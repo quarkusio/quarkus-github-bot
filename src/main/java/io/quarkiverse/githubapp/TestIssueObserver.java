@@ -8,7 +8,7 @@ import io.quarkiverse.githubapp.event.Issue;
 
 public class TestIssueObserver {
 
-    public void listen(@Issue.Opened GHEventPayload.Issue issue) throws IOException {
-        issue.getIssue().comment("Test new comment 2");
+    public void listen(@Issue.Opened @Issue.Edited GHEventPayload.Issue issuePayload) throws IOException {
+        issuePayload.getIssue().comment("Test new comment 2");
     }
 }
