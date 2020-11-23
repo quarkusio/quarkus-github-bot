@@ -36,6 +36,7 @@ Typically having:
 
 * Issues - `Read & Write`
 * Pull Requests - `Read & Write`
+* Contents - `Read`
 
 makes sense for a start.
 You can adjust the permissions later.
