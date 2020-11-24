@@ -13,13 +13,14 @@ import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueState;
-import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHMilestone;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.util.GHIssues;
+import io.quarkus.bot.util.Labels;
 
 class AffectMilestone {
 
@@ -27,7 +28,6 @@ class AffectMilestone {
 
     private static final String MASTER_BRANCH = "master";
     private static final String MAIN_BRANCH = "main";
-    private static final String AREA_INFRA_LABEL = "area/infra";
     private static final String MASTER_MILESTONE_SUFFIX = "- master";
 
     @Inject
@@ -45,6 +45,10 @@ class AffectMilestone {
             return;
         }
 
+        if (GHIssues.hasLabel(pullRequest, Labels.TRIAGE_INVALID)) {
+            pullRequest.removeLabels(Labels.TRIAGE_INVALID);
+        }
+
         GHMilestone masterMilestone = getMasterMilestone(pullRequestPayload.getRepository());
         if (masterMilestone == null) {
             LOG.error("Unable to find the master milestone");
@@ -52,7 +56,7 @@ class AffectMilestone {
         }
 
         GHMilestone currentMilestone = pullRequest.getMilestone();
-        if (currentMilestone == null && !hasAreaInfraLabel(pullRequest)) {
+        if (currentMilestone == null && !GHIssues.hasLabel(pullRequest, Labels.AREA_INFRA)) {
             if (!quarkusBotConfig.dryRun) {
                 pullRequest.setMilestone(masterMilestone);
             } else {
@@ -109,15 +113,6 @@ class AffectMilestone {
             }
         }
         return null;
-    }
-
-    private static boolean hasAreaInfraLabel(GHPullRequest pullRequest) throws IOException {
-        for (GHLabel label : pullRequest.getLabels()) {
-            if (AREA_INFRA_LABEL.equals(label.getName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public Set<Integer> extractCurrentRepositoryIssueNumbers(GHRepository repository, String pullRequestBody) {

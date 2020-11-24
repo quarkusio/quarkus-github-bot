@@ -18,6 +18,9 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+
+        <quarkiverse-github-app.version>999-SNAPSHOT</quarkiverse-github-app.version>
+        <glob.version>0.9.0</glob.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -34,7 +37,16 @@
         <dependency>
             <groupId>io.quarkiverse.githubapp</groupId>
             <artifactId>quarkiverse-github-app</artifactId>
-            <version>999-SNAPSHOT</version>
+            <version>${quarkiverse-github-app.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.el</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hrakaroo</groupId>
+            <artifactId>glob</artifactId>
+            <version>${glob.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

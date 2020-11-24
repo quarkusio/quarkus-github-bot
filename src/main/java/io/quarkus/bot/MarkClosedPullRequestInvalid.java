@@ -10,12 +10,11 @@ import org.kohsuke.github.GHPullRequest;
 
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.util.Labels;
 
 class MarkClosedPullRequestInvalid {
 
     private static final Logger LOG = Logger.getLogger(MarkClosedPullRequestInvalid.class);
-
-    private static final String TRIAGE_INVALID_LABEL = "triage/invalid";
 
     @Inject
     QuarkusBotConfig quarkusBotConfig;
@@ -28,9 +27,9 @@ class MarkClosedPullRequestInvalid {
         }
 
         if (!quarkusBotConfig.dryRun) {
-            pullRequest.addLabels(TRIAGE_INVALID_LABEL);
+            pullRequest.addLabels(Labels.TRIAGE_INVALID);
         } else {
-            LOG.info("Pull request #" + pullRequest.getNumber() + " - Add label: triage/invalid");
+            LOG.info("Pull request #" + pullRequest.getNumber() + " - Add label: " + Labels.TRIAGE_INVALID);
         }
     }
 }
