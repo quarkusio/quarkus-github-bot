@@ -3,7 +3,6 @@ package io.quarkus.bot;
 import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import javax.el.ELContext;
 import javax.el.ELManager;
@@ -23,6 +22,7 @@ import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
 import io.quarkus.bot.el.SimpleELContext;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Patterns;
 import io.quarkus.bot.util.Strings;
 
 class TriageIssue {
@@ -89,8 +89,7 @@ class TriageIssue {
     private static boolean matchRule(GHIssue issue, TriageRule rule) {
         try {
             if (Strings.isNotBlank(rule.title)) {
-                if (Pattern.compile(rule.title, Pattern.DOTALL | Pattern.CASE_INSENSITIVE).matcher(issue.getTitle())
-                        .matches()) {
+                if (Patterns.matches(rule.title, issue.getTitle())) {
                     return true;
                 }
             }
@@ -100,7 +99,7 @@ class TriageIssue {
 
         try {
             if (Strings.isNotBlank(rule.body)) {
-                if (Pattern.compile(rule.body, Pattern.DOTALL | Pattern.CASE_INSENSITIVE).matcher(issue.getBody()).matches()) {
+                if (Patterns.matches(rule.body, issue.getBody())) {
                     return true;
                 }
             }
@@ -110,10 +109,7 @@ class TriageIssue {
 
         try {
             if (Strings.isNotBlank(rule.titleBody)) {
-                if (Pattern.compile(rule.titleBody, Pattern.DOTALL | Pattern.CASE_INSENSITIVE).matcher(issue.getTitle())
-                        .matches() ||
-                        Pattern.compile(rule.titleBody, Pattern.DOTALL | Pattern.CASE_INSENSITIVE).matcher(issue.getBody())
-                                .matches()) {
+                if (Patterns.matches(rule.titleBody, issue.getTitle()) || Patterns.matches(rule.titleBody, issue.getBody())) {
                     return true;
                 }
             }
