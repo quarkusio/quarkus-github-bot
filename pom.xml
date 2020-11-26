@@ -53,13 +53,9 @@
             <artifactId>quarkus-openshift</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
+            <groupId>io.quarkiverse.githubapp</groupId>
+            <artifactId>quarkus-github-app-testing</artifactId>
+            <version>${quarkus-github-app.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
