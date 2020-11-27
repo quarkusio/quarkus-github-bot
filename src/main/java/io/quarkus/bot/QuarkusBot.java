@@ -16,7 +16,7 @@ public class QuarkusBot {
     QuarkusBotConfig quarkusBotConfig;
 
     void init(@Observes StartupEvent startupEvent) {
-        if (quarkusBotConfig.dryRun) {
+        if (quarkusBotConfig.isDryRun()) {
             LOG.warn("››› Quarkus Bot running in dry-run mode");
         }
     }

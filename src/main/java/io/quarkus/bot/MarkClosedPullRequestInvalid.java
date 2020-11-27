@@ -26,7 +26,7 @@ class MarkClosedPullRequestInvalid {
             return;
         }
 
-        if (!quarkusBotConfig.dryRun) {
+        if (!quarkusBotConfig.isDryRun()) {
             pullRequest.addLabels(Labels.TRIAGE_INVALID);
         } else {
             LOG.info("Pull request #" + pullRequest.getNumber() + " - Add label: " + Labels.TRIAGE_INVALID);

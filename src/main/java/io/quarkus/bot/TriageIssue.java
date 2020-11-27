@@ -62,7 +62,7 @@ class TriageIssue {
         }
 
         if (!labels.isEmpty()) {
-            if (!quarkusBotConfig.dryRun) {
+            if (!quarkusBotConfig.isDryRun()) {
                 issue.addLabels(labels.toArray(new String[0]));
             } else {
                 LOG.info("Issue #" + issue.getNumber() + " - Add labels: " + String.join(", ", labels));
@@ -70,7 +70,7 @@ class TriageIssue {
         }
 
         if (!mentions.isEmpty()) {
-            if (!quarkusBotConfig.dryRun) {
+            if (!quarkusBotConfig.isDryRun()) {
                 issue.comment("/cc @" + String.join(", @", mentions));
             } else {
                 LOG.info("Issue #" + issue.getNumber() + " - Mentions: " + String.join(", ", mentions));
@@ -78,7 +78,7 @@ class TriageIssue {
         }
 
         if (!triaged && !GHIssues.hasAreaLabel(issue)) {
-            if (!quarkusBotConfig.dryRun) {
+            if (!quarkusBotConfig.isDryRun()) {
                 issue.addLabels(Labels.TRIAGE_NEEDS_TRIAGE);
             } else {
                 LOG.info("Issue #" + issue.getNumber() + " - Add label: " + Labels.TRIAGE_NEEDS_TRIAGE);

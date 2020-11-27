@@ -57,7 +57,7 @@ class TriagePullRequest {
         }
 
         if (!labels.isEmpty()) {
-            if (!quarkusBotConfig.dryRun) {
+            if (!quarkusBotConfig.isDryRun()) {
                 pullRequest.addLabels(labels.toArray(new String[0]));
             } else {
                 LOG.info("Pull Request #" + pullRequest.getNumber() + " - Add labels: " + String.join(", ", labels));
@@ -65,7 +65,7 @@ class TriagePullRequest {
         }
 
         if (!mentions.isEmpty()) {
-            if (!quarkusBotConfig.dryRun) {
+            if (!quarkusBotConfig.isDryRun()) {
                 pullRequest.comment("/cc @" + String.join(", @", mentions));
             } else {
                 LOG.info("Pull Request #" + pullRequest.getNumber() + " - Mentions: " + String.join(", ", mentions));
