@@ -19,7 +19,7 @@
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
-        <quarkus-github-app.version>0.0.3</quarkus-github-app.version>
+        <quarkus-github-app.version>0.0.4</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
     </properties>
     <dependencyManagement>
