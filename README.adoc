@@ -1,75 +1,130 @@
-= quarkus-bot-java - Quick introduction
+= Quarkus Bot
 
-== Repositories
+> A Quarkus-powered GitHub App to simplify issues and pull requests management in the Quarkus project.
 
- * The extension: https://github.com/gsmet/quarkiverse-github-app
- * The bot: https://github.com/gsmet/quarkus-bot-java/
- * The playground project: https://github.com/gsmet/quarkus-bot-java-playground/
+== Introduction
 
-Development progress is tracked here: https://github.com/gsmet/quarkiverse-github-app/projects/1 .
+This GitHub App is based on the https://github.com/quarkiverse/quarkus-github-app[Quarkus GitHub App framework].
 
-== Developing
+It can be run as a native executable.
 
-=== Create a new Smee.io channel
+== Current Actions
 
-* Go to https://smee.io/
-* Click on `Start a new channel`
-* Save the provided URL
+=== Check pull request editorial rules
 
-=== Create an application
+This action checks that the title of a pull request respects some editorial rules to make Release Notes more consistent.
 
-You need to create your own instance of the application.
+=== Triage issues
 
-To create your application, go to: https://github.com/settings/apps/new and confirm your password.
+Based on the `.github/quarkus-bot-java.yml` file, this rule affects labels to issues and also pings the appropriate people.
 
-Please avoid using a name too generic.
-Using your GitHub username as a suffix is a good idea.
+Syntax of the `.github/quarkus-bot-java.yml` file is as follows:
 
-`Homepage URL` is mandatory, it can be whatever you want.
+[source, yaml]
+----
+triage:
+  rules:
+    - labels: [area/amazon-lambda]
+      title: "lambda"
+      notify: [patriot1burke, matejvasek]
+      directories:
+        - extensions/amazon-lambda
+        - integration-tests/amazon-lambda
+    - labels: [area/persistence]
+      title: "db2"
+      notify: [aguibert]
+      directories:
+        - extensions/reactive-db2-client/
+        - extensions/jdbc/jdbc-db2/
+----
 
-Put the Smee.io channel URL in `Webhook URL`.
-You don't need a secret for now.
+For issues, each rule can be triggered by:
 
-Define some sensible repository permissions for your tests.
+* `title` - if the title matches this regular expression (case insensitively), trigger the rule
+* `body` - if the body (i.e. description) matches this regular expression (case insensitively), trigger the rule
+* `titleBody` - if either the title or the body (i.e. description) match this regular expression (case insensitively), trigger the rule
+* `expression` - allows to write a Jakarta EL expression testing `title`, `body` or `titleBody`. Be careful when writing expressions, better ping `@gsmet` in the pull request when creating/updating an expression.
 
-Typically having:
+[TIP]
+====
+When writing expressions, you can use the `matches(String pattern, String string)` function that behaves as follows:
+
+[source,java]
+----
+public static boolean matches(String pattern, String string) {
+    return Pattern.compile(".*" + pattern + ".*", Pattern.DOTALL | Pattern.CASE_INSENSITIVE).matcher(string)
+            .matches();
+}
+----
+
+A rule using an expression based on `matches()` would look like:
+
+[source,yaml]
+----
+    - labels: [area/hibernate-orm, area/persistence]
+      expression: |
+              matches("hibernate", title)
+              && !matches("hibernate.validator", title)
+              && !matches("hibernate.search", title)
+              && !matches("hibernate.reactive", title)
+      notify: [gsmet, Sanne, yrodiere]
+----
+====
+
+If the rule is triggered, the following actions will be executed:
+
+* `notify` - will create a comment pinging the users listed in the array
+* `labels` - will add the labels to the issue
+
+=== Triage pull requests
+
+The pull requests triage action uses the same configuration file as the issues triage action.
+
+There are a few differences though as it doesn't behave in the exact same way.
+
+For pull requests, each rule can be triggered by:
+
+* `directories` - if any file in the commits of the pull requests match, trigger the rule. This is not a regexp (it uses `startsWith`) but glob type expression are supported too `extensions/test/**`.
+
+If the rule is triggered, the following action will be executed:
+
+* `labels` - will add the labels to the issue
+* `notify` - will create a comment pinging the users listed in the array **only if `notifyInPullRequest` is true**
+
+=== Affect milestones
+
+When a pull request is merged, if it targets the `master` branch, it affects the milestone ending with ` - master` to the pull request and the issues resolved by the pull request (e.g. `Fixes #1234`).
+
+It only affects the milestone is no milestone has been affected prior to the merge.
+If the milestone cannot be affected, we add a comment to the pull request indicating the items for which we haven't affected the milestone.
+
+=== Mark closed pull requests as invalid
+
+If a pull request is closed without being merged, we automatically add the `triage/invalid` label to the pull request.
+
+== Contributing
+
+To participate to the development of this GitHub App, create a playground project in your own org and
+follow the steps outlined in https://quarkiverse.github.io/quarkiverse-docs/quarkus-github-app/dev/index.html[the Quarkus GitHub App documentation].
+
+GitHub permissions required:
 
 * Issues - `Read & Write`
 * Pull Requests - `Read & Write`
 * Contents - `Read`
 
-makes sense for a start.
-You can adjust the permissions later.
+By default, in dev mode, the Bot runs in dry-run so it's logging its actions but do not perform them.
+You can override this behavior by adding `_DEV_QUARKUS_BOT_DRY_RUN=false` to your `.env` file.
 
-Once done, you will arrive on the application page settings.
+== Deployment
 
-Take note of your numeric `App ID`, you will need it.
+Once logged in to the OpenShift cluster (using `oc login...`), just run:
 
-Click on `Generate a private key` to generate a new private key.
-Your browser will download the new key.
+[source, bash]
+----
+$ ./deploy-to-openshift.sh
+----
 
-=== Create a `.env` file
+== License
 
-At the root of the repository, create a `.env` file containing:
-
-[source]
-------
-QUARKUS_GITHUB_APP_APP_ID=<your numeric app id>
-QUARKUS_GITHUB_APP_WEBHOOK_SECRET=useless for now
-QUARKUS_GITHUB_APP_WEBHOOK_PROXY_URL=<your Smee.io channel URL>
-QUARKUS_GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\
-                                                                \
-                        YOUR PRIVATE KEY                        \
-                                                                \
------END RSA PRIVATE KEY-----
-------
-
-Then you can start your application as usual with `./mvnw clean quarkus:dev`.
-
-It will connect to the Smee.io channel and redirect the requests received there to your local running application.
-
-=== Redeliver payloads
-
-It might be quite practical to redeliver a payload when testing or even have a look at the generated payload.
-
-You can do that here: https://github.com/settings/apps/<your app name>/advanced .
+This project is licensed under the Apache License Version 2.0.
