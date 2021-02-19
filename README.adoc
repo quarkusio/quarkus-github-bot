@@ -1,3 +1,5 @@
+** ⚠ This project has been replaced by a Quarkus-powered bot: https://github.com/quarkusio/quarkus-bot-java ⚠ **
+
 = Quarkus Bot
 
 > A Quarkus-powered GitHub App to simplify issues and pull requests management in the Quarkus project.
