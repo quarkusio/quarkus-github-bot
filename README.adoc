@@ -1,4 +1,4 @@
-*⚠ This project has been replaced by a Quarkus-powered bot: https://github.com/quarkusio/quarkus-bot-java ⚠*
+*⚠ This project has been replaced by a Quarkus-based bot: https://github.com/quarkusio/quarkus-bot-java ⚠*
 
 = Quarkus Bot
 
