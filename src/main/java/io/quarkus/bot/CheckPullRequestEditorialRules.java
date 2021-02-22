@@ -66,7 +66,7 @@ class CheckPullRequestEditorialRules {
         if (SPACE_PATTERN.split(title.trim()).length < 2) {
             errorMessages.add("title should count at least 2 words to describe the change properly");
         }
-        if (!Character.isUpperCase(title.codePointAt(0))) {
+        if (!Character.isDigit(title.codePointAt(0)) && !Character.isUpperCase(title.codePointAt(0))) {
             errorMessages.add("title should preferably start with an uppercase character (if it makes sense!)");
         }
         if (ISSUE_PATTERN.matcher(title).matches()) {
