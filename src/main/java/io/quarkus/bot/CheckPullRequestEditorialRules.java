@@ -2,8 +2,10 @@ package io.quarkus.bot;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
@@ -22,6 +24,8 @@ class CheckPullRequestEditorialRules {
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final Pattern ISSUE_PATTERN = Pattern.compile("#[0-9]+");
     private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs)[(:]");
+
+    private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
 
     @Inject
     QuarkusBotConfig quarkusBotConfig;
@@ -66,7 +70,8 @@ class CheckPullRequestEditorialRules {
         if (SPACE_PATTERN.split(title.trim()).length < 2) {
             errorMessages.add("title should count at least 2 words to describe the change properly");
         }
-        if (!Character.isDigit(title.codePointAt(0)) && !Character.isUpperCase(title.codePointAt(0))) {
+        if (!Character.isDigit(title.codePointAt(0)) && !Character.isUpperCase(title.codePointAt(0))
+                && !isUpperCaseException(title)) {
             errorMessages.add("title should preferably start with an uppercase character (if it makes sense!)");
         }
         if (ISSUE_PATTERN.matcher(title).matches()) {
@@ -77,5 +82,15 @@ class CheckPullRequestEditorialRules {
         }
 
         return errorMessages;
+    }
+
+    private static boolean isUpperCaseException(String title) {
+        for (String exception : UPPER_CASE_EXCEPTIONS) {
+            if (title.toLowerCase(Locale.ROOT).startsWith(exception.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
