@@ -89,7 +89,7 @@ class TriageIssue {
     private static boolean matchRule(GHIssue issue, TriageRule rule) {
         try {
             if (Strings.isNotBlank(rule.title)) {
-                if (Patterns.matches(rule.title, issue.getTitle())) {
+                if (Patterns.find(rule.title, issue.getTitle())) {
                     return true;
                 }
             }
@@ -99,7 +99,7 @@ class TriageIssue {
 
         try {
             if (Strings.isNotBlank(rule.body)) {
-                if (Patterns.matches(rule.body, issue.getBody())) {
+                if (Patterns.find(rule.body, issue.getBody())) {
                     return true;
                 }
             }
@@ -109,7 +109,7 @@ class TriageIssue {
 
         try {
             if (Strings.isNotBlank(rule.titleBody)) {
-                if (Patterns.matches(rule.titleBody, issue.getTitle()) || Patterns.matches(rule.titleBody, issue.getBody())) {
+                if (Patterns.find(rule.titleBody, issue.getTitle()) || Patterns.find(rule.titleBody, issue.getBody())) {
                     return true;
                 }
             }
