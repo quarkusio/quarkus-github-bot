@@ -23,7 +23,7 @@ class CheckPullRequestEditorialRules {
 
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final Pattern ISSUE_PATTERN = Pattern.compile("#[0-9]+");
-    private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs)[(:]");
+    private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs)[(:].*");
 
     private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
 
@@ -74,7 +74,7 @@ class CheckPullRequestEditorialRules {
                 && !isUpperCaseException(title)) {
             errorMessages.add("title should preferably start with an uppercase character (if it makes sense!)");
         }
-        if (ISSUE_PATTERN.matcher(title).matches()) {
+        if (ISSUE_PATTERN.matcher(title).find()) {
             errorMessages.add("title should not contain an issue number (use 'Fix #1234' in the description instead)");
         }
         if (FIX_FEAT_CHORE.matcher(title).matches()) {
