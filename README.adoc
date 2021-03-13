@@ -16,9 +16,9 @@ This action checks that the title of a pull request respects some editorial rule
 
 === Triage issues
 
-Based on the `.github/quarkus-bot-java.yml` file, this rule affects labels to issues and also pings the appropriate people.
+Based on the `.github/quarkus-bot.yml` file, this rule affects labels to issues and also pings the appropriate people.
 
-Syntax of the `.github/quarkus-bot-java.yml` file is as follows:
+Syntax of the `.github/quarkus-bot.yml` file is as follows:
 
 [source, yaml]
 ----

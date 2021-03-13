@@ -29,7 +29,7 @@ class TriagePullRequest {
 
     void triageIssue(
             @PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
-            @ConfigFile("quarkus-bot-java.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {
 
         if (quarkusBotConfigFile == null) {
             LOG.error("Unable to find triage configuration.");
