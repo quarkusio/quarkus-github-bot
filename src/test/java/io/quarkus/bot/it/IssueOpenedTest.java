@@ -19,7 +19,7 @@ public class IssueOpenedTest {
     @Test
     void triage() throws IOException {
         given().github(mocks -> mocks.configFileFromString(
-                "quarkus-bot-java.yml",
+                "quarkus-bot.yml",
                 "triage:\n"
                 + "  rules:\n"
                 + "    - title: test\n"
