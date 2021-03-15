@@ -23,7 +23,7 @@ class CheckPullRequestEditorialRules {
 
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final Pattern ISSUE_PATTERN = Pattern.compile("#[0-9]+");
-    private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs)[(:].*");
+    private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs|refactor)[(:].*");
 
     private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
 
