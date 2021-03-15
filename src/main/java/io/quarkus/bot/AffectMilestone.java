@@ -28,7 +28,7 @@ class AffectMilestone {
 
     private static final String MASTER_BRANCH = "master";
     private static final String MAIN_BRANCH = "main";
-    private static final String MASTER_MILESTONE_SUFFIX = "- master";
+    private static final String MAIN_MILESTONE_SUFFIX = "- main";
 
     @Inject
     QuarkusBotConfig quarkusBotConfig;
@@ -49,18 +49,18 @@ class AffectMilestone {
             pullRequest.removeLabels(Labels.TRIAGE_INVALID);
         }
 
-        GHMilestone masterMilestone = getMasterMilestone(pullRequestPayload.getRepository());
-        if (masterMilestone == null) {
-            LOG.error("Unable to find the master milestone");
+        GHMilestone mainMilestone = getMainMilestone(pullRequestPayload.getRepository());
+        if (mainMilestone == null) {
+            LOG.error("Unable to find the main milestone");
             return;
         }
 
         GHMilestone currentMilestone = pullRequest.getMilestone();
         if (currentMilestone == null && !GHIssues.hasLabel(pullRequest, Labels.AREA_INFRA)) {
             if (!quarkusBotConfig.isDryRun()) {
-                pullRequest.setMilestone(masterMilestone);
+                pullRequest.setMilestone(mainMilestone);
             } else {
-                LOG.info("Pull request #" + pullRequest.getNumber() + " - Affect milestone: " + masterMilestone.getTitle());
+                LOG.info("Pull request #" + pullRequest.getNumber() + " - Affect milestone: " + mainMilestone.getTitle());
             }
         }
 
@@ -74,20 +74,20 @@ class AffectMilestone {
             }
 
             if (resolvedIssue.getMilestone() != null
-                    && (resolvedIssue.getMilestone().getNumber() != masterMilestone.getNumber())) {
+                    && (resolvedIssue.getMilestone().getNumber() != mainMilestone.getNumber())) {
                 alreadyAffectedIssues.add(resolvedIssueNumber);
             } else {
                 if (!quarkusBotConfig.isDryRun()) {
-                    resolvedIssue.setMilestone(masterMilestone);
+                    resolvedIssue.setMilestone(mainMilestone);
                 } else {
-                    LOG.info("Issue #" + resolvedIssueNumber + " - Affect milestone: " + masterMilestone.getTitle());
+                    LOG.info("Issue #" + resolvedIssueNumber + " - Affect milestone: " + mainMilestone.getTitle());
                 }
             }
         }
 
         // Add a comment if some of the items were already affected to a different milestone
         String comment = "";
-        if (currentMilestone != null && (currentMilestone.getNumber() != masterMilestone.getNumber())) {
+        if (currentMilestone != null && (currentMilestone.getNumber() != mainMilestone.getNumber())) {
             comment += "* The pull request itself\n";
         }
         for (Integer alreadyAffectedIssue : alreadyAffectedIssues) {
@@ -106,9 +106,9 @@ class AffectMilestone {
         }
     }
 
-    private static GHMilestone getMasterMilestone(GHRepository repository) {
+    private static GHMilestone getMainMilestone(GHRepository repository) {
         for (GHMilestone milestone : repository.listMilestones(GHIssueState.OPEN)) {
-            if (milestone.getTitle().endsWith(MASTER_MILESTONE_SUFFIX)) {
+            if (milestone.getTitle().endsWith(MAIN_MILESTONE_SUFFIX)) {
                 return milestone;
             }
         }
