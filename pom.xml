@@ -18,6 +18,8 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+        <version.formatter.plugin>2.12.2</version.formatter.plugin>
+        <version.impsort.plugin>1.4.1</version.impsort.plugin>
 
         <quarkus-github-app.version>0.0.7</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
@@ -87,6 +89,31 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
+              <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>${version.formatter.plugin}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.quarkus</groupId>
+                        <artifactId>quarkus-ide-config</artifactId>
+                        <version>${quarkus.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configFile>eclipse-format.xml</configFile>
+                    <lineEnding>LF</lineEnding>
+                    <skip>${format.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                  </plugin>
         </plugins>
     </build>
     <profiles>
