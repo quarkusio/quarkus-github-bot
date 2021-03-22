@@ -21,10 +21,9 @@ public class IssueOpenedTest {
         given().github(mocks -> mocks.configFileFromString(
                 "quarkus-bot.yml",
                 "triage:\n"
-                + "  rules:\n"
-                + "    - title: test\n"
-                + "      labels: [test1, test2]"
-        ))
+                        + "  rules:\n"
+                        + "    - title: test\n"
+                        + "      labels: [test1, test2]"))
                 .when().payloadFromClasspath("/issue-opened.json")
                 .event(GHEvent.ISSUES)
                 .then().github(mocks -> {
