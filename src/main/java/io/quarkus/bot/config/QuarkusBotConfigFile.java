@@ -14,6 +14,8 @@ public class QuarkusBotConfigFile {
     public static class TriageConfig {
 
         public List<TriageRule> rules = new ArrayList<>();
+
+        public QE qe = new QE();
     }
 
     public static class TriageRule {
@@ -36,5 +38,10 @@ public class QuarkusBotConfigFile {
         public Set<String> notify = new TreeSet<>();
 
         public boolean notifyInPullRequest;
+    }
+
+    public static class QE {
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> notify = new TreeSet<>();
     }
 }
