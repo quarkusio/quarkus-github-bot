@@ -20,6 +20,7 @@
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
         <version.formatter.plugin>2.15.0</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
+
         <quarkus-github-app.version>1.0.2</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
     </properties>
@@ -41,6 +42,14 @@
             <version>${quarkus-github-app.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-qute</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jaxp</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>jakarta.el</artifactId>
         </dependency>
@@ -48,6 +57,11 @@
             <groupId>com.hrakaroo</groupId>
             <artifactId>glob</artifactId>
             <version>${glob.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-report-parser</artifactId>
+            <version>${surefire-plugin.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
