@@ -38,6 +38,10 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @ApplicationScoped
 public class SurefireReportsAnalyzer {
 
+    private static final Path MAVEN_SUREFIRE_REPORTS_PATH = Path.of("target", "surefire-reports");
+    private static final Path MAVEN_FAILSAFE_REPORTS_PATH = Path.of("target", "failsafe-reports");
+    private static final Path GRADLE_REPORTS_PATH = Path.of("build", "test-results", "test");
+
     public Optional<String> getAnalysis(GHRepository workflowRepository,
             GHPullRequest pullRequest,
             List<GHArtifact> surefireReportsArtifacts)
@@ -54,20 +58,24 @@ public class SurefireReportsAnalyzer {
                         .replace(AnalyzeWorkflowRunResults.SUREFIRE_REPORTS_ARTIFACT_PREFIX, ""));
                 Path jobDirectory = allSurefireReportsDirectory.resolve(surefireReportsArtifact.getName());
 
-                Set<Path> surefireReportsDirectories = surefireReportsArtifact
+                Set<TestResultsPath> testResultsPath = surefireReportsArtifact
                         .download((is) -> unzip(is, jobDirectory));
 
-                for (Path surefireReportsDirectory : surefireReportsDirectories) {
-                    SurefireReportParser surefireReportsParser = new SurefireReportParser(
-                            Collections.singletonList(surefireReportsDirectory.toFile()), Locale.ENGLISH,
-                            new NullConsoleLogger());
-                    List<ReportTestSuite> reportTestSuites = surefireReportsParser.parseXMLReportFiles();
-                    Module module = new Module(
-                            jobDirectory.relativize(surefireReportsDirectory).getParent().getParent().toString(),
-                            reportTestSuites,
-                            surefireReportsParser.getFailureDetails(reportTestSuites).stream().filter(rtc -> !rtc.hasSkipped())
-                                    .collect(Collectors.toList()));
-                    job.addModule(module);
+                for (TestResultsPath testResultPath : testResultsPath) {
+                    try {
+                        SurefireReportParser surefireReportsParser = new SurefireReportParser(
+                                Collections.singletonList(testResultPath.getPath().toFile()), Locale.ENGLISH,
+                                new NullConsoleLogger());
+                        List<ReportTestSuite> reportTestSuites = surefireReportsParser.parseXMLReportFiles();
+                        Module module = new Module(
+                                testResultPath.getModuleName(jobDirectory),
+                                reportTestSuites,
+                                surefireReportsParser.getFailureDetails(reportTestSuites).stream().filter(rtc -> !rtc.hasSkipped())
+                                        .collect(Collectors.toList()));
+                        job.addModule(module);
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Unable to parse test results for file " + testResultPath.getPath(), e);
+                    }
                 }
 
                 report.addJob(job);
@@ -86,8 +94,8 @@ public class SurefireReportsAnalyzer {
         }
     }
 
-    public static Set<Path> unzip(InputStream inputStream, Path destinationDirectory) throws IOException {
-        Set<Path> surefireReportsDirectories = new TreeSet<>();
+    public static Set<TestResultsPath> unzip(InputStream inputStream, Path destinationDirectory) throws IOException {
+        Set<TestResultsPath> testResultsPaths = new TreeSet<>();
 
         try (final ZipInputStream zis = new ZipInputStream(inputStream)) {
             final byte[] buffer = new byte[1024];
@@ -95,8 +103,12 @@ public class SurefireReportsAnalyzer {
             while (zipEntry != null) {
                 final Path newPath = getZipEntryPath(destinationDirectory, zipEntry);
                 final File newFile = newPath.toFile();
-                if (newPath.endsWith("surefire-reports")) {
-                    surefireReportsDirectories.add(newPath);
+                if (newPath.endsWith(MAVEN_SUREFIRE_REPORTS_PATH)) {
+                    testResultsPaths.add(new SurefireTestResultsPath(newPath));
+                } else if (newPath.endsWith(MAVEN_FAILSAFE_REPORTS_PATH)) {
+                    testResultsPaths.add(new FailsafeTestResultsPath(newPath));
+                } else if (newPath.endsWith(GRADLE_REPORTS_PATH)) {
+                    testResultsPaths.add(new GradleTestResultsPath(newPath));
                 }
                 if (zipEntry.isDirectory()) {
                     if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -120,7 +132,7 @@ public class SurefireReportsAnalyzer {
             zis.closeEntry();
         }
 
-        return surefireReportsDirectories;
+        return testResultsPaths;
     }
 
     public static Path getZipEntryPath(Path destinationDirectory, ZipEntry zipEntry) throws IOException {
@@ -131,6 +143,85 @@ public class SurefireReportsAnalyzer {
         }
 
         return destinationFile;
+    }
+
+    private interface TestResultsPath extends Comparable<TestResultsPath> {
+
+        Path getPath();
+
+        String getModuleName(Path jobDirectory);
+    }
+
+    private static class SurefireTestResultsPath implements TestResultsPath {
+
+        private final Path path;
+
+        private SurefireTestResultsPath(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public String getModuleName(Path jobDirectory) {
+            return jobDirectory.relativize(path).getParent().getParent().toString();
+        }
+
+        @Override
+        public int compareTo(TestResultsPath o) {
+            return path.compareTo(o.getPath());
+        }
+    }
+
+    private static class FailsafeTestResultsPath implements TestResultsPath {
+
+        private final Path path;
+
+        private FailsafeTestResultsPath(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public String getModuleName(Path jobDirectory) {
+            return jobDirectory.relativize(path).getParent().getParent().toString();
+        }
+
+        @Override
+        public int compareTo(TestResultsPath o) {
+            return path.compareTo(o.getPath());
+        }
+    }
+
+    private static class GradleTestResultsPath implements TestResultsPath {
+
+        private final Path path;
+
+        private GradleTestResultsPath(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public String getModuleName(Path jobDirectory) {
+            return jobDirectory.relativize(path).getParent().getParent().getParent().toString();
+        }
+
+        @Override
+        public int compareTo(TestResultsPath o) {
+            return path.compareTo(o.getPath());
+        }
     }
 
     @RegisterForReflection
