@@ -72,7 +72,8 @@ public class AnalyzeWorkflowRunResults {
             return;
         }
 
-        Optional<String> analysis = surefireReportsAnalyzer.getAnalysis(workflowRunPayload.getRepository(), pullRequest, surefireReportsArtifacts);
+        Optional<String> analysis = surefireReportsAnalyzer.getAnalysis(workflowRunPayload.getRepository(), pullRequest,
+                surefireReportsArtifacts);
 
         if (analysis.isPresent()) {
             if (!quarkusBotConfig.isDryRun()) {

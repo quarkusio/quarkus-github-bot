@@ -17,7 +17,7 @@
 
 {#for failure : module.failures}
 
-##### :x: `{failure.fullClassName}`
+##### :x: `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} - [**see on GitHub**](https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}{#if failure.failureErrorLine}#L{failure.failureErrorLine}{/if})
 
 <details>
 
@@ -29,8 +29,6 @@
 
 {#if report.sameRepository}
 https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}#L{failure.failureErrorLine}
-{#else}
-› `{failure.fullClassName} line {failure.failureErrorLine}` - [**see in GitHub**](https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}#L{failure.failureErrorLine})
 {/if}
 </details>
 

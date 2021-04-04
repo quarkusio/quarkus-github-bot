@@ -25,6 +25,7 @@ import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.apache.maven.plugins.surefire.report.SurefireReportParser;
 import org.apache.maven.reporting.MavenReportException;
+import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
@@ -37,6 +38,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @ApplicationScoped
 public class SurefireReportsAnalyzer {
+
+    private static final Logger LOG = Logger.getLogger(SurefireReportsAnalyzer.class);
 
     private static final Path MAVEN_SUREFIRE_REPORTS_PATH = Path.of("target", "surefire-reports");
     private static final Path MAVEN_FAILSAFE_REPORTS_PATH = Path.of("target", "failsafe-reports");
@@ -70,11 +73,13 @@ public class SurefireReportsAnalyzer {
                         Module module = new Module(
                                 testResultPath.getModuleName(jobDirectory),
                                 reportTestSuites,
-                                surefireReportsParser.getFailureDetails(reportTestSuites).stream().filter(rtc -> !rtc.hasSkipped())
+                                surefireReportsParser.getFailureDetails(reportTestSuites).stream()
+                                        .filter(rtc -> !rtc.hasSkipped())
+                                        .sorted((rtc1, rtc2) -> rtc1.getFullClassName().compareTo(rtc2.getFullClassName()))
                                         .collect(Collectors.toList()));
                         job.addModule(module);
                     } catch (Exception e) {
-                        throw new IllegalStateException("Unable to parse test results for file " + testResultPath.getPath(), e);
+                        LOG.error("Unable to parse test results for file " + testResultPath.getPath(), e);
                     }
                 }
 
