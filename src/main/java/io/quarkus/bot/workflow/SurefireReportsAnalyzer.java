@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -24,7 +25,6 @@ import org.apache.maven.plugin.surefire.log.api.NullConsoleLogger;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.apache.maven.plugins.surefire.report.SurefireReportParser;
-import org.apache.maven.reporting.MavenReportException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHPullRequest;
@@ -47,8 +47,13 @@ public class SurefireReportsAnalyzer {
 
     public Optional<String> getAnalysis(GHRepository workflowRepository,
             GHPullRequest pullRequest,
-            List<GHArtifact> surefireReportsArtifacts)
-            throws IOException, MavenReportException {
+            List<GHArtifact> surefireReportsArtifacts,
+            Map<String, String> testFailuresAnchors)
+            throws IOException {
+        if (surefireReportsArtifacts.isEmpty()) {
+            return Optional.empty();
+        }
+
         Path allSurefireReportsDirectory = Files.createTempDirectory("surefire-reports-analyzer-");
 
         Report report = new Report(pullRequest.getHead().getRepository().getFullName(),
@@ -57,8 +62,9 @@ public class SurefireReportsAnalyzer {
 
         try {
             for (GHArtifact surefireReportsArtifact : surefireReportsArtifacts) {
-                Job job = new Job(surefireReportsArtifact.getName()
-                        .replace(AnalyzeWorkflowRunResults.SUREFIRE_REPORTS_ARTIFACT_PREFIX, ""));
+                String jobName = surefireReportsArtifact.getName()
+                        .replace(AnalyzeWorkflowRunResults.SUREFIRE_REPORTS_ARTIFACT_PREFIX, "");
+                Job job = new Job(jobName, testFailuresAnchors.get(jobName));
                 Path jobDirectory = allSurefireReportsDirectory.resolve(surefireReportsArtifact.getName());
 
                 Set<TestResultsPath> testResultsPath = surefireReportsArtifact
@@ -279,10 +285,12 @@ public class SurefireReportsAnalyzer {
     private static class Job {
 
         private final String name;
+        private final String testFailuresAnchor;
         private final List<Module> modules = new ArrayList<>();
 
-        private Job(String name) {
+        private Job(String name, String testFailuresAnchor) {
             this.name = name;
+            this.testFailuresAnchor = testFailuresAnchor;
         }
 
         private void addModule(Module module) {
@@ -291,6 +299,10 @@ public class SurefireReportsAnalyzer {
 
         public String getName() {
             return name;
+        }
+
+        public String getTestFailuresAnchor() {
+            return testFailuresAnchor;
         }
 
         public List<Module> getModules() {

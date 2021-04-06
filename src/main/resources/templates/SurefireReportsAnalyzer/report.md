@@ -2,7 +2,7 @@
 
 {#for job in report.jobs}
 {#if job.errors}
-### :gear: {job.name}
+### :gear: {job.name} {#if job.testFailuresAnchor}<a href="#user-content-{job.testFailuresAnchor}" id="{job.testFailuresAnchor}">#</a>{/if}
 {#for module in job.modules}
 {#if module.errors}
 #### :package: {module.name}
@@ -17,7 +17,7 @@
 
 {#for failure : module.failures}
 
-##### :x: `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} - [**see on GitHub**](https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}{#if failure.failureErrorLine}#L{failure.failureErrorLine}{/if})
+##### :x: `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} - [**See on GitHub**](https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}{#if failure.failureErrorLine}#L{failure.failureErrorLine}{/if})
 
 <details>
 
@@ -27,7 +27,7 @@
 ```
 {/if}
 
-{#if report.sameRepository}
+{#if report.sameRepository && failure.failureErrorLine}
 https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}#L{failure.failureErrorLine}
 {/if}
 </details>
