@@ -139,9 +139,17 @@ follow the steps outlined in https://quarkiverse.github.io/quarkiverse-docs/quar
 
 GitHub permissions required:
 
+* Actions - `Read only`
+* Contents - `Read only`
 * Issues - `Read & Write`
 * Pull Requests - `Read & Write`
-* Contents - `Read`
+
+Events to subscribe to:
+
+* Issues
+* Pull Request
+* Workflow run
+* Workflow dispatch
 
 By default, in dev mode, the Bot runs in dry-run so it's logging its actions but do not perform them.
 You can override this behavior by adding `_DEV_QUARKUS_BOT_DRY_RUN=false` to your `.env` file.
