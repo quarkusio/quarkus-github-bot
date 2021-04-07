@@ -95,6 +95,19 @@ If the rule is triggered, the following action will be executed:
 * `labels` - will add the labels to the issue
 * `notify` - will create a comment pinging the users listed in the array **only if `notifyInPullRequest` is true**
 
+=== Notify QE
+
+When the `triage/qe?` label is added to an issue or a pull request, the QE team is pinged.
+
+The configuration is done in the `quarkus-bot.yml` config file:
+
+[source,yaml]
+----
+triage:
+  qe:
+    notify: [rsvoboda, mjurc]
+----
+
 === Affect milestones
 
 When a pull request is merged, if it targets the `main` branch, it affects the milestone ending with ` - main` to the pull request and the issues resolved by the pull request (e.g. `Fixes #1234`).
@@ -102,9 +115,22 @@ When a pull request is merged, if it targets the `main` branch, it affects the m
 It only affects the milestone is no milestone has been affected prior to the merge.
 If the milestone cannot be affected, we add a comment to the pull request indicating the items for which we haven't affected the milestone.
 
+=== Workflow run report
+
+When a workflow run associated to a pull request is completed, a report is generated and added as a comment in the pull request:
+
+> image::documentation/screenshots/workflow-run-report.png[]
+
 === Mark closed pull requests as invalid
 
 If a pull request is closed without being merged, we automatically add the `triage/invalid` label to the pull request.
+
+=== Automatically remove outdated labels
+
+The bot will automatically remove these labels when they are outdated:
+
+* `triage/needs-triage` from closed issues
+* `waiting-for-ci` from closed pull requests
 
 == Contributing
 
