@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.maven.reporting.MavenReportException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHEvent;
@@ -31,8 +30,10 @@ public class AnalyzeWorkflowRunResults {
     private static final Logger LOG = Logger.getLogger(AnalyzeWorkflowRunResults.class);
 
     public static final String SUREFIRE_REPORTS_ARTIFACT_PREFIX = "surefire-reports-";
+    public static final String MESSAGE_ID_ACTIVE = "<!-- Quarkus-GitHub-Bot/msg-id:workflow-run-status-active -->";
+    public static final String MESSAGE_ID_HIDDEN = "<!-- Quarkus-GitHub-Bot/msg-id:workflow-run-status-hidden -->";
+    public static final String QUARKUS_CI_WORKFLOW_NAME = "Quarkus CI";
     private static final String PULL_REQUEST_NUMBER_PREFIX = "pull-request-number-";
-    private static final String QUARKUS_CI_WORKFLOW_NAME = "Quarkus CI";
 
     @Inject
     SurefireReportsAnalyzer surefireReportsAnalyzer;
@@ -44,7 +45,7 @@ public class AnalyzeWorkflowRunResults {
     QuarkusBotConfig quarkusBotConfig;
 
     void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload)
-            throws IOException, MavenReportException {
+            throws IOException {
         GHWorkflowRun workflowRun = workflowRunPayload.getWorkflowRun();
         GHWorkflow workflow = workflowRunPayload.getWorkflow();
 
@@ -113,6 +114,8 @@ public class AnalyzeWorkflowRunResults {
         }
 
         if (sb.length() > 0) {
+            sb.append("\n\n").append(MESSAGE_ID_ACTIVE);
+
             if (!quarkusBotConfig.isDryRun()) {
                 pullRequest.comment(sb.toString());
             } else {

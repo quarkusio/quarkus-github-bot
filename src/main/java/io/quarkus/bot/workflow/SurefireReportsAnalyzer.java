@@ -67,8 +67,14 @@ public class SurefireReportsAnalyzer {
                 Job job = new Job(jobName, testFailuresAnchors.get(jobName));
                 Path jobDirectory = allSurefireReportsDirectory.resolve(surefireReportsArtifact.getName());
 
-                Set<TestResultsPath> testResultsPath = surefireReportsArtifact
-                        .download((is) -> unzip(is, jobDirectory));
+                Set<TestResultsPath> testResultsPath;
+                try {
+                    testResultsPath = surefireReportsArtifact
+                            .download((is) -> unzip(is, jobDirectory));
+                } catch (Exception e) {
+                    LOG.error("Unable to download artifact " + surefireReportsArtifact.getName());
+                    continue;
+                }
 
                 for (TestResultsPath testResultPath : testResultsPath) {
                     try {

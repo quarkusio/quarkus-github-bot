@@ -29,7 +29,7 @@ public class JobReportsAnalyzer {
         Report report = new Report();
 
         for (GHWorkflowJob job : jobs) {
-            if (job.getConclusion() == Conclusion.SUCCESS) {
+            if (job.getConclusion() != Conclusion.FAILURE && job.getConclusion() != Conclusion.CANCELLED) {
                 continue;
             }
 
