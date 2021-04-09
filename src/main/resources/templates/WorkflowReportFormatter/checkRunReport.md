@@ -1,10 +1,10 @@
 ## Test Failures
 
 {#for job in report.jobs}
-{#if job.errors}
+{#if job.testFailures}
 ### :gear: {job.name} {#if job.testFailuresAnchor}<a href="#user-content-{job.testFailuresAnchor}" id="{job.testFailuresAnchor}">#</a>{/if}
 {#for module in job.modules}
-{#if module.errors}
+{#if module.testFailures}
 #### :package: {module.name}
 
 ```diff
@@ -16,9 +16,9 @@
 ```
 
 {#for failure : module.failures}
+##### ✖ `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} <a id="test-failure-{failure.fullClassName.toLowerCase}-{count}"></a> - [Source on GitHub]({failure.shortenedFailureUrl}) - [🠅](#user-content-build-summary-top)
 
-##### :x: `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} - [**See on GitHub**](https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}{#if failure.failureErrorLine}#L{failure.failureErrorLine}{/if})
-
+{#if failure.failureDetail || (report.sameRepository && failure.failureErrorLine)}
 <details>
 
 {#if failure.failureDetail}
@@ -28,12 +28,12 @@
 {/if}
 
 {#if report.sameRepository && failure.failureErrorLine}
-https://github.com/{report.repository}/blob/{report.sha}/{module.name}/{failure.classPath}#L{failure.failureErrorLine}
+{failure.shortenedFailureUrl}
 {/if}
 </details>
+{/if}
 
 {/for}
-
 {/if}
 {/for}
 {#if hasNext}

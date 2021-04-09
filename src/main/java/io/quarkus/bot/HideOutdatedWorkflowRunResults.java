@@ -16,6 +16,7 @@ import org.kohsuke.github.GHWorkflowRun;
 
 import io.quarkiverse.githubapp.event.WorkflowRun;
 import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.workflow.WorkflowConstants;
 
 public class HideOutdatedWorkflowRunResults {
 
@@ -35,7 +36,7 @@ public class HideOutdatedWorkflowRunResults {
         GHWorkflowRun workflowRun = workflowRunPayload.getWorkflowRun();
         GHWorkflow workflow = workflowRunPayload.getWorkflow();
 
-        if (!AnalyzeWorkflowRunResults.QUARKUS_CI_WORKFLOW_NAME.equals(workflow.getName())) {
+        if (!WorkflowConstants.QUARKUS_CI_WORKFLOW_NAME.equals(workflow.getName())) {
             return;
         }
         if (workflowRun.getEvent() != GHEvent.PULL_REQUEST) {
@@ -57,14 +58,14 @@ public class HideOutdatedWorkflowRunResults {
         List<GHIssueComment> comments = pullRequest.getComments();
 
         for (GHIssueComment comment : comments) {
-            if (!comment.getBody().contains(AnalyzeWorkflowRunResults.MESSAGE_ID_ACTIVE)) {
+            if (!comment.getBody().contains(WorkflowConstants.MESSAGE_ID_ACTIVE)) {
                 continue;
             }
 
             StringBuilder updatedComment = new StringBuilder();
             updatedComment.append(HIDE_MESSAGE_PREFIX);
-            updatedComment.append(comment.getBody().replace(AnalyzeWorkflowRunResults.MESSAGE_ID_ACTIVE,
-                    AnalyzeWorkflowRunResults.MESSAGE_ID_HIDDEN));
+            updatedComment.append(comment.getBody().replace(WorkflowConstants.MESSAGE_ID_ACTIVE,
+                    WorkflowConstants.MESSAGE_ID_HIDDEN));
             updatedComment.append(HIDE_MESSAGE_SUFFIX);
 
             if (!quarkusBotConfig.isDryRun()) {
