@@ -1,20 +1,21 @@
 package io.quarkus.bot;
 
+import java.io.IOException;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssue;
+import org.kohsuke.github.GHLabel;
+
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
 import io.quarkus.bot.config.QuarkusBotConfig;
 import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.util.Labels;
-import io.quarkus.bot.util.Patterns;
-import io.quarkus.bot.util.Strings;
-import org.jboss.logging.Logger;
-import org.kohsuke.github.GHEventPayload;
-import org.kohsuke.github.GHIssue;
-import org.kohsuke.github.GHLabel;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class PingWhenNeedsTriageRemoved {
     private static final Logger LOG = Logger.getLogger(PingWhenNeedsTriageRemoved.class);
@@ -33,7 +34,10 @@ public class PingWhenNeedsTriageRemoved {
         GHIssue issue = issuePayload.getIssue();
         GHLabel removedLabel = issuePayload.getLabel();
 
-        if (!removedLabel.toString().equals(Labels.TRIAGE_NEEDS_TRIAGE)) {
+        if (!Labels.TRIAGE_NEEDS_TRIAGE.equals(removedLabel.getName())) {
+            return;
+        }
+        if (issue.getLabels().isEmpty()) {
             return;
         }
 
@@ -51,29 +55,22 @@ public class PingWhenNeedsTriageRemoved {
             }
         }
 
-        if (removedLabel.getName().equals(Labels.TRIAGE_NEEDS_TRIAGE)) {
-            if (!mentions.isEmpty()) {
-                if (!quarkusBotConfig.isDryRun()) {
-                    issue.comment("/cc @" + String.join(", @", mentions));
-                } else {
-                    LOG.info("Issue #" + issue.getNumber() + " - Ping: " + mentions);
-                }
-            }
+        if (mentions.isEmpty()) {
+            return;
+        }
+
+        if (!quarkusBotConfig.isDryRun()) {
+            issue.comment("/cc @" + String.join(", @", mentions));
+        } else {
+            LOG.info("Issue #" + issue.getNumber() + " - Ping: " + mentions);
         }
     }
 
     private static boolean matchRule(GHIssue issue, QuarkusBotConfigFile.TriageRule rule) {
-
-        try {
-            if (Strings.isNotBlank(rule.labels.toString())) {
-                if (Patterns.find(rule.labels.toString(), issue.getLabels().toString())) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            LOG.error("Error evaluating labels: " + rule.labels, e);
+        if (rule.labels.isEmpty() || rule.notify.isEmpty()) {
+            return false;
         }
 
-        return false;
+        return issue.getLabels().stream().anyMatch(l -> rule.labels.contains(l.getName()));
     }
 }
