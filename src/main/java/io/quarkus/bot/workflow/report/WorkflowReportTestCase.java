@@ -8,6 +8,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class WorkflowReportTestCase {
 
     private final String classPath;
+    private final String fullName;
     private final String fullClassName;
     private final String failureType;
     private final String failureErrorLine;
@@ -18,6 +19,7 @@ public class WorkflowReportTestCase {
     public WorkflowReportTestCase(String classPath, ReportTestCase reportTestCase, String failureUrl,
             String shortenedFailureUrl) {
         this.classPath = classPath;
+        this.fullName = reportTestCase.getFullName();
         this.fullClassName = reportTestCase.getFullClassName();
         this.failureType = reportTestCase.getFailureType();
         this.failureErrorLine = reportTestCase.getFailureErrorLine();
@@ -28,6 +30,10 @@ public class WorkflowReportTestCase {
 
     public String getClassPath() {
         return classPath;
+    }
+
+    public String getFullName() {
+        return fullName;
     }
 
     public String getFullClassName() {

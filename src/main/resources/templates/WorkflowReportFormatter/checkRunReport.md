@@ -15,7 +15,7 @@
 ```
 
 {#for failure : module.failures}
-##### ✖ `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} <a id="test-failure-{failure.fullClassName.toLowerCase}-{count}"></a> - [Source on GitHub]({failure.shortenedFailureUrl}) - [🠅](#user-content-build-summary-top)
+##### ✖ `{failure.fullName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} <a id="test-failure-{failure.fullClassName.toLowerCase}-{count}"></a> - [Source on GitHub]({failure.shortenedFailureUrl}) - [🠅](#user-content-build-summary-top)
 
 {#if failure.failureDetail || (report.sameRepository && failure.failureErrorLine)}
 <details>

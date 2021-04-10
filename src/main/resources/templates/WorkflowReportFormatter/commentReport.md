@@ -24,7 +24,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 #### :package: {module.name}
 
 {#for failure : module.failures}
-##### ✖ `{failure.fullClassName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} - {#if checkRun && failure.failureDetail}[More details]({checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{count}) - {/if}[Source on GitHub]({failure.shortenedFailureUrl})
+##### ✖ `{failure.fullName}`{#if failure.failureErrorLine} line `{failure.failureErrorLine}`{/if} - {#if checkRun && failure.failureDetail}[More details]({checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{count}) - {/if}[Source on GitHub]({failure.shortenedFailureUrl})
 {/for}
 {/if}
 {/for}
