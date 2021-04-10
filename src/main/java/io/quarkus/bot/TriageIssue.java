@@ -1,6 +1,8 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -28,6 +30,11 @@ import io.quarkus.bot.util.Strings;
 class TriageIssue {
 
     private static final Logger LOG = Logger.getLogger(TriageIssue.class);
+
+    /**
+     * We cannot add more than 100 labels and we have some other automatic labels such as kind/bug.
+     */
+    private static final int LABEL_SIZE_LIMIT = 95;
 
     @Inject
     QuarkusBotConfig quarkusBotConfig;
@@ -63,9 +70,9 @@ class TriageIssue {
 
         if (!labels.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
-                issue.addLabels(labels.toArray(new String[0]));
+                issue.addLabels(limit(labels).toArray(new String[0]));
             } else {
-                LOG.info("Issue #" + issue.getNumber() + " - Add labels: " + String.join(", ", labels));
+                LOG.info("Issue #" + issue.getNumber() + " - Add labels: " + String.join(", ", limit(labels)));
             }
         }
 
@@ -84,6 +91,14 @@ class TriageIssue {
                 LOG.info("Issue #" + issue.getNumber() + " - Add label: " + Labels.TRIAGE_NEEDS_TRIAGE);
             }
         }
+    }
+
+    private static Collection<String> limit(Set<String> labels) {
+        if (labels.size() <= LABEL_SIZE_LIMIT) {
+            return labels;
+        }
+
+        return new ArrayList<>(labels).subList(0, LABEL_SIZE_LIMIT);
     }
 
     private static boolean matchRule(GHIssue issue, TriageRule rule) {
