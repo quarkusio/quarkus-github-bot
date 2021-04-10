@@ -118,14 +118,14 @@ public class AnalyzeWorkflowRunResults {
                     workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest))
                             .withText(workflowReportFormatter.getCheckRunReport(workflowReport));
 
-            List<WorkflowReportTestCase> workflowReportTestCases = workflowReport.getJobs().stream()
+            List<WorkflowReportTestCase> annotatedWorkflowReportTestCases = workflowReport.getJobs().stream()
                     .filter(j -> j.hasTestFailures())
                     .flatMap(j -> j.getModules().stream())
                     .filter(m -> m.hasTestFailures())
                     .flatMap(m -> m.getFailures().stream())
-                    .filter(f -> f.getFailureErrorLine() != null)
+                    .filter(f -> StringUtils.isNumeric(f.getFailureErrorLine()))
                     .collect(Collectors.toList());
-            for (WorkflowReportTestCase workflowReportTestCase : workflowReportTestCases) {
+            for (WorkflowReportTestCase workflowReportTestCase : annotatedWorkflowReportTestCases) {
                 checkRunOutput.add(new Annotation(workflowReportTestCase.getClassPath(),
                         Integer.valueOf(workflowReportTestCase.getFailureErrorLine()),
                         AnnotationLevel.FAILURE,

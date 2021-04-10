@@ -1,7 +1,6 @@
 ## Test Failures
 
-{#for job in report.jobs}
-{#if job.testFailures}
+{#for job in report.jobsWithTestFailures}
 ### :gear: {job.name} {#if job.testFailuresAnchor}<a href="#user-content-{job.testFailuresAnchor}" id="{job.testFailuresAnchor}">#</a>{/if}
 {#for module in job.modules}
 {#if module.testFailures}
@@ -38,6 +37,5 @@
 {/for}
 {#if hasNext}
 ---
-{/if}
 {/if}
 {/for}

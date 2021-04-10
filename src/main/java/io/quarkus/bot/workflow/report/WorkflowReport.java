@@ -1,6 +1,7 @@
 package io.quarkus.bot.workflow.report;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -27,6 +28,10 @@ public class WorkflowReport {
 
     public List<WorkflowReportJob> getJobs() {
         return jobs;
+    }
+
+    public List<WorkflowReportJob> getJobsWithTestFailures() {
+        return jobs.stream().filter(j -> j.hasTestFailures()).collect(Collectors.toList());
     }
 
     public boolean hasTestFailures() {

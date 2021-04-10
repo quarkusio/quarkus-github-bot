@@ -1,6 +1,8 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -23,6 +25,11 @@ import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
 class TriagePullRequest {
 
     private static final Logger LOG = Logger.getLogger(TriagePullRequest.class);
+
+    /**
+     * We cannot add more than 100 labels and we have some other automatic labels such as kind/bug.
+     */
+    private static final int LABEL_SIZE_LIMIT = 95;
 
     @Inject
     QuarkusBotConfig quarkusBotConfig;
@@ -58,9 +65,9 @@ class TriagePullRequest {
 
         if (!labels.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
-                pullRequest.addLabels(labels.toArray(new String[0]));
+                pullRequest.addLabels(limit(labels).toArray(new String[0]));
             } else {
-                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Add labels: " + String.join(", ", labels));
+                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Add labels: " + String.join(", ", limit(labels)));
             }
         }
 
@@ -71,6 +78,14 @@ class TriagePullRequest {
                 LOG.info("Pull Request #" + pullRequest.getNumber() + " - Mentions: " + String.join(", ", mentions));
             }
         }
+    }
+
+    private static Collection<String> limit(Set<String> labels) {
+        if (labels.size() <= LABEL_SIZE_LIMIT) {
+            return labels;
+        }
+
+        return new ArrayList<>(labels).subList(0, LABEL_SIZE_LIMIT);
     }
 
     private static boolean matchRule(GHPullRequest pullRequest, TriageRule rule) {

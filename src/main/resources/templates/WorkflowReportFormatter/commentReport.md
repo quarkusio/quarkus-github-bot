@@ -17,8 +17,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 {#if report.testFailures}
 ## Test Failures
 
-{#for job in report.jobs}
-{#if job.testFailures}
+{#for job in report.jobsWithTestFailures}
 ### :gear: {job.name} {#if job.testFailuresAnchor}<a href="#user-content-{job.testFailuresAnchor}" id="{job.testFailuresAnchor}">#</a>{/if}
 {#for module in job.modules}
 {#if module.testFailures}
@@ -31,7 +30,6 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 {/for}
 {#if hasNext}
 ---
-{/if}
 {/if}
 {/for}
 {/if}
