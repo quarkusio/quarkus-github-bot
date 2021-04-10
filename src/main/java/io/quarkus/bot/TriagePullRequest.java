@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -62,6 +63,9 @@ class TriagePullRequest {
                 }
             }
         }
+
+        // remove from the set the labels already present on the pull request
+        labels.removeAll(pullRequest.getLabels().stream().map(l -> l.getName()).collect(Collectors.toList()));
 
         if (!labels.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
