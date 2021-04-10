@@ -3,7 +3,7 @@
 > A Quarkus-powered GitHub App to simplify issues and pull requests management in the Quarkus project.
 
 ++++
-<p align="center"><img src="https://design.jboss.org/quarkus/bot/final/images/quarkusbot_full_128px.png" width="128" height="128" /></p>
+<p align="center"><img src="https://design.jboss.org/quarkus/bot/final/images/quarkusbot_full.svg" width="128" height="128" /></p>
 ++++
 
 == Introduction
