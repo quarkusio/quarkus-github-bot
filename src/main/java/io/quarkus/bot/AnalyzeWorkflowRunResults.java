@@ -18,6 +18,7 @@ import org.kohsuke.github.GHCheckRunBuilder.Annotation;
 import org.kohsuke.github.GHCheckRunBuilder.Output;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowJob;
@@ -61,19 +62,15 @@ public class AnalyzeWorkflowRunResults {
             return;
         }
 
-        // unfortunately when the pull request is coming from a fork, the pull request is not in the payload
-        // so we use a dirty trick to get it
-        // we cannot really use the sha to get the PR here as the workflow take some time and the sha might not be associated to the pull request anymore
         List<GHArtifact> artifacts = workflowRun.listArtifacts().toList();
 
-        Optional<GHArtifact> pullRequestNumberArtifact = artifacts.stream()
-                .filter(a -> a.getName().startsWith(WorkflowConstants.PULL_REQUEST_NUMBER_PREFIX)).findFirst();
-        if (pullRequestNumberArtifact.isEmpty()) {
+        Optional<GHPullRequest> pullRequestOptional = getAssociatedPullRequest(workflowRun, artifacts);
+        if (pullRequestOptional.isEmpty()) {
+            LOG.error("Workflow run #" + workflowRun.getId() + " - Unable to find the associated pull request");
             return;
         }
-        GHPullRequest pullRequest = workflowRunPayload.getRepository().getPullRequest(
-                Integer.valueOf(
-                        pullRequestNumberArtifact.get().getName().replace(WorkflowConstants.PULL_REQUEST_NUMBER_PREFIX, "")));
+        GHPullRequest pullRequest = pullRequestOptional.get();
+
         List<GHArtifact> surefireReportsArtifacts = artifacts
                 .stream()
                 .filter(a -> a.getName().startsWith(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX))
@@ -105,18 +102,49 @@ public class AnalyzeWorkflowRunResults {
         }
     }
 
+    /**
+     * Unfortunately when the pull request is coming from a fork, the pull request is not in the payload
+     * so we use a dirty trick to get it.
+     * We use the sha as last resort as the workflow takes some time and the sha might not be associated to the pull request
+     * anymore.
+     */
+    private Optional<GHPullRequest> getAssociatedPullRequest(GHWorkflowRun workflowRun, List<GHArtifact> artifacts)
+            throws NumberFormatException, IOException {
+        Optional<GHArtifact> pullRequestNumberArtifact = artifacts.stream()
+                .filter(a -> a.getName().startsWith(WorkflowConstants.PULL_REQUEST_NUMBER_PREFIX)).findFirst();
+        if (!pullRequestNumberArtifact.isEmpty()) {
+            GHPullRequest pullRequest = workflowRun.getRepository().getPullRequest(
+                    Integer.valueOf(
+                            pullRequestNumberArtifact.get().getName().replace(WorkflowConstants.PULL_REQUEST_NUMBER_PREFIX,
+                                    "")));
+            return Optional.of(pullRequest);
+        }
+
+        LOG.warn("Workflow run #" + workflowRun.getId() + " - Unable to get the pull request artifact, trying with sha");
+
+        List<GHPullRequest> pullRequests = workflowRun.getRepository().queryPullRequests()
+                .state(GHIssueState.OPEN)
+                .head(workflowRun.getHeadRepository().getOwnerName() + ":" + workflowRun.getHeadBranch())
+                .list().toList();
+        if (!pullRequests.isEmpty()) {
+            return Optional.of(pullRequests.get(0));
+        }
+
+        return Optional.empty();
+    }
+
     private Optional<GHCheckRun> createCheckRun(GHWorkflowRun workflowRun, GHPullRequest pullRequest,
             WorkflowReport workflowReport) {
         if (!workflowReport.hasTestFailures() || quarkusBotConfig.isDryRun()) {
             return Optional.empty();
         }
 
-        try {
-            String title = "Build summary for " + workflowRun.getHeadSha();
+        String title = "Build summary for " + workflowRun.getHeadSha();
+        String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest);
 
-            Output checkRunOutput = new Output(title,
-                    workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest))
-                            .withText(workflowReportFormatter.getCheckRunReport(workflowReport));
+        try {
+            Output checkRunOutput = new Output(title, summary)
+                    .withText(workflowReportFormatter.getCheckRunReport(workflowReport));
 
             List<WorkflowReportTestCase> annotatedWorkflowReportTestCases = workflowReport.getJobs().stream()
                     .filter(j -> j.hasTestFailures())
@@ -142,7 +170,8 @@ public class AnalyzeWorkflowRunResults {
 
             return Optional.of(checkRun.create());
         } catch (Exception e) {
-            LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures", e);
+            LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures\ntitle="
+                    + title + "\nsummary=" + summary, e);
             return Optional.empty();
         }
     }
