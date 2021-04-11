@@ -54,6 +54,7 @@ public class WorkflowRunAnalyzer {
             List<GHWorkflowJob> jobs,
             List<GHArtifact> surefireReportsArtifacts) throws IOException {
         if (jobs.isEmpty()) {
+            LOG.error("Pull request #" + pullRequest.getNumber() + " - No jobs found");
             return Optional.empty();
         }
 
@@ -104,6 +105,7 @@ public class WorkflowRunAnalyzer {
             }
 
             if (workflowReportJobs.isEmpty()) {
+                LOG.warn("Pull request #" + pullRequest.getNumber() + " - Report jobs empty");
                 return Optional.empty();
             }
 
