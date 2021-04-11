@@ -170,8 +170,7 @@ public class AnalyzeWorkflowRunResults {
 
             return Optional.of(checkRun.create());
         } catch (Exception e) {
-            LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures\ntitle="
-                    + title + "\nsummary=" + summary, e);
+            LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures", e);
             return Optional.empty();
         }
     }
