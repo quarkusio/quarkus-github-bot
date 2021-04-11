@@ -47,9 +47,10 @@ public class PingWhenNeedsTriageRemoved {
             if (matchRule(issue, rule)) {
                 if (!rule.notify.isEmpty()) {
                     for (String mention : rule.notify) {
-                        if (!mention.equals(issue.getUser().getLogin())) {
-                            mentions.add(mention);
+                        if (mention.equals(issue.getUser().getLogin()) || mention.equals(issuePayload.getSender().getLogin())) {
+                            continue;
                         }
+                        mentions.add(mention);
                     }
                 }
             }
