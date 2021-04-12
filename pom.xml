@@ -68,6 +68,10 @@
             <version>${surefire-plugin.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-openshift</artifactId>
         </dependency>
@@ -75,6 +79,11 @@
             <groupId>io.quarkiverse.githubapp</groupId>
             <artifactId>quarkus-github-app-testing</artifactId>
             <version>${quarkus-github-app.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

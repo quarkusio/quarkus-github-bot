@@ -147,6 +147,7 @@ public class WorkflowRunAnalyzer {
                                 .map(rtc -> new WorkflowReportTestCase(
                                         WorkflowUtils.getFilePath(moduleName, rtc.getFullClassName()),
                                         rtc,
+                                        StackTraceUtils.abbreviate(rtc.getFailureDetail(), 1500),
                                         getFailureUrl(pullRequestRepository, sha, moduleName, rtc),
                                         urlShortener.shorten(getFailureUrl(pullRequestRepository, sha, moduleName, rtc))))
                                 .collect(Collectors.toList()));

@@ -1,5 +1,7 @@
 ## Test Failures
 
+{#if !includeStackTraces}:warning: Unable to include the stracktraces as they were too long. See annotations below for the details.{/if}
+
 {#for job in report.jobsWithTestFailures}
 ### :gear: {job.name} {#if job.testFailuresAnchor}<a href="#user-content-{job.testFailuresAnchor}" id="{job.testFailuresAnchor}">#</a>{/if}
 {#for module in job.modules}
@@ -17,12 +19,12 @@
 {#for failure : module.failures}
 <p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} <a id="test-failure-{failure.fullClassName.toLowerCase}-{count}"></a> - <a href="{failure.shortenedFailureUrl}">Source on GitHub</a> - <a href="#user-content-build-summary-top">🠅</a></p>
 
-{#if failure.failureDetail || (report.sameRepository && failure.failureErrorLine)}
+{#if (failure.abbreviatedFailureDetail && includeStackTraces) || (report.sameRepository && failure.failureErrorLine)}
 <details>
 
-{#if failure.failureDetail}
+{#if failure.abbreviatedFailureDetail && includeStackTraces}
 ```
-{failure.failureDetail.trim}
+{failure.abbreviatedFailureDetail.trim}
 ```
 {/if}
 

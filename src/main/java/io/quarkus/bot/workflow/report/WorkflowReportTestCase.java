@@ -12,17 +12,20 @@ public class WorkflowReportTestCase {
     private final String fullClassName;
     private final String failureType;
     private final String failureErrorLine;
+    private final String abbreviatedFailureDetail;
     private final String failureDetail;
     private final String failureUrl;
     private final String shortenedFailureUrl;
 
-    public WorkflowReportTestCase(String classPath, ReportTestCase reportTestCase, String failureUrl,
+    public WorkflowReportTestCase(String classPath, ReportTestCase reportTestCase, String abbreviatedFailureDetail,
+            String failureUrl,
             String shortenedFailureUrl) {
         this.classPath = classPath;
         this.fullName = reportTestCase.getFullName();
         this.fullClassName = reportTestCase.getFullClassName();
         this.failureType = reportTestCase.getFailureType();
         this.failureErrorLine = reportTestCase.getFailureErrorLine();
+        this.abbreviatedFailureDetail = abbreviatedFailureDetail;
         this.failureDetail = reportTestCase.getFailureDetail();
         this.failureUrl = failureUrl;
         this.shortenedFailureUrl = shortenedFailureUrl;
@@ -46,6 +49,10 @@ public class WorkflowReportTestCase {
 
     public String getFailureErrorLine() {
         return failureErrorLine;
+    }
+
+    public String getAbbreviatedFailureDetail() {
+        return abbreviatedFailureDetail;
     }
 
     public String getFailureDetail() {
