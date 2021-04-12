@@ -1,5 +1,7 @@
 ## Failing Jobs - Building {report.sha}
 
+{#if !artifactsAvailable}:warning: Artifacts of the workflow run were not available thus the report misses some details.{/if}
+
 | Status | Name | Step | Test failures | Logs | Raw logs |
 | :-:  | --  | --  | :-:  | :-:  | :-:  |
 {#for job in report.jobs}

@@ -1,14 +1,19 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCheckRun;
@@ -27,6 +32,7 @@ import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
 import io.quarkiverse.githubapp.event.WorkflowRun;
 import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.workflow.StackTraceUtils;
 import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.bot.workflow.WorkflowReportFormatter;
 import io.quarkus.bot.workflow.WorkflowRunAnalyzer;
@@ -37,6 +43,8 @@ import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
 public class AnalyzeWorkflowRunResults {
 
     private static final Logger LOG = Logger.getLogger(AnalyzeWorkflowRunResults.class);
+
+    private static final int GITHUB_FIELD_LENGTH_HARD_LIMIT = 65000;
 
     @Inject
     WorkflowRunAnalyzer workflowRunAnalyzer;
@@ -62,7 +70,24 @@ public class AnalyzeWorkflowRunResults {
             return;
         }
 
-        List<GHArtifact> artifacts = workflowRun.listArtifacts().toList();
+        List<GHArtifact> artifacts;
+        boolean artifactsAvailable;
+        try {
+            ArtifactsAreReady artifactsAreReady = new ArtifactsAreReady(workflowRun);
+            Awaitility.await()
+                    .atMost(Duration.ofMinutes(5))
+                    .pollDelay(Duration.ofSeconds(5))
+                    .pollInterval(Duration.ofSeconds(30))
+                    .ignoreExceptions()
+                    .until(artifactsAreReady);
+            artifacts = artifactsAreReady.getArtifacts();
+            artifactsAvailable = true;
+        } catch (ConditionTimeoutException e) {
+            LOG.warn("Workflow run #" + workflowRun.getId()
+                    + " - Unable to get the artifacts in a timely manner, ignoring them");
+            artifacts = Collections.emptyList();
+            artifactsAvailable = false;
+        }
 
         Optional<GHPullRequest> pullRequestOptional = getAssociatedPullRequest(workflowRun, artifacts);
         if (pullRequestOptional.isEmpty()) {
@@ -93,6 +118,7 @@ public class AnalyzeWorkflowRunResults {
         Optional<GHCheckRun> checkRunOptional = createCheckRun(workflowRun, pullRequest, workflowReport);
 
         String commentReport = workflowReportFormatter.getCommentReport(workflowReport,
+                artifactsAvailable,
                 checkRunOptional.orElse(null),
                 WorkflowConstants.MESSAGE_ID_ACTIVE);
         if (!quarkusBotConfig.isDryRun()) {
@@ -141,10 +167,13 @@ public class AnalyzeWorkflowRunResults {
 
         String title = "Build summary for " + workflowRun.getHeadSha();
         String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest);
+        String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
+        if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
+            checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
+        }
 
         try {
-            Output checkRunOutput = new Output(title, summary)
-                    .withText(workflowReportFormatter.getCheckRunReport(workflowReport));
+            Output checkRunOutput = new Output(title, summary).withText(checkRunReport);
 
             List<WorkflowReportTestCase> annotatedWorkflowReportTestCases = workflowReport.getJobs().stream()
                     .filter(j -> j.hasTestFailures())
@@ -158,7 +187,8 @@ public class AnalyzeWorkflowRunResults {
                         Integer.valueOf(workflowReportTestCase.getFailureErrorLine()),
                         AnnotationLevel.FAILURE,
                         workflowReportTestCase.getFailureDetail() != null
-                                ? StringUtils.abbreviate(workflowReportTestCase.getFailureDetail(), 65000)
+                                ? StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
+                                        GITHUB_FIELD_LENGTH_HARD_LIMIT)
                                 : null)
                                         .withTitle(StringUtils.abbreviate(workflowReportTestCase.getFailureType(), 255)));
             }
@@ -172,6 +202,25 @@ public class AnalyzeWorkflowRunResults {
         } catch (Exception e) {
             LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures", e);
             return Optional.empty();
+        }
+    }
+
+    private final static class ArtifactsAreReady implements Callable<Boolean> {
+        private final GHWorkflowRun workflowRun;
+        private List<GHArtifact> artifacts;
+
+        private ArtifactsAreReady(GHWorkflowRun workflowRun) {
+            this.workflowRun = workflowRun;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            artifacts = workflowRun.listArtifacts().toList();
+            return !artifacts.isEmpty();
+        }
+
+        public List<GHArtifact> getArtifacts() {
+            return artifacts;
         }
     }
 }
