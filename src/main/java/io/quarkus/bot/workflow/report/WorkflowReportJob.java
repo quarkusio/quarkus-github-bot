@@ -47,6 +47,8 @@ public class WorkflowReportJob {
                 return "✖";
             case CANCELLED:
                 return ":hourglass:";
+            case SKIPPED:
+                return ":no_entry_sign:";
             default:
                 return ":question:";
         }

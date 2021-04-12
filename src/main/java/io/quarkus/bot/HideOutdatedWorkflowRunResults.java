@@ -51,10 +51,11 @@ public class HideOutdatedWorkflowRunResults {
             return;
         }
 
-        hideOutdatedWorkflowRunResults(pullRequests.get(0));
+        hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequests.get(0));
     }
 
-    private void hideOutdatedWorkflowRunResults(GHPullRequest pullRequest) throws IOException {
+    static void hideOutdatedWorkflowRunResults(QuarkusBotConfig quarkusBotConfig, GHPullRequest pullRequest)
+            throws IOException {
         List<GHIssueComment> comments = pullRequest.getComments();
 
         for (GHIssueComment comment : comments) {
