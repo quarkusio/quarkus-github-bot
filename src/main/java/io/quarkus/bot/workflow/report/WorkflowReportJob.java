@@ -62,6 +62,10 @@ public class WorkflowReportJob {
         return !Conclusion.SUCCESS.equals(conclusion);
     }
 
+    public boolean isSkipped() {
+        return Conclusion.SKIPPED.equals(conclusion);
+    }
+
     public String getFailingStep() {
         return failingStep;
     }

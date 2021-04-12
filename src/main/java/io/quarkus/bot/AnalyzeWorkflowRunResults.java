@@ -3,6 +3,7 @@ package io.quarkus.bot;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -107,7 +108,7 @@ public class AnalyzeWorkflowRunResults {
 
         List<GHWorkflowJob> jobs = workflowRun.listJobs().toList()
                 .stream()
-                .sorted((j1, j2) -> j1.getName().compareTo(j2.getName()))
+                .sorted(GHWorkflowJobComparator.INSTANCE)
                 .collect(Collectors.toList());
 
         Optional<WorkflowReport> workflowReportOptional = workflowRunAnalyzer.getReport(workflowRun, pullRequest, jobs,
@@ -214,6 +215,26 @@ public class AnalyzeWorkflowRunResults {
             LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures", e);
             return Optional.empty();
         }
+    }
+
+    private final static class GHWorkflowJobComparator implements Comparator<GHWorkflowJob> {
+
+        private static final GHWorkflowJobComparator INSTANCE = new GHWorkflowJobComparator();
+
+        private static final String INITIAL_JDK_PREFIX = "Initial JDK ";
+
+        @Override
+        public int compare(GHWorkflowJob o1, GHWorkflowJob o2) {
+            if (o1.getName().startsWith(INITIAL_JDK_PREFIX) && !o2.getName().startsWith(INITIAL_JDK_PREFIX)) {
+                return -1;
+            }
+            if (!o1.getName().startsWith(INITIAL_JDK_PREFIX) && o2.getName().startsWith(INITIAL_JDK_PREFIX)) {
+                return 1;
+            }
+
+            return o1.getName().compareTo(o2.getName());
+        }
+
     }
 
     private final static class ArtifactsAreReady implements Callable<Boolean> {
