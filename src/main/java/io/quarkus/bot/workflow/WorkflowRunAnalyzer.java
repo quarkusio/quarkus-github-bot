@@ -69,6 +69,8 @@ public class WorkflowRunAnalyzer {
 
             for (GHWorkflowJob job : jobs) {
                 if (job.getConclusion() != Conclusion.FAILURE && job.getConclusion() != Conclusion.CANCELLED) {
+                    workflowReportJobs.add(new WorkflowReportJob(job.getName(), null, job.getConclusion(), null, null, null,
+                            Collections.emptyList(), false));
                     continue;
                 }
 

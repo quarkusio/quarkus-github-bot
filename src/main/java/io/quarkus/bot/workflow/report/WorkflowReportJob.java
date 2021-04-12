@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
+import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -40,6 +41,8 @@ public class WorkflowReportJob {
 
     public String getConclusionEmoji() {
         switch (conclusion) {
+            case SUCCESS:
+                return ":heavy_check_mark:";
             case FAILURE:
                 return "✖";
             case CANCELLED:
@@ -47,6 +50,14 @@ public class WorkflowReportJob {
             default:
                 return ":question:";
         }
+    }
+
+    public boolean isJvm() {
+        return name.startsWith(WorkflowConstants.JVM_TESTS_PREFIX);
+    }
+
+    public boolean isFailing() {
+        return !Conclusion.SUCCESS.equals(conclusion);
     }
 
     public String getFailingStep() {

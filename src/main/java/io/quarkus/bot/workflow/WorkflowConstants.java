@@ -7,5 +7,5 @@ public class WorkflowConstants {
     public static final String MESSAGE_ID_HIDDEN = "<!-- Quarkus-GitHub-Bot/msg-id:workflow-run-status-hidden -->";
     public static final String QUARKUS_CI_WORKFLOW_NAME = "Quarkus CI";
     public static final String PULL_REQUEST_NUMBER_PREFIX = "pull-request-number-";
-    public static final String QUARKUS_ROOT_PACKAGE = "io.quarkus";
+    public static final String JVM_TESTS_PREFIX = "JVM Tests - ";
 }
