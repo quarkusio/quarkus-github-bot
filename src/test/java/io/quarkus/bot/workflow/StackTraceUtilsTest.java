@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 public class StackTraceUtilsTest {
 
     @Test
-    public void test() {
+    public void testAbbreviate() {
         assertThat(StackTraceUtils.abbreviate(
                 "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\n"
                         + "    at io.quarkus.test.common.LauncherUtil.waitForCapturedListeningData(LauncherUtil.java:73)\n"
@@ -556,5 +556,33 @@ public class StackTraceUtilsTest {
                         + "    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n"
                         + "    at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n"
                         + "    at java.base/java.lang.reflect.Method.invoke(Method.java:566)");
+    }
+
+    @Test
+    public void testFirstLines() {
+        assertThat(StackTraceUtils.firstLines(
+                "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\n"
+                        + "    at io.quarkus.test.common.LauncherUtil.waitForCapturedListeningData(LauncherUtil.java:73)\n"
+                        + "    at io.quarkus.test.common.NativeImageLauncher.start(NativeImageLauncher.java:116)\n"
+                        + "    at io.quarkus.test.junit.IntegrationTestUtil.startLauncher(IntegrationTestUtil.java:129)\n"
+                        + "    at io.quarkus.test.junit.NativeTestExtension.doNativeStart(NativeTestExtension.java:126)\n"
+                        + "    at io.quarkus.test.junit.NativeTestExtension.ensureStarted(NativeTestExtension.java:92)\n"
+                        + "    at io.quarkus.test.junit.NativeTestExtension.beforeAll(NativeTestExtension.java:65)\n"
+                        + "    at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$8(ClassBasedTestDescriptor.java:368)\n"
+                        + "    at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)\n"
+                        + "    at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeBeforeAllCallbacks(ClassBasedTestDescriptor.java:368)\n"
+                        + "    at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:192)\n"
+                        + "    at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:78)\n"
+                        + "    at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:136)\n"
+                        + "    ... 34 more",
+                3)).isEqualTo(
+                        "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\n"
+                                + "    at io.quarkus.test.common.LauncherUtil.waitForCapturedListeningData(LauncherUtil.java:73)\n"
+                                + "    at io.quarkus.test.common.NativeImageLauncher.start(NativeImageLauncher.java:116)");
+
+        assertThat(StackTraceUtils.firstLines(
+                "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details",
+                3)).isEqualTo(
+                        "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details");
     }
 }

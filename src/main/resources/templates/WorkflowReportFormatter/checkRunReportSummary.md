@@ -3,5 +3,7 @@
 | Status | Name | Step | Test failures | Logs | Raw logs |
 | :-:  | --  | --  | :-:  | :-:  | :-:  |
 {#for job in report.jobs}
-| {job.conclusionEmoji} | {job.name} | {#if job.failingStep}`{job.failingStep}`{/if} | {#if job.testFailuresAnchor}[Test failures](#user-content-{job.testFailuresAnchor}){#else}:warning: Check →{/if} | [Logs]({job.url}) | [Raw logs]({job.rawLogsUrl})
+{#if job.failing || (report.jvmJobsFailing && job.jvm)}
+| {job.conclusionEmoji} | {job.name} | {#if job.failingStep}`{job.failingStep}`{/if} | {#if job.testFailuresAnchor}[Test failures](#user-content-{job.testFailuresAnchor}){#else if job.failing}:warning: Check →{/if} | {#if job.url}[Logs]({job.url}){/if} | {#if job.rawLogsUrl}[Raw logs]({job.rawLogsUrl}){/if}
+{/if}
 {/for}

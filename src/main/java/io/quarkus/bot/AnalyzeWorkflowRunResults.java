@@ -37,6 +37,7 @@ import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.bot.workflow.WorkflowReportFormatter;
 import io.quarkus.bot.workflow.WorkflowRunAnalyzer;
 import io.quarkus.bot.workflow.report.WorkflowReport;
+import io.quarkus.bot.workflow.report.WorkflowReportJob;
 import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
 
 @SuppressWarnings("deprecation")
@@ -96,6 +97,8 @@ public class AnalyzeWorkflowRunResults {
         }
         GHPullRequest pullRequest = pullRequestOptional.get();
 
+        HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest);
+
         List<GHArtifact> surefireReportsArtifacts = artifacts
                 .stream()
                 .filter(a -> a.getName().startsWith(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX))
@@ -124,7 +127,7 @@ public class AnalyzeWorkflowRunResults {
         if (!quarkusBotConfig.isDryRun()) {
             pullRequest.comment(commentReport);
         } else {
-            LOG.info("Workflow run #" + workflowRun.getId() + " - Add test failures:\n" + commentReport);
+            LOG.info("Pull request #" + pullRequest.getNumber() + " - Add test failures:\n" + commentReport);
         }
     }
 
@@ -165,40 +168,48 @@ public class AnalyzeWorkflowRunResults {
             return Optional.empty();
         }
 
-        String title = "Build summary for " + workflowRun.getHeadSha();
-        String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest);
-        String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
-        if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
-            checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
-        }
-
         try {
-            Output checkRunOutput = new Output(title, summary).withText(checkRunReport);
-
-            List<WorkflowReportTestCase> annotatedWorkflowReportTestCases = workflowReport.getJobs().stream()
-                    .filter(j -> j.hasTestFailures())
-                    .flatMap(j -> j.getModules().stream())
-                    .filter(m -> m.hasTestFailures())
-                    .flatMap(m -> m.getFailures().stream())
-                    .filter(f -> StringUtils.isNumeric(f.getFailureErrorLine()))
-                    .collect(Collectors.toList());
-            for (WorkflowReportTestCase workflowReportTestCase : annotatedWorkflowReportTestCases) {
-                checkRunOutput.add(new Annotation(workflowReportTestCase.getClassPath(),
-                        Integer.valueOf(workflowReportTestCase.getFailureErrorLine()),
-                        AnnotationLevel.FAILURE,
-                        workflowReportTestCase.getFailureDetail() != null
-                                ? StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
-                                        GITHUB_FIELD_LENGTH_HARD_LIMIT)
-                                : null)
-                                        .withTitle(StringUtils.abbreviate(workflowReportTestCase.getFailureType(), 255)));
+            String name = "Build summary for " + workflowRun.getHeadSha();
+            String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest);
+            String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
+            if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
+                checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
             }
 
-            GHCheckRunBuilder checkRun = workflowRun.getRepository().createCheckRun(title, workflowRun.getHeadSha())
+            Output checkRunOutput = new Output(name, summary).withText(checkRunReport);
+
+            for (WorkflowReportJob workflowReportJob : workflowReport.getJobs()) {
+                if (!workflowReportJob.hasTestFailures()) {
+                    continue;
+                }
+
+                List<WorkflowReportTestCase> annotatedWorkflowReportTestCases = workflowReportJob.getModules().stream()
+                        .filter(m -> m.hasTestFailures())
+                        .flatMap(m -> m.getFailures().stream())
+                        .filter(f -> StringUtils.isNumeric(f.getFailureErrorLine()))
+                        .collect(Collectors.toList());
+
+                for (WorkflowReportTestCase workflowReportTestCase : annotatedWorkflowReportTestCases) {
+                    checkRunOutput.add(new Annotation(workflowReportTestCase.getClassPath(),
+                            Integer.valueOf(workflowReportTestCase.getFailureErrorLine()),
+                            AnnotationLevel.FAILURE,
+                            StringUtils.isNotBlank(workflowReportTestCase.getFailureDetail()) ? StackTraceUtils
+                                    .firstLines(StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
+                                            GITHUB_FIELD_LENGTH_HARD_LIMIT), 3)
+                                    : "The test failed.")
+                                            .withTitle(StringUtils.abbreviate(workflowReportJob.getName(), 255))
+                                            .withRawDetails(
+                                                    StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
+                                                            GITHUB_FIELD_LENGTH_HARD_LIMIT)));
+                }
+            }
+
+            GHCheckRunBuilder checkRunBuilder = workflowRun.getRepository().createCheckRun(name, workflowRun.getHeadSha())
                     .add(checkRunOutput)
                     .withConclusion(GHCheckRun.Conclusion.from(workflowRun.getConclusion().name()))
                     .withCompletedAt(new Date());
 
-            return Optional.of(checkRun.create());
+            return Optional.of(checkRunBuilder.create());
         } catch (Exception e) {
             LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures", e);
             return Optional.empty();

@@ -2,6 +2,7 @@ package io.quarkus.bot.workflow;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -13,6 +14,10 @@ public final class StackTraceUtils {
     private static final String QUARKUS_TEST_EXTENSION = " at io.quarkus.test.junit.QuarkusTestExtension.runExtensionMethod(";
 
     public static String abbreviate(String stacktrace, int length) {
+        if (StringUtils.isBlank(stacktrace)) {
+            return null;
+        }
+
         if (stacktrace.contains(HTML_INTERNAL_ERROR_MARKER)) {
             // this is an HTML error, let's get to the stacktrace
             Matcher matcher = STACK_TRACE_PATTERN.matcher(stacktrace);
@@ -28,6 +33,14 @@ public final class StackTraceUtils {
         }
 
         return StringUtils.abbreviate(stacktrace, length);
+    }
+
+    public static String firstLines(String stacktrace, int numberOfLines) {
+        if (StringUtils.isBlank(stacktrace)) {
+            return null;
+        }
+
+        return stacktrace.lines().limit(numberOfLines).collect(Collectors.joining("\n"));
     }
 
     private StackTraceUtils() {
