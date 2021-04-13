@@ -95,6 +95,21 @@ If the rule is triggered, the following action will be executed:
 * `labels` - will add the labels to the issue
 * `notify` - will create a comment pinging the users listed in the array **only if `notifyInPullRequest` is true**
 
+`notifyInPullRequest` should be used as follows:
+
+[source, yaml]
+----
+triage:
+  rules:
+    - labels: [area/amazon-lambda]
+      title: "lambda"
+      notify: [patriot1burke, matejvasek]
+      notifyInPullRequest: true
+      directories:
+        - extensions/amazon-lambda
+        - integration-tests/amazon-lambda
+----
+
 === Notify QE
 
 When the `triage/qe?` label is added to an issue or a pull request, the QE team is pinged.
