@@ -8,4 +8,5 @@ public class WorkflowConstants {
     public static final String QUARKUS_CI_WORKFLOW_NAME = "Quarkus CI";
     public static final String PULL_REQUEST_NUMBER_PREFIX = "pull-request-number-";
     public static final String JVM_TESTS_PREFIX = "JVM Tests - ";
+    public static final String WINDOWS = "Windows";
 }

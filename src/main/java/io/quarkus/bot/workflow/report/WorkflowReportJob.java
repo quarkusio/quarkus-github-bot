@@ -58,6 +58,10 @@ public class WorkflowReportJob {
         return name.startsWith(WorkflowConstants.JVM_TESTS_PREFIX);
     }
 
+    public boolean isJvmLinux() {
+        return isJvm() && !name.contains(WorkflowConstants.WINDOWS);
+    }
+
     public boolean isFailing() {
         return !Conclusion.SUCCESS.equals(conclusion);
     }
