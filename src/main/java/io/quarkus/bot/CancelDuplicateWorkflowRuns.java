@@ -63,9 +63,17 @@ public class CancelDuplicateWorkflowRuns {
         return waitingWorkflowRuns.stream()
                 .filter(wr -> wr.getWorkflowId() == workflowRun.getWorkflowId())
                 .filter(wr -> wr.getId() < workflowRun.getId())
-                .filter(wr -> GHEvent.PUSH.equals(wr.getEvent()) || GHEvent.PULL_REQUEST.equals(wr.getEvent()))
+                .filter(wr -> GHEvent.PUSH.name().equals(getEvent(wr)) || GHEvent.PULL_REQUEST.name().equals(getEvent(wr)))
                 .filter(wr -> wr.getHeadRepository().getId() == workflowRun.getHeadRepository().getId())
                 .sorted((wr1, wr2) -> Long.compare(wr1.getId(), wr2.getId()))
                 .collect(Collectors.toList());
+    }
+
+    private static String getEvent(GHWorkflowRun workflowRun) {
+        try {
+            return workflowRun.getEvent().name();
+        } catch (Exception e) {
+            return "_UNKNOWN_";
+        }
     }
 }
