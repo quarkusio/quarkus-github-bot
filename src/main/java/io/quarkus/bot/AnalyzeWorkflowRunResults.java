@@ -98,6 +98,10 @@ public class AnalyzeWorkflowRunResults {
         }
         GHPullRequest pullRequest = pullRequestOptional.get();
 
+        if (pullRequest.isDraft()) {
+            return;
+        }
+
         HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest);
 
         List<GHArtifact> surefireReportsArtifacts = artifacts
