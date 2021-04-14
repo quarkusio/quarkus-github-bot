@@ -1,3 +1,12 @@
+{#if report.cancelled}
+:no_entry_sign: This workflow run has been cancelled.
+
+{/if}
+{#if report.failure && report.jobs.empty}
+✖ This workflow run has failed but no jobs reported an error. Something weird happened, please check [the workflow run page]({report.workflowRunUrl}) carefully: it might be an issue with the workflow configuration itself.
+
+{/if}
+{#if !report.jobs.empty}
 ## Failing Jobs - Building {report.sha}
 
 {#if !artifactsAvailable}:warning: Artifacts of the workflow run were not available thus the report misses some details.{/if}
@@ -12,6 +21,7 @@
 
 {#if checkRun}
 Full information is available in the [Build summary check run]({checkRun.htmlUrl}).
+{/if}
 {/if}
 
 {#if report.errorDownloadingSurefireReports}

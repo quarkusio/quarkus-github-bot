@@ -112,7 +112,8 @@ public class WorkflowRunAnalyzer {
             }
 
             WorkflowReport report = new WorkflowReport(sha, workflowReportJobs,
-                    workflowRunRepository.getFullName().equals(pullRequestRepositoryName));
+                    workflowRunRepository.getFullName().equals(pullRequestRepositoryName),
+                    workflowRun.getConclusion(), workflowRun.getHtmlUrl().toString());
 
             return Optional.of(report);
         } finally {
