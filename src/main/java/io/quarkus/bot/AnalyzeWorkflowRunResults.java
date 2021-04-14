@@ -207,7 +207,7 @@ public class AnalyzeWorkflowRunResults {
 
             GHCheckRunBuilder checkRunBuilder = workflowRun.getRepository().createCheckRun(name, workflowRun.getHeadSha())
                     .add(checkRunOutput)
-                    .withConclusion(GHCheckRun.Conclusion.from(workflowRun.getConclusion().name()))
+                    .withConclusion(GHCheckRun.Conclusion.NEUTRAL)
                     .withCompletedAt(new Date());
 
             return Optional.of(checkRunBuilder.create());
