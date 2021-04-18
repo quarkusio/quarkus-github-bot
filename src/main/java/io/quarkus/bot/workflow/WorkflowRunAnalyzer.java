@@ -184,7 +184,8 @@ public class WorkflowRunAnalyzer {
 
     private static String getFailingStep(List<Step> steps) {
         for (Step step : steps) {
-            if (step.getConclusion() != Conclusion.SUCCESS) {
+            if (step.getConclusion() != Conclusion.SUCCESS && step.getConclusion() != Conclusion.SKIPPED
+                    && step.getConclusion() != Conclusion.NEUTRAL) {
                 return step.getName();
             }
         }
