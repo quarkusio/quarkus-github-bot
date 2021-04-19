@@ -37,6 +37,15 @@ public class WorkflowReport {
         return jobs;
     }
 
+    public boolean hasJobsFailing() {
+        for (WorkflowReportJob job : jobs) {
+            if (job.isFailing()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public List<WorkflowReportJob> getJobsWithTestFailures() {
         return jobs.stream().filter(j -> j.hasTestFailures()).collect(Collectors.toList());
     }

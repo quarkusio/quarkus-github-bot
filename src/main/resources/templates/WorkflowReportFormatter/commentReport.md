@@ -2,11 +2,11 @@
 :no_entry_sign: This workflow run has been cancelled.
 
 {/if}
-{#if report.failure && report.jobs.empty}
+{#if report.failure && !report.jobsFailing}
 ✖ This workflow run has failed but no jobs reported an error. Something weird happened, please check [the workflow run page]({report.workflowRunUrl}) carefully: it might be an issue with the workflow configuration itself.
 
 {/if}
-{#if !report.jobs.empty}
+{#if report.jobsFailing}
 ## Failing Jobs - Building {report.sha}
 
 {#if !artifactsAvailable}:warning: Artifacts of the workflow run were not available thus the report misses some details.{/if}
