@@ -65,9 +65,6 @@ public class AnalyzeWorkflowRunResults {
         if (!WorkflowConstants.QUARKUS_CI_WORKFLOW_NAME.equals(workflow.getName())) {
             return;
         }
-        if (workflowRun.getConclusion() != Conclusion.FAILURE && workflowRun.getConclusion() != Conclusion.CANCELLED) {
-            return;
-        }
         if (workflowRun.getEvent() != GHEvent.PULL_REQUEST) {
             return;
         }
@@ -98,11 +95,15 @@ public class AnalyzeWorkflowRunResults {
         }
         GHPullRequest pullRequest = pullRequestOptional.get();
 
+        HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest);
+
         if (pullRequest.isDraft()) {
             return;
         }
 
-        HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest);
+        if (workflowRun.getConclusion() != Conclusion.FAILURE && workflowRun.getConclusion() != Conclusion.CANCELLED) {
+            return;
+        }
 
         List<GHArtifact> surefireReportsArtifacts = artifacts
                 .stream()

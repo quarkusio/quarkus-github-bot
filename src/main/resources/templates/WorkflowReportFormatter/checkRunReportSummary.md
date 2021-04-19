@@ -2,11 +2,11 @@
 :no_entry_sign: This build has been cancelled.
 
 {/if}
-{#if report.failure && report.jobs.empty}
+{#if report.failure && !report.jobsFailing}
 ✖ This build has failed but no jobs reported an error. Something weird happened, please check [the workflow run page]({report.workflowRunUrl}) carefully.
 
 {/if}
-{#if !report.jobs.empty}
+{#if report.jobsFailing}
 ## <a id="build-summary-top"></a>Failing Jobs - Building {report.sha} - [Back to Pull Request]({pullRequest.htmlUrl})
 
 | Status | Name | Step | Test failures | Logs | Raw logs |
