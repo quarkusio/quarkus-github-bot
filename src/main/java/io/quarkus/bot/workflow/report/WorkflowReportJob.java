@@ -40,6 +40,11 @@ public class WorkflowReportJob {
     }
 
     public String getConclusionEmoji() {
+        // apparently, conclusion can sometimes be null...
+        if (conclusion == null) {
+            return ":question:";
+        }
+
         switch (conclusion) {
             case SUCCESS:
                 return ":heavy_check_mark:";
