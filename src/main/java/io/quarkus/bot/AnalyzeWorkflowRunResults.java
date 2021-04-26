@@ -192,12 +192,13 @@ public class AnalyzeWorkflowRunResults {
                 List<WorkflowReportTestCase> annotatedWorkflowReportTestCases = workflowReportJob.getModules().stream()
                         .filter(m -> m.hasTestFailures())
                         .flatMap(m -> m.getFailures().stream())
-                        .filter(f -> StringUtils.isNumeric(f.getFailureErrorLine()))
                         .collect(Collectors.toList());
 
                 for (WorkflowReportTestCase workflowReportTestCase : annotatedWorkflowReportTestCases) {
                     checkRunOutput.add(new Annotation(workflowReportTestCase.getClassPath(),
-                            Integer.valueOf(workflowReportTestCase.getFailureErrorLine()),
+                            StringUtils.isNumeric(workflowReportTestCase.getFailureErrorLine())
+                                    ? Integer.valueOf(workflowReportTestCase.getFailureErrorLine())
+                                    : 1,
                             AnnotationLevel.FAILURE,
                             StringUtils.isNotBlank(workflowReportTestCase.getFailureDetail()) ? StackTraceUtils
                                     .firstLines(StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
