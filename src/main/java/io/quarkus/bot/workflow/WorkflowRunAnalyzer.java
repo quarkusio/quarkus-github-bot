@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.surefire.log.api.NullConsoleLogger;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
@@ -212,7 +213,7 @@ public class WorkflowRunAnalyzer {
         StringBuilder sb = new StringBuilder();
         sb.append("https://github.com/").append(repository).append("/blob/").append(sha).append("/")
                 .append(WorkflowUtils.getFilePath(moduleName, reportTestCase.getFullClassName()));
-        if (reportTestCase.getFailureErrorLine() != null) {
+        if (StringUtils.isNotBlank(reportTestCase.getFailureErrorLine())) {
             sb.append("#L").append(reportTestCase.getFailureErrorLine());
         }
         return sb.toString();
