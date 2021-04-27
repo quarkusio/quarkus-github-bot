@@ -9,6 +9,8 @@
 {#if report.jobsFailing}
 ## <a id="build-summary-top"></a>Failing Jobs - Building {report.sha} - [Back to Pull Request]({pullRequest.htmlUrl})
 
+{#if !artifactsAvailable && !report.cancelled}:warning: Artifacts of the workflow run were not available thus the report misses some details.{/if}
+
 | Status | Name | Step | Test failures | Logs | Raw logs |
 | :-:  | --  | --  | :-:  | :-:  | :-:  |
 {#for job in report.jobs}
