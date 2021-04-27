@@ -39,6 +39,10 @@ public class WorkflowReportJob {
         return testFailuresAnchor;
     }
 
+    public Conclusion getConclusion() {
+        return conclusion;
+    }
+
     public String getConclusionEmoji() {
         // apparently, conclusion can sometimes be null...
         if (conclusion == null) {

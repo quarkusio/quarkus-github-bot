@@ -73,7 +73,14 @@ public class WorkflowReport {
     }
 
     public boolean isCancelled() {
-        return Conclusion.CANCELLED.equals(conclusion);
+        if (Conclusion.CANCELLED.equals(conclusion)) {
+            return true;
+        }
+
+        return jobs.stream()
+                .noneMatch(j -> Conclusion.CANCELLED != j.getConclusion()
+                        && Conclusion.SKIPPED != j.getConclusion()
+                        && Conclusion.NEUTRAL != j.getConclusion());
     }
 
     public boolean isFailure() {
