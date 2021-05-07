@@ -49,17 +49,23 @@ public class RerunWorkflowCommand implements Command<GHPullRequest> {
                 .collect(Collectors.groupingBy(GHWorkflowRun::getName,
                         Collectors.maxBy(Comparator.comparing(GHWorkflowRun::getRunNumber))));
 
-        for (Map.Entry<String, Optional<GHWorkflowRun>> lastWorkflowRun : lastWorkflowRuns.entrySet()) {
-            if (lastWorkflowRun.getValue().isPresent()) {
+        boolean workflowRunRestarted = false;
+
+        for (Map.Entry<String, Optional<GHWorkflowRun>> lastWorkflowRunEntry : lastWorkflowRuns.entrySet()) {
+            if (lastWorkflowRunEntry.getValue().isPresent()) {
+                GHWorkflowRun lastWorkflowRun = lastWorkflowRunEntry.getValue().get();
                 if (!quarkusBotConfig.isDryRun()) {
-                    lastWorkflowRun.getValue().get().rerun();
+                    lastWorkflowRun.rerun();
+                    workflowRunRestarted = true;
                     LOG.debug("Pull request #" + pullRequest.getNumber() + " - Restart workflow: "
-                            + lastWorkflowRun.getValue().get().getHtmlUrl());
+                            + lastWorkflowRun.getName() + " - " + lastWorkflowRun.getId());
                 } else {
-                    LOG.info("Pull request #" + pullRequest.getNumber() + " - Restart workflow " + lastWorkflowRun.getKey());
+                    LOG.info("Pull request #" + pullRequest.getNumber() + " - Restart workflow "
+                            + lastWorkflowRun.getName() + " - " + lastWorkflowRun.getId());
                 }
             }
         }
-        return ReactionContent.ROCKET;
+
+        return workflowRunRestarted ? ReactionContent.ROCKET : ReactionContent.CONFUSED;
     }
 }
