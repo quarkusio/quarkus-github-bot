@@ -15,6 +15,7 @@ import org.kohsuke.github.ReactionContent;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -74,7 +75,7 @@ public class PullRequestCommandHandler {
     private Optional<Command<GHPullRequest>> extractCommand(String comment) {
         Matcher matcher = QUARKUS_BOT_MENTION.matcher(comment);
         if (matcher.matches()) {
-            String commandLabel = matcher.group(1);
+            String commandLabel = matcher.group(1).toLowerCase(Locale.ROOT).trim();
             return commands.stream().filter(command -> command.labels().contains(commandLabel)).findFirst();
         }
         return Optional.empty();
