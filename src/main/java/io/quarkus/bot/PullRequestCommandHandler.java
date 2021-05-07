@@ -32,6 +32,7 @@ public class PullRequestCommandHandler {
     @Inject
     QuarkusBotConfig quarkusBotConfig;
 
+    @SuppressWarnings("deprecation")
     public void onComment(@IssueComment.Created @IssueComment.Edited GHEventPayload.IssueComment commentPayload)
             throws IOException {
         GHUser user = commentPayload.getComment().getUser();
@@ -42,18 +43,25 @@ public class PullRequestCommandHandler {
             return;
         }
 
-        if (issue.isPullRequest()) {
-            Optional<Command<GHPullRequest>> command = extractCommand(commentPayload.getComment().getBody());
-            if (command.isPresent() && canRunCommand(repository, user)) {
-                GHPullRequest pullRequest = repository.getPullRequest(issue.getNumber());
-                ReactionContent reactionResult = command.get().run(pullRequest);
-                postReaction(commentPayload, issue, reactionResult);
-            } else {
-                postReaction(commentPayload, issue, ReactionContent.MINUS_ONE);
-            }
+        if (!issue.isPullRequest()) {
+            return;
+        }
+
+        Optional<Command<GHPullRequest>> command = extractCommand(commentPayload.getComment().getBody());
+        if (command.isEmpty()) {
+            return;
+        }
+
+        if (canRunCommand(repository, user)) {
+            GHPullRequest pullRequest = repository.getPullRequest(issue.getNumber());
+            ReactionContent reactionResult = command.get().run(pullRequest);
+            postReaction(commentPayload, issue, reactionResult);
+        } else {
+            postReaction(commentPayload, issue, ReactionContent.MINUS_ONE);
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void postReaction(GHEventPayload.IssueComment comment, GHIssue issue, ReactionContent reactionResult)
             throws IOException {
         if (!quarkusBotConfig.isDryRun()) {
