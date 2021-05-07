@@ -82,7 +82,8 @@ public class PullRequestCommandHandler {
     }
 
     private boolean canRunCommand(GHRepository repository, GHUser user) throws IOException {
-        return repository.getPermission(user) == GHPermissionType.WRITE
-                || repository.getPermission(user) == GHPermissionType.ADMIN;
+        GHPermissionType permission = repository.getPermission(user);
+
+        return permission == GHPermissionType.WRITE || permission == GHPermissionType.ADMIN;
     }
 }
