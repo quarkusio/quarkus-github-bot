@@ -1,15 +1,5 @@
 package io.quarkus.bot.command;
 
-import io.quarkus.bot.config.QuarkusBotConfig;
-import io.quarkus.bot.workflow.WorkflowConstants;
-import org.jboss.logging.Logger;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GHWorkflowRun;
-import org.kohsuke.github.ReactionContent;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,6 +7,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHWorkflowRun;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.ReactionContent;
+import org.kohsuke.github.extras.okhttp3.OkHttpConnector;
+
+import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.workflow.WorkflowConstants;
+import okhttp3.OkHttpClient;
 
 @ApplicationScoped
 public class RerunWorkflowCommand implements Command<GHPullRequest> {
@@ -26,6 +33,19 @@ public class RerunWorkflowCommand implements Command<GHPullRequest> {
     @Inject
     QuarkusBotConfig quarkusBotConfig;
 
+    @Inject
+    OkHttpClient okHttpClient;
+
+    private GitHub gitHub;
+
+    @PostConstruct
+    public void initGitHubClient() throws IOException {
+        if (quarkusBotConfig.getAccessToken().isPresent()) {
+            gitHub = new GitHubBuilder().withOAuthToken(quarkusBotConfig.getAccessToken().get())
+                    .withConnector(new OkHttpConnector(okHttpClient)).build();
+        }
+    }
+
     @Override
     public List<String> labels() {
         return Arrays.asList("test", "retest");
@@ -33,6 +53,12 @@ public class RerunWorkflowCommand implements Command<GHPullRequest> {
 
     @Override
     public ReactionContent run(GHPullRequest pullRequest) throws IOException {
+        if (gitHub == null) {
+            LOG.error("Pull request #" + pullRequest.getNumber()
+                    + " - Unable to restart workflow as no access token was provided in the config");
+            return ReactionContent.MINUS_ONE;
+        }
+
         GHRepository repository = pullRequest.getRepository();
 
         List<GHWorkflowRun> ghWorkflowRuns = repository
@@ -54,8 +80,13 @@ public class RerunWorkflowCommand implements Command<GHPullRequest> {
         for (Map.Entry<String, Optional<GHWorkflowRun>> lastWorkflowRunEntry : lastWorkflowRuns.entrySet()) {
             if (lastWorkflowRunEntry.getValue().isPresent()) {
                 GHWorkflowRun lastWorkflowRun = lastWorkflowRunEntry.getValue().get();
+
+                // There is a bug in the GitHub API and we have to use a personal access token to execute the rerun() call
+                GHRepository accessTokenRepository = gitHub.getRepository(lastWorkflowRun.getRepository().getFullName());
+                GHWorkflowRun accessTokenLastWorkflowRun = accessTokenRepository.getWorkflowRun(lastWorkflowRun.getId());
+
                 if (!quarkusBotConfig.isDryRun()) {
-                    lastWorkflowRun.rerun();
+                    accessTokenLastWorkflowRun.rerun();
                     workflowRunRestarted = true;
                     LOG.debug("Pull request #" + pullRequest.getNumber() + " - Restart workflow: "
                             + lastWorkflowRun.getName() + " - " + lastWorkflowRun.getId());
