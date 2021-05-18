@@ -136,12 +136,6 @@ When a workflow run associated to a pull request is completed, a report is gener
 
 > image::documentation/screenshots/workflow-run-report.png[]
 
-=== Cancel duplicate workflow runs
-
-When multiple workflow runs are targeting the same branch, older workflow runs are cancelled to preserve CI resources.
-
-This is especially useful when someone pushes new commits to a pull request while workflow runs are still running to validate the previous commits.
-
 === Mark closed pull requests as invalid
 
 If a pull request is closed without being merged, we automatically add the `triage/invalid` label to the pull request.
