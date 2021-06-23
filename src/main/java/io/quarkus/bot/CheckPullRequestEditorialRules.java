@@ -75,10 +75,10 @@ class CheckPullRequestEditorialRules {
             errorMessages.add("title should preferably start with an uppercase character (if it makes sense!)");
         }
         if (ISSUE_PATTERN.matcher(title).find()) {
-            errorMessages.add("title should not contain an issue number (use 'Fix #1234' in the description instead)");
+            errorMessages.add("title should not contain an issue number (use `Fix #1234` in the description instead)");
         }
         if (FIX_FEAT_CHORE.matcher(title).matches()) {
-            errorMessages.add("title should not start with chore/feat/fix/docs but be a proper sentence");
+            errorMessages.add("title should not start with chore/docs/feat/fix/refactor but be a proper sentence");
         }
 
         return errorMessages;
