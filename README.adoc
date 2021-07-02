@@ -1,4 +1,4 @@
-= Quarkus Bot
+= Quarkus GitHub Bot
 
 > A Quarkus-powered GitHub App to simplify issues and pull requests management in the Quarkus project.
 
