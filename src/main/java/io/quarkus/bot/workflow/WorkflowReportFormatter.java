@@ -12,8 +12,8 @@ import io.quarkus.qute.TemplateInstance;
 @ApplicationScoped
 public class WorkflowReportFormatter {
 
-    public String getCheckRunReportSummary(WorkflowReport report, GHPullRequest pullRequest) {
-        return Templates.checkRunReportSummary(report, pullRequest).render();
+    public String getCheckRunReportSummary(WorkflowReport report, GHPullRequest pullRequest, boolean artifactsAvailable) {
+        return Templates.checkRunReportSummary(report, pullRequest, artifactsAvailable).render();
     }
 
     public String getCheckRunReport(WorkflowReport report, boolean includeStackTraces) {
@@ -28,7 +28,8 @@ public class WorkflowReportFormatter {
     @CheckedTemplate
     private static class Templates {
 
-        public static native TemplateInstance checkRunReportSummary(WorkflowReport report, GHPullRequest pullRequest);
+        public static native TemplateInstance checkRunReportSummary(WorkflowReport report, GHPullRequest pullRequest,
+                boolean artifactsAvailable);
 
         public static native TemplateInstance checkRunReport(WorkflowReport report, boolean includeStackTraces);
 

@@ -22,7 +22,6 @@ public class SetAreaLabelColor {
 
     private static final String AREA_LABEL_COLOR = "0366d6";
 
-    @SuppressWarnings("deprecation")
     void setAreaLabelColor(@Label.Created GHEventPayload.Label labelPayload) throws IOException {
         GHLabel label = labelPayload.getLabel();
 

@@ -41,7 +41,6 @@ import io.quarkus.bot.workflow.report.WorkflowReport;
 import io.quarkus.bot.workflow.report.WorkflowReportJob;
 import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
 
-@SuppressWarnings("deprecation")
 public class AnalyzeWorkflowRunResults {
 
     private static final Logger LOG = Logger.getLogger(AnalyzeWorkflowRunResults.class);
@@ -124,7 +123,7 @@ public class AnalyzeWorkflowRunResults {
 
         WorkflowReport workflowReport = workflowReportOptional.get();
 
-        Optional<GHCheckRun> checkRunOptional = createCheckRun(workflowRun, pullRequest, workflowReport);
+        Optional<GHCheckRun> checkRunOptional = createCheckRun(workflowRun, pullRequest, artifactsAvailable, workflowReport);
 
         String commentReport = workflowReportFormatter.getCommentReport(workflowReport,
                 artifactsAvailable,
@@ -169,14 +168,14 @@ public class AnalyzeWorkflowRunResults {
     }
 
     private Optional<GHCheckRun> createCheckRun(GHWorkflowRun workflowRun, GHPullRequest pullRequest,
-            WorkflowReport workflowReport) {
+            boolean artifactsAvailable, WorkflowReport workflowReport) {
         if (!workflowReport.hasTestFailures() || quarkusBotConfig.isDryRun()) {
             return Optional.empty();
         }
 
         try {
             String name = "Build summary for " + workflowRun.getHeadSha();
-            String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest);
+            String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest, artifactsAvailable);
             String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
             if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
                 checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
