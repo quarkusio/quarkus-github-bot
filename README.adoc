@@ -1,5 +1,7 @@
 = Quarkus Bot
 
+Something.
+
 > A Quarkus-powered GitHub App to simplify issues and pull requests management in the Quarkus project.
 
 == Introduction
