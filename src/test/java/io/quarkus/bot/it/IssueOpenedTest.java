@@ -23,12 +23,12 @@ public class IssueOpenedTest {
                 "triage:\n"
                         + "  rules:\n"
                         + "    - title: test\n"
-                        + "      labels: [test1, test2]"))
+                        + "      labels: [area/test1, area/test2]"))
                 .when().payloadFromClasspath("/issue-opened.json")
                 .event(GHEvent.ISSUES)
                 .then().github(mocks -> {
                     verify(mocks.issue(750705278))
-                            .addLabels("test1", "test2");
+                            .addLabels("area/test1", "area/test2");
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
