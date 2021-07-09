@@ -48,7 +48,6 @@ class TriageIssue {
         }
 
         GHIssue issue = issuePayload.getIssue();
-        boolean triaged = false;
         Set<String> labels = new TreeSet<>();
         Set<String> mentions = new TreeSet<>();
 
@@ -64,7 +63,6 @@ class TriageIssue {
                         }
                     }
                 }
-                triaged = true;
             }
         }
 
@@ -84,13 +82,23 @@ class TriageIssue {
             }
         }
 
-        if (!triaged && !GHIssues.hasAreaLabel(issue)) {
+        if (mentions.isEmpty() && !hasAreaLabels(labels) && !GHIssues.hasAreaLabel(issue)) {
             if (!quarkusBotConfig.isDryRun()) {
                 issue.addLabels(Labels.TRIAGE_NEEDS_TRIAGE);
             } else {
                 LOG.info("Issue #" + issue.getNumber() + " - Add label: " + Labels.TRIAGE_NEEDS_TRIAGE);
             }
         }
+    }
+
+    private boolean hasAreaLabels(Set<String> labels) {
+        for (String label : labels) {
+            if (label.startsWith(Labels.AREA_PREFIX)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static Collection<String> limit(Set<String> labels) {
