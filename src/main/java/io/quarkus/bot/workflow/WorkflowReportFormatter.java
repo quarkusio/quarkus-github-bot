@@ -21,8 +21,8 @@ public class WorkflowReportFormatter {
     }
 
     public String getCommentReport(WorkflowReport report, boolean artifactsAvailable, GHCheckRun checkRun,
-            String messageIdActive) {
-        return Templates.commentReport(report, artifactsAvailable, checkRun, messageIdActive).render();
+            String messageIdActive, boolean includeStackTraces) {
+        return Templates.commentReport(report, artifactsAvailable, checkRun, messageIdActive, includeStackTraces).render();
     }
 
     @CheckedTemplate
@@ -34,6 +34,6 @@ public class WorkflowReportFormatter {
         public static native TemplateInstance checkRunReport(WorkflowReport report, boolean includeStackTraces);
 
         public static native TemplateInstance commentReport(WorkflowReport report, boolean artifactsAvailable,
-                GHCheckRun checkRun, String messageIdActive);
+                GHCheckRun checkRun, String messageIdActive, boolean includeStackTraces);
     }
 }
