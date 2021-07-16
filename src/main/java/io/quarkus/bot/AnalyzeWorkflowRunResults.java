@@ -67,6 +67,9 @@ public class AnalyzeWorkflowRunResults {
         if (workflowRun.getEvent() != GHEvent.PULL_REQUEST) {
             return;
         }
+        if (workflowRun.getConclusion() == Conclusion.CANCELLED) {
+            return;
+        }
 
         List<GHArtifact> artifacts;
         boolean artifactsAvailable;
