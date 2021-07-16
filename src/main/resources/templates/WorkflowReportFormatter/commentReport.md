@@ -40,6 +40,16 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 {#for failure : module.failures}
 <p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} - {#if checkRun && failure.failureDetail}<a href="{checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{count}">More details</a> - {/if}<a href="{failure.shortenedFailureUrl}">Source on GitHub</a></p>
 
+{#if failure.abbreviatedFailureDetail && includeStackTraces}
+<details>
+
+```
+{failure.abbreviatedFailureDetail.trim}
+```
+
+</details>
+{/if}
+
 {/for}
 {/if}
 {/for}
