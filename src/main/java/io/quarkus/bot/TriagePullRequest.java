@@ -27,6 +27,8 @@ class TriagePullRequest {
 
     private static final Logger LOG = Logger.getLogger(TriagePullRequest.class);
 
+    private static final String BACKPORTS_BRANCH = "-backports-";
+
     /**
      * We cannot add more than 100 labels and we have some other automatic labels such as kind/bug.
      */
@@ -47,14 +49,17 @@ class TriagePullRequest {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Set<String> labels = new TreeSet<>();
         Set<String> mentions = new TreeSet<>();
+        boolean isBackportsBranch = pullRequest.getHead().getRef().contains(BACKPORTS_BRANCH);
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (matchRule(pullRequest, rule)) {
                 if (!rule.labels.isEmpty()) {
                     labels.addAll(rule.labels);
                 }
+
                 if (!rule.notify.isEmpty() && rule.notifyInPullRequest
-                        && PullRequest.Opened.NAME.equals(pullRequestPayload.getAction())) {
+                        && PullRequest.Opened.NAME.equals(pullRequestPayload.getAction())
+                        && !isBackportsBranch) {
                     for (String mention : rule.notify) {
                         if (!mention.equals(pullRequest.getUser().getLogin())) {
                             mentions.add(mention);
