@@ -115,7 +115,7 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-              <plugin>
+            <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
                 <version>${version.formatter.plugin}</version>
@@ -139,7 +139,7 @@
                         </goals>
                     </execution>
                 </executions>
-                  </plugin>
+            </plugin>
         </plugins>
     </build>
     <profiles>
