@@ -77,6 +77,7 @@ public class WorkflowRunAnalyzer {
 
                 Optional<GHArtifact> surefireReportsArtifactOptional = surefireReportsArtifacts.stream()
                         .filter(a -> a.getName().replace(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX, "")
+                                .replace(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX, "")
                                 .equals(job.getName()))
                         .findFirst();
 
@@ -170,7 +171,8 @@ public class WorkflowRunAnalyzer {
     private static Map<String, String> getTestFailuresAnchors(List<GHWorkflowJob> jobs,
             List<GHArtifact> surefireReportsArtifacts) {
         Set<String> surefireReportsArtifactNames = surefireReportsArtifacts.stream()
-                .map(a -> a.getName().replace(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX, ""))
+                .map(a -> a.getName().replace(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX, "")
+                        .replace(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX, ""))
                 .collect(Collectors.toSet());
 
         Map<String, String> testFailuresAnchors = new HashMap<>();

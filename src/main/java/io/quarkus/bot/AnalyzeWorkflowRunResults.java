@@ -106,7 +106,8 @@ public class AnalyzeWorkflowRunResults {
 
         List<GHArtifact> surefireReportsArtifacts = artifacts
                 .stream()
-                .filter(a -> a.getName().startsWith(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX))
+                .filter(a -> a.getName().startsWith(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX)
+                        || a.getName().startsWith(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX))
                 .sorted((a1, a2) -> a1.getName().compareTo(a2.getName()))
                 .collect(Collectors.toList());
 
