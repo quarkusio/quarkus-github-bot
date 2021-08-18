@@ -2,6 +2,9 @@
 
 # login to the OpenShift cluster before launching this script
 
+# delete problematic image
+oc delete is ubi-quarkus-native-binary-s2i
+
 # switch to the right project
 oc project prod-quarkus-bot
 
