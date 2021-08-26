@@ -46,13 +46,26 @@ public class WorkflowReport {
         return false;
     }
 
-    public List<WorkflowReportJob> getJobsWithTestFailures() {
-        return jobs.stream().filter(j -> j.hasTestFailures()).collect(Collectors.toList());
+    public List<WorkflowReportJob> getJobsWithReportedFailures() {
+        return jobs.stream().filter(j -> j.hasReportedFailures()).collect(Collectors.toList());
     }
 
     public boolean hasJvmJobsFailing() {
         for (WorkflowReportJob job : jobs) {
             if (job.isFailing() && job.isJvm()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasReportedFailures() {
+        return hasBuildReportFailures() || hasTestFailures();
+    }
+
+    public boolean hasBuildReportFailures() {
+        for (WorkflowReportJob job : jobs) {
+            if (job.hasBuildReportFailures()) {
                 return true;
             }
         }
@@ -91,9 +104,9 @@ public class WorkflowReport {
         return workflowRunUrl;
     }
 
-    public boolean hasErrorDownloadingSurefireReports() {
+    public boolean hasErrorDownloadingBuildReports() {
         for (WorkflowReportJob job : jobs) {
-            if (job.hasErrorDownloadingSurefireReports()) {
+            if (job.hasErrorDownloadingBuildReports()) {
                 return true;
             }
         }

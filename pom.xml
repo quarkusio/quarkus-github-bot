@@ -23,6 +23,7 @@
 
         <quarkus-github-app.version>1.1.3</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
+        <build-reporting-maven-extension.version>1.0.3</build-reporting-maven-extension.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -74,6 +75,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-openshift</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus.bot</groupId>
+            <artifactId>build-reporting-maven-extension-model</artifactId>
+            <version>${build-reporting-maven-extension.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.githubapp</groupId>

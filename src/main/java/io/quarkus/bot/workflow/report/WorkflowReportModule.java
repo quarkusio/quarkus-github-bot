@@ -5,23 +5,33 @@ import java.util.List;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 
+import io.quarkus.bot.build.reporting.model.BuildStatus;
+import io.quarkus.bot.build.reporting.model.ProjectReport;
+import io.quarkus.bot.workflow.StackTraceUtils;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public class WorkflowReportModule {
 
     private final String name;
+    private final ProjectReport projectReport;
     private final List<ReportTestSuite> reportTestSuites;
     private final List<WorkflowReportTestCase> failures;
 
-    public WorkflowReportModule(String name, List<ReportTestSuite> reportTestSuites, List<WorkflowReportTestCase> failures) {
+    public WorkflowReportModule(String name, ProjectReport projectReport, List<ReportTestSuite> reportTestSuites,
+            List<WorkflowReportTestCase> failures) {
         this.name = name;
+        this.projectReport = projectReport;
         this.reportTestSuites = reportTestSuites;
         this.failures = failures;
     }
 
     public String getName() {
         return name;
+    }
+
+    public boolean hasReportedFailures() {
+        return hasTestFailures() || hasBuildReportFailures();
     }
 
     public boolean hasTestFailures() {
@@ -33,7 +43,11 @@ public class WorkflowReportModule {
         return false;
     }
 
-    public List<WorkflowReportTestCase> getFailures() {
+    public boolean hasBuildReportFailures() {
+        return projectReport != null && projectReport.getStatus() == BuildStatus.FAILURE;
+    }
+
+    public List<WorkflowReportTestCase> getTestFailures() {
         return failures;
     }
 
@@ -79,5 +93,9 @@ public class WorkflowReportModule {
             testCount += reportTestSuite.getNumberOfSkipped();
         }
         return testCount;
+    }
+
+    public String getBuildReportFailure() {
+        return projectReport != null ? StackTraceUtils.firstLines(projectReport.getError(), 5) : null;
     }
 }

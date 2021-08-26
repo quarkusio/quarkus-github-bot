@@ -7,12 +7,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -32,20 +34,29 @@ import org.kohsuke.github.GHWorkflowJob.Step;
 import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
-import io.quarkus.bot.workflow.SurefireReportsUnarchiver.TestResultsPath;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkus.bot.build.reporting.model.BuildReport;
+import io.quarkus.bot.build.reporting.model.ProjectReport;
+import io.quarkus.bot.workflow.BuildReportsUnarchiver.BuildReports;
+import io.quarkus.bot.workflow.BuildReportsUnarchiver.TestResultsPath;
 import io.quarkus.bot.workflow.report.WorkflowReport;
 import io.quarkus.bot.workflow.report.WorkflowReportJob;
 import io.quarkus.bot.workflow.report.WorkflowReportModule;
 import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
 import io.quarkus.bot.workflow.urlshortener.UrlShortener;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @ApplicationScoped
+@RegisterForReflection(targets = { BuildReport.class, ProjectReport.class })
 public class WorkflowRunAnalyzer {
 
     private static final Logger LOG = Logger.getLogger(WorkflowRunAnalyzer.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final BuildReport EMPTY_BUILD_REPORT = new BuildReport();
 
     @Inject
-    SurefireReportsUnarchiver surefireReportsUnarchiver;
+    BuildReportsUnarchiver buildReportsUnarchiver;
 
     @Inject
     UrlShortener urlShortener;
@@ -53,7 +64,7 @@ public class WorkflowRunAnalyzer {
     public Optional<WorkflowReport> getReport(GHWorkflowRun workflowRun,
             GHPullRequest pullRequest,
             List<GHWorkflowJob> jobs,
-            List<GHArtifact> surefireReportsArtifacts) throws IOException {
+            List<GHArtifact> buildReportsArtifacts) throws IOException {
         if (jobs.isEmpty()) {
             LOG.error("Pull request #" + pullRequest.getNumber() + " - No jobs found");
             return Optional.empty();
@@ -62,8 +73,7 @@ public class WorkflowRunAnalyzer {
         GHRepository workflowRunRepository = workflowRun.getRepository();
         String pullRequestRepositoryName = pullRequest.getHead().getRepository().getFullName();
         String sha = workflowRun.getHeadSha();
-        Map<String, String> testFailuresAnchors = getTestFailuresAnchors(jobs, surefireReportsArtifacts);
-        Path allSurefireReportsDirectory = Files.createTempDirectory("surefire-reports-analyzer-");
+        Path allBuildReportsDirectory = Files.createTempDirectory("build-reports-analyzer-");
 
         try {
             List<WorkflowReportJob> workflowReportJobs = new ArrayList<>();
@@ -71,41 +81,48 @@ public class WorkflowRunAnalyzer {
             for (GHWorkflowJob job : jobs) {
                 if (job.getConclusion() != Conclusion.FAILURE && job.getConclusion() != Conclusion.CANCELLED) {
                     workflowReportJobs.add(new WorkflowReportJob(job.getName(), null, job.getConclusion(), null, null, null,
-                            Collections.emptyList(), false));
+                            EMPTY_BUILD_REPORT, Collections.emptyList(), false));
                     continue;
                 }
 
-                Optional<GHArtifact> surefireReportsArtifactOptional = surefireReportsArtifacts.stream()
-                        .filter(a -> a.getName().replace(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX, "")
-                                .replace(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX, "")
+                Optional<GHArtifact> buildReportsArtifactOptional = buildReportsArtifacts.stream()
+                        .filter(a -> a.getName().replace(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX, "")
                                 .equals(job.getName()))
                         .findFirst();
 
+                BuildReport buildReport = EMPTY_BUILD_REPORT;
                 List<WorkflowReportModule> modules = Collections.emptyList();
-                boolean errorDownloadingSurefireReports = false;
-                if (surefireReportsArtifactOptional.isPresent()) {
-                    GHArtifact surefireReportsArtifact = surefireReportsArtifactOptional.get();
-                    Path jobDirectory = allSurefireReportsDirectory.resolve(surefireReportsArtifact.getName());
-                    Set<TestResultsPath> testResultsPaths = Collections.emptySet();
+                boolean errorDownloadingBuildReports = false;
+                if (buildReportsArtifactOptional.isPresent()) {
+                    GHArtifact buildReportsArtifact = buildReportsArtifactOptional.get();
+                    Path jobDirectory = allBuildReportsDirectory.resolve(buildReportsArtifact.getName());
                     try {
-                        testResultsPaths = surefireReportsUnarchiver.getTestResults(jobDirectory,
-                                surefireReportsArtifact);
-                        modules = surefireReportsArtifactOptional.isPresent()
-                                ? getModules(pullRequest, jobDirectory, testResultsPaths, pullRequestRepositoryName, sha)
+                        BuildReports buildReports = buildReportsUnarchiver.getBuildReports(buildReportsArtifact, jobDirectory);
+
+                        if (buildReports.getBuildReportPath() != null) {
+                            buildReport = getBuildReport(pullRequest, buildReports.getBuildReportPath());
+                        }
+
+                        modules = buildReportsArtifactOptional.isPresent()
+                                ? getModules(pullRequest, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
+                                        pullRequestRepositoryName, sha)
                                 : Collections.emptyList();
                     } catch (Exception e) {
-                        errorDownloadingSurefireReports = true;
-                        LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to download artifact "
-                                + surefireReportsArtifact.getName());
+                        errorDownloadingBuildReports = true;
+                        LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to analyze build report for artifact "
+                                + buildReportsArtifact.getName());
                     }
                 }
 
-                workflowReportJobs.add(new WorkflowReportJob(job.getName(), testFailuresAnchors.get(job.getName()),
-                        job.getConclusion(), getFailingStep(job.getSteps()),
+                workflowReportJobs.add(new WorkflowReportJob(job.getName(),
+                        getFailuresAnchor(job.getId()),
+                        job.getConclusion(),
+                        getFailingStep(job.getSteps()),
                         getJobUrl(job),
                         getRawLogsUrl(job, workflowRun.getHeadSha()),
+                        buildReport,
                         modules,
-                        errorDownloadingSurefireReports));
+                        errorDownloadingBuildReports));
             }
 
             if (workflowReportJobs.isEmpty()) {
@@ -120,69 +137,103 @@ public class WorkflowRunAnalyzer {
             return Optional.of(report);
         } finally {
             try {
-                Files.walk(allSurefireReportsDirectory)
+                Files.walk(allBuildReportsDirectory)
                         .sorted(Comparator.reverseOrder())
                         .map(Path::toFile)
                         .forEach(File::delete);
             } catch (IOException e) {
                 LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to delete temp directory "
-                        + allSurefireReportsDirectory);
+                        + allBuildReportsDirectory);
             }
         }
     }
 
-    public List<WorkflowReportModule> getModules(GHPullRequest pullRequest, Path jobDirectory,
+    private static BuildReport getBuildReport(GHPullRequest pullRequest, Path buildReportPath) {
+        if (buildReportPath == null) {
+            return new BuildReport();
+        }
+
+        try {
+            return OBJECT_MAPPER.readValue(buildReportPath.toFile(), BuildReport.class);
+        } catch (Exception e) {
+            LOG.error("Pull Request #" + pullRequest.getNumber() + " - Unable to deserialize "
+                    + WorkflowConstants.BUILD_REPORT_PATH, e);
+            return new BuildReport();
+        }
+    }
+
+    private List<WorkflowReportModule> getModules(GHPullRequest pullRequest,
+            BuildReport buildReport,
+            Path jobDirectory,
             Set<TestResultsPath> testResultsPaths,
-            String pullRequestRepository, String sha) {
+            String pullRequestRepository,
+            String sha) {
         List<WorkflowReportModule> modules = new ArrayList<>();
 
-        for (TestResultsPath testResultPath : testResultsPaths) {
-            try {
-                SurefireReportParser surefireReportsParser = new SurefireReportParser(
-                        Collections.singletonList(testResultPath.getPath().toFile()), Locale.ENGLISH,
-                        new NullConsoleLogger());
-                List<ReportTestSuite> reportTestSuites = surefireReportsParser.parseXMLReportFiles();
-                String moduleName = testResultPath.getModuleName(jobDirectory);
-                WorkflowReportModule module = new WorkflowReportModule(
-                        moduleName,
-                        reportTestSuites,
-                        surefireReportsParser.getFailureDetails(reportTestSuites).stream()
-                                .filter(rtc -> !rtc.hasSkipped())
-                                .sorted((rtc1, rtc2) -> rtc1.getFullClassName().compareTo(rtc2.getFullClassName()))
-                                .map(rtc -> new WorkflowReportTestCase(
-                                        WorkflowUtils.getFilePath(moduleName, rtc.getFullClassName()),
-                                        rtc,
-                                        StackTraceUtils.abbreviate(rtc.getFailureDetail(), 1000),
-                                        getFailureUrl(pullRequestRepository, sha, moduleName, rtc),
-                                        urlShortener.shorten(getFailureUrl(pullRequestRepository, sha, moduleName, rtc))))
-                                .collect(Collectors.toList()));
-                if (module.hasTestFailures()) {
-                    modules.add(module);
+        Map<String, ModuleReports> moduleReportsMap = mapModuleReports(buildReport, testResultsPaths, jobDirectory);
+
+        for (Entry<String, ModuleReports> moduleReportsEntry : moduleReportsMap.entrySet()) {
+            String moduleName = moduleReportsEntry.getKey();
+            ModuleReports moduleReports = moduleReportsEntry.getValue();
+
+            List<ReportTestSuite> reportTestSuites = new ArrayList<>();
+            List<WorkflowReportTestCase> workflowReportTestCases = new ArrayList<>();
+            for (TestResultsPath testResultPath : moduleReports.getTestResultsPaths()) {
+                try {
+                    SurefireReportParser surefireReportsParser = new SurefireReportParser(
+                            Collections.singletonList(testResultPath.getPath().toFile()), Locale.ENGLISH,
+                            new NullConsoleLogger());
+                    reportTestSuites.addAll(surefireReportsParser.parseXMLReportFiles());
+                    workflowReportTestCases.addAll(surefireReportsParser.getFailureDetails(reportTestSuites).stream()
+                            .filter(rtc -> !rtc.hasSkipped())
+                            .sorted((rtc1, rtc2) -> rtc1.getFullClassName().compareTo(rtc2.getFullClassName()))
+                            .map(rtc -> new WorkflowReportTestCase(
+                                    WorkflowUtils.getFilePath(moduleName, rtc.getFullClassName()),
+                                    rtc,
+                                    StackTraceUtils.firstLines(StackTraceUtils.abbreviate(rtc.getFailureDetail(), 1000), 3),
+                                    getFailureUrl(pullRequestRepository, sha, moduleName, rtc),
+                                    urlShortener.shorten(getFailureUrl(pullRequestRepository, sha, moduleName, rtc))))
+                            .collect(Collectors.toList()));
+                } catch (Exception e) {
+                    LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to parse test results for file "
+                            + testResultPath.getPath(), e);
                 }
-            } catch (Exception e) {
-                LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to parse test results for file "
-                        + testResultPath.getPath(), e);
+            }
+
+            WorkflowReportModule module = new WorkflowReportModule(
+                    moduleName,
+                    moduleReports.getProjectReport(),
+                    reportTestSuites,
+                    workflowReportTestCases);
+
+            if (module.hasReportedFailures()) {
+                modules.add(module);
             }
         }
 
         return modules;
     }
 
-    private static Map<String, String> getTestFailuresAnchors(List<GHWorkflowJob> jobs,
-            List<GHArtifact> surefireReportsArtifacts) {
-        Set<String> surefireReportsArtifactNames = surefireReportsArtifacts.stream()
-                .map(a -> a.getName().replace(WorkflowConstants.SUREFIRE_REPORTS_ARTIFACT_PREFIX, "")
-                        .replace(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX, ""))
-                .collect(Collectors.toSet());
+    private static Map<String, ModuleReports> mapModuleReports(BuildReport buildReport, Set<TestResultsPath> testResultsPaths,
+            Path jobDirectory) {
+        Set<String> modules = new TreeSet<>();
+        modules.addAll(buildReport.getProjectReports().stream().map(pr -> pr.getBasedir()).collect(Collectors.toList()));
+        modules.addAll(testResultsPaths.stream().map(trp -> trp.getModuleName(jobDirectory)).collect(Collectors.toList()));
 
-        Map<String, String> testFailuresAnchors = new HashMap<>();
-        for (GHWorkflowJob job : jobs) {
-            if (!surefireReportsArtifactNames.contains(job.getName())) {
-                continue;
-            }
-            testFailuresAnchors.put(job.getName(), "test-failures-job-" + job.getId());
+        Map<String, ModuleReports> moduleReports = new TreeMap<>();
+        for (String module : modules) {
+            moduleReports.put(module, new ModuleReports(
+                    buildReport.getProjectReports().stream().filter(pr -> pr.getBasedir().equals(module)).findFirst()
+                            .orElse(null),
+                    testResultsPaths.stream().filter(trp -> trp.getModuleName(jobDirectory).equals(module))
+                            .collect(Collectors.toList())));
         }
-        return testFailuresAnchors;
+
+        return moduleReports;
+    }
+
+    private static String getFailuresAnchor(Long jobId) {
+        return "test-failures-job-" + jobId;
     }
 
     private static String getFailingStep(List<Step> steps) {
@@ -219,5 +270,24 @@ public class WorkflowRunAnalyzer {
             sb.append("#L").append(reportTestCase.getFailureErrorLine());
         }
         return sb.toString();
+    }
+
+    private static class ModuleReports {
+
+        private final ProjectReport projectReport;
+        private final List<TestResultsPath> testResultsPaths;
+
+        private ModuleReports(ProjectReport projectReport, List<TestResultsPath> testResultsPaths) {
+            this.projectReport = projectReport;
+            this.testResultsPaths = testResultsPaths;
+        }
+
+        public ProjectReport getProjectReport() {
+            return projectReport;
+        }
+
+        public List<TestResultsPath> getTestResultsPaths() {
+            return testResultsPaths;
+        }
     }
 }
