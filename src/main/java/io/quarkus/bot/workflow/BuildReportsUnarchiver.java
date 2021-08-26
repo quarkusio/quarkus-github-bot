@@ -11,22 +11,30 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.kohsuke.github.GHArtifact;
 
+import io.quarkus.bot.workflow.urlshortener.UrlShortener;
+
 @ApplicationScoped
-class SurefireReportsUnarchiver {
+class BuildReportsUnarchiver {
 
     private static final Path MAVEN_SUREFIRE_REPORTS_PATH = Path.of("target", "surefire-reports");
     private static final Path MAVEN_FAILSAFE_REPORTS_PATH = Path.of("target", "failsafe-reports");
     private static final Path GRADLE_REPORTS_PATH = Path.of("build", "test-results", "test");
 
-    public Set<TestResultsPath> getTestResults(Path jobDirectory, GHArtifact surefireReportsArtifact) throws IOException {
-        return surefireReportsArtifact
+    @Inject
+    UrlShortener urlShortener;
+
+    public BuildReports getBuildReports(GHArtifact buildReportsArtifact,
+            Path jobDirectory) throws IOException {
+        return buildReportsArtifact
                 .download((is) -> unzip(is, jobDirectory));
     }
 
-    public Set<TestResultsPath> unzip(InputStream inputStream, Path destinationDirectory) throws IOException {
+    private BuildReports unzip(InputStream inputStream, Path destinationDirectory) throws IOException {
+        Path buildReportPath = null;
         Set<TestResultsPath> testResultsPaths = new TreeSet<>();
 
         try (final ZipInputStream zis = new ZipInputStream(inputStream)) {
@@ -35,7 +43,9 @@ class SurefireReportsUnarchiver {
             while (zipEntry != null) {
                 final Path newPath = getZipEntryPath(destinationDirectory, zipEntry);
                 final File newFile = newPath.toFile();
-                if (newPath.endsWith(MAVEN_SUREFIRE_REPORTS_PATH)) {
+                if (newPath.endsWith(WorkflowConstants.BUILD_REPORT_PATH)) {
+                    buildReportPath = newPath;
+                } else if (newPath.endsWith(MAVEN_SUREFIRE_REPORTS_PATH)) {
                     testResultsPaths.add(new SurefireTestResultsPath(newPath));
                 } else if (newPath.endsWith(MAVEN_FAILSAFE_REPORTS_PATH)) {
                     testResultsPaths.add(new FailsafeTestResultsPath(newPath));
@@ -64,10 +74,10 @@ class SurefireReportsUnarchiver {
             zis.closeEntry();
         }
 
-        return testResultsPaths;
+        return new BuildReports(buildReportPath, testResultsPaths);
     }
 
-    static Path getZipEntryPath(Path destinationDirectory, ZipEntry zipEntry) throws IOException {
+    private static Path getZipEntryPath(Path destinationDirectory, ZipEntry zipEntry) throws IOException {
         Path destinationFile = destinationDirectory.resolve(zipEntry.getName());
 
         if (!destinationFile.toAbsolutePath().startsWith(destinationDirectory.toAbsolutePath())) {
@@ -75,6 +85,25 @@ class SurefireReportsUnarchiver {
         }
 
         return destinationFile;
+    }
+
+    static class BuildReports {
+
+        private final Path buildReportPath;
+        private final Set<TestResultsPath> testResultsPaths;
+
+        BuildReports(Path buildReportPath, Set<TestResultsPath> testResultsPaths) {
+            this.buildReportPath = buildReportPath;
+            this.testResultsPaths = testResultsPaths;
+        }
+
+        public Path getBuildReportPath() {
+            return buildReportPath;
+        }
+
+        public Set<TestResultsPath> getTestResultsPaths() {
+            return testResultsPaths;
+        }
     }
 
     interface TestResultsPath extends Comparable<TestResultsPath> {
