@@ -61,8 +61,10 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 {/for}
 {#else if module.buildReportFailure}
 <p>✖ <code>{module.buildReportFailure}</code></p>
+
 {#else}
 <p>We were unable to extract a useful error message.</p>
+
 {/if}
 {/for}
 {#if hasNext}
