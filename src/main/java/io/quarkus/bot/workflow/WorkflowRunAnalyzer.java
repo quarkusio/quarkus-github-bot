@@ -217,19 +217,25 @@ public class WorkflowRunAnalyzer {
     private static Map<String, ModuleReports> mapModuleReports(BuildReport buildReport, Set<TestResultsPath> testResultsPaths,
             Path jobDirectory) {
         Set<String> modules = new TreeSet<>();
-        modules.addAll(buildReport.getProjectReports().stream().map(pr -> pr.getBasedir()).collect(Collectors.toList()));
-        modules.addAll(testResultsPaths.stream().map(trp -> trp.getModuleName(jobDirectory)).collect(Collectors.toList()));
+        modules.addAll(buildReport.getProjectReports().stream().map(pr -> normalizeModuleName(pr.getBasedir()))
+                .collect(Collectors.toList()));
+        modules.addAll(testResultsPaths.stream().map(trp -> normalizeModuleName(trp.getModuleName(jobDirectory)))
+                .collect(Collectors.toList()));
 
         Map<String, ModuleReports> moduleReports = new TreeMap<>();
         for (String module : modules) {
             moduleReports.put(module, new ModuleReports(
-                    buildReport.getProjectReports().stream().filter(pr -> pr.getBasedir().equals(module)).findFirst()
-                            .orElse(null),
-                    testResultsPaths.stream().filter(trp -> trp.getModuleName(jobDirectory).equals(module))
+                    buildReport.getProjectReports().stream().filter(pr -> normalizeModuleName(pr.getBasedir()).equals(module))
+                            .findFirst().orElse(null),
+                    testResultsPaths.stream().filter(trp -> normalizeModuleName(trp.getModuleName(jobDirectory)).equals(module))
                             .collect(Collectors.toList())));
         }
 
         return moduleReports;
+    }
+
+    private static String normalizeModuleName(String moduleName) {
+        return moduleName.replace('\\', '/');
     }
 
     private static String getFailuresAnchor(Long jobId) {
