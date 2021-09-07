@@ -186,7 +186,6 @@ public class WorkflowRunAnalyzer {
                     reportTestSuites.addAll(surefireReportsParser.parseXMLReportFiles());
                     workflowReportTestCases.addAll(surefireReportsParser.getFailureDetails(reportTestSuites).stream()
                             .filter(rtc -> !rtc.hasSkipped())
-                            .sorted((rtc1, rtc2) -> rtc1.getFullClassName().compareTo(rtc2.getFullClassName()))
                             .map(rtc -> new WorkflowReportTestCase(
                                     WorkflowUtils.getFilePath(moduleName, rtc.getFullClassName()),
                                     rtc,
