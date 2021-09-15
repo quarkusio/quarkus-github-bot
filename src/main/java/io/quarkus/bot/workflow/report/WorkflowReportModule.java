@@ -51,6 +51,10 @@ public class WorkflowReportModule {
         return failures;
     }
 
+    public List<ReportTestSuite> getReportTestSuites() {
+        return reportTestSuites;
+    }
+
     public int getTestCount() {
         int testCount = 0;
         for (ReportTestSuite reportTestSuite : reportTestSuites) {

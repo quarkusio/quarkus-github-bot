@@ -1,5 +1,6 @@
 package io.quarkus.bot.workflow.report;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,10 +26,11 @@ public class WorkflowReportJob {
     private final List<String> skippedModules;
     private final List<WorkflowReportModule> modules;
     private final boolean errorDownloadingSurefireReports;
+    private final Date completedAt;
 
     public WorkflowReportJob(String name, String failuresAnchor, Conclusion conclusion, String failingStep, String url,
             String rawLogsUrl, BuildReport buildReport, List<WorkflowReportModule> modules,
-            boolean errorDownloadingSurefireReports) {
+            boolean errorDownloadingSurefireReports, Date completedAt) {
         this.name = name;
         this.failuresAnchor = failuresAnchor;
         this.conclusion = conclusion;
@@ -47,6 +49,7 @@ public class WorkflowReportJob {
                 .collect(Collectors.toList());
         this.modules = modules;
         this.errorDownloadingSurefireReports = errorDownloadingSurefireReports;
+        this.completedAt = completedAt;
     }
 
     public String getName() {
@@ -59,6 +62,10 @@ public class WorkflowReportJob {
 
     public Conclusion getConclusion() {
         return conclusion;
+    }
+
+    public Date getCompletedAt() {
+        return completedAt;
     }
 
     public String getConclusionEmoji() {

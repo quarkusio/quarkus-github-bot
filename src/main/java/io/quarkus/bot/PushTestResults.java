@@ -1,21 +1,27 @@
 package io.quarkus.bot;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
+import io.quarkiverse.githubapp.event.WorkflowRun;
+import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.test.JobResult;
+import io.quarkus.bot.test.QuarkusStatusClient;
+import io.quarkus.bot.test.TestResult;
+import io.quarkus.bot.test.WorkflowResult;
 import io.quarkus.bot.workflow.ArtifactsAreReady;
 import io.quarkus.bot.workflow.GHWorkflowJobComparator;
+import io.quarkus.bot.workflow.StackTraceUtils;
+import io.quarkus.bot.workflow.WorkflowConstants;
+import io.quarkus.bot.workflow.WorkflowReportFormatter;
+import io.quarkus.bot.workflow.WorkflowRunAnalyzer;
+import io.quarkus.bot.workflow.report.WorkflowReport;
+import io.quarkus.bot.workflow.report.WorkflowReportJob;
+import io.quarkus.bot.workflow.report.WorkflowReportModule;
+import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.plugins.surefire.report.ReportTestCase;
+import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCheckRun;
@@ -30,21 +36,21 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowJob;
 import org.kohsuke.github.GHWorkflowRun;
-import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
-import io.quarkiverse.githubapp.event.WorkflowRun;
-import io.quarkus.bot.config.QuarkusBotConfig;
-import io.quarkus.bot.workflow.StackTraceUtils;
-import io.quarkus.bot.workflow.WorkflowConstants;
-import io.quarkus.bot.workflow.WorkflowReportFormatter;
-import io.quarkus.bot.workflow.WorkflowRunAnalyzer;
-import io.quarkus.bot.workflow.report.WorkflowReport;
-import io.quarkus.bot.workflow.report.WorkflowReportJob;
-import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-public class AnalyzeWorkflowRunResults {
+@ApplicationScoped
+public class PushTestResults {
 
-    private static final Logger LOG = Logger.getLogger(AnalyzeWorkflowRunResults.class);
+    private static final Logger LOG = Logger.getLogger(PushTestResults.class);
 
     private static final int GITHUB_FIELD_LENGTH_HARD_LIMIT = 65000;
 
@@ -56,6 +62,9 @@ public class AnalyzeWorkflowRunResults {
 
     @Inject
     QuarkusBotConfig quarkusBotConfig;
+
+    @RestClient
+    QuarkusStatusClient quarkusStatusClient;
 
     void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload)
             throws IOException {
@@ -70,7 +79,6 @@ public class AnalyzeWorkflowRunResults {
         }
 
         List<GHArtifact> artifacts;
-        boolean artifactsAvailable;
         try {
             ArtifactsAreReady artifactsAreReady = new ArtifactsAreReady(workflowRun);
             Awaitility.await()
@@ -80,12 +88,10 @@ public class AnalyzeWorkflowRunResults {
                     .ignoreExceptions()
                     .until(artifactsAreReady);
             artifacts = artifactsAreReady.getArtifacts();
-            artifactsAvailable = true;
         } catch (ConditionTimeoutException e) {
             LOG.warn("Workflow run #" + workflowRun.getId()
                     + " - Unable to get the artifacts in a timely manner, ignoring them");
-            artifacts = Collections.emptyList();
-            artifactsAvailable = false;
+            return;
         }
 
         Optional<GHPullRequest> pullRequestOptional = getAssociatedPullRequest(workflowRun, artifacts);
@@ -101,14 +107,10 @@ public class AnalyzeWorkflowRunResults {
             return;
         }
 
-        if (workflowRun.getConclusion() != Conclusion.FAILURE) {
-            return;
-        }
-
         List<GHArtifact> surefireReportsArtifacts = artifacts
                 .stream()
                 .filter(a -> a.getName().startsWith(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX))
-                .sorted(Comparator.comparing(GHArtifact::getName))
+                .sorted((a1, a2) -> a1.getName().compareTo(a2.getName()))
                 .collect(Collectors.toList());
 
         List<GHWorkflowJob> jobs = workflowRun.listJobs().toList()
@@ -116,33 +118,31 @@ public class AnalyzeWorkflowRunResults {
                 .sorted(GHWorkflowJobComparator.INSTANCE)
                 .collect(Collectors.toList());
 
-        Optional<WorkflowReport> workflowReportOptional = workflowRunAnalyzer.getErrorReport(workflowRun, pullRequest, jobs,
+        Optional<WorkflowReport> workflowReportOptional = workflowRunAnalyzer.getTestReport(workflowRun, pullRequest, jobs,
                 surefireReportsArtifacts);
         if (workflowReportOptional.isEmpty()) {
-            return;
+            return; // the reason was logged by workflowRunAnalyzer
         }
-
         WorkflowReport workflowReport = workflowReportOptional.get();
 
-        Optional<GHCheckRun> checkRunOptional = createCheckRun(workflowRun, pullRequest, artifactsAvailable, workflowReport);
+        List<JobResult> jobResults = new ArrayList<>();
+        for (WorkflowReportJob job : workflowReport.getJobs()) {
+            List<TestResult> testResults = new ArrayList<>();
+            for (WorkflowReportModule module : job.getModules()) {
+                for (ReportTestSuite reportTestSuite : module.getReportTestSuites()) {
+                    for (ReportTestCase testCase : reportTestSuite.getTestCases()) {
+                        if (!testCase.hasSkipped()) {
+                            String testFullName = testCase.getFullName();
+                            TestResult result = new TestResult(testFullName, testCase.isSuccessful());
+                            testResults.add(result);
+                        }
+                    }
+                }
+            }
+            jobResults.add(new JobResult(job.getUrl(), job.getName(), testResults, job.getCompletedAt()));
+        }
 
-        String commentReport = workflowReportFormatter.getCommentReport(workflowReport,
-                artifactsAvailable,
-                checkRunOptional.orElse(null),
-                WorkflowConstants.MESSAGE_ID_ACTIVE,
-                true);
-        if (commentReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
-            commentReport = workflowReportFormatter.getCommentReport(workflowReport,
-                    artifactsAvailable,
-                    checkRunOptional.orElse(null),
-                    WorkflowConstants.MESSAGE_ID_ACTIVE,
-                    false);
-        }
-        if (!quarkusBotConfig.isDryRun()) {
-            pullRequest.comment(commentReport);
-        } else {
-            LOG.info("Pull request #" + pullRequest.getNumber() + " - Add test failures:\n" + commentReport);
-        }
+        quarkusStatusClient.storeTestResults(new WorkflowResult(jobResults, workflowReport.getSha()));
     }
 
     /**
@@ -230,5 +230,4 @@ public class AnalyzeWorkflowRunResults {
             return Optional.empty();
         }
     }
-
 }
