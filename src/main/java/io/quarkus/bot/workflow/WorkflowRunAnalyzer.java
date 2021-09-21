@@ -61,7 +61,87 @@ public class WorkflowRunAnalyzer {
     @Inject
     UrlShortener urlShortener;
 
-    public Optional<WorkflowReport> getReport(GHWorkflowRun workflowRun,
+    public Optional<WorkflowReport> getTestReport(GHWorkflowRun workflowRun,
+            GHPullRequest pullRequest,
+            List<GHWorkflowJob> jobs,
+            List<GHArtifact> buildReportsArtifacts) throws IOException {
+        if (jobs.isEmpty()) {
+            LOG.error("Pull request #" + pullRequest.getNumber() + " - No jobs found");
+            return Optional.empty();
+        }
+
+        GHRepository repository = workflowRun.getRepository();
+        String pullRequestRepositoryName = pullRequest.getHead().getRepository().getFullName();
+        String sha = workflowRun.getHeadSha();
+        Path allBuildReportsDirectory = Files.createTempDirectory("build-reports-analyzer-");
+
+        try {
+            List<WorkflowReportJob> workflowReportJobs = new ArrayList<>();
+
+            for (GHWorkflowJob job : jobs) {
+                Optional<GHArtifact> buildReportsArtifactOptional = buildReportsArtifacts.stream()
+                        .filter(a -> a.getName().replace(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX, "")
+                                .equals(job.getName()))
+                        .findFirst();
+
+                BuildReport buildReport = EMPTY_BUILD_REPORT;
+                List<WorkflowReportModule> modules = Collections.emptyList();
+                boolean errorDownloadingBuildReports = false;
+                if (buildReportsArtifactOptional.isPresent()) {
+                    GHArtifact buildReportsArtifact = buildReportsArtifactOptional.get();
+                    Path jobDirectory = allBuildReportsDirectory.resolve(buildReportsArtifact.getName());
+                    try {
+                        BuildReports buildReports = buildReportsUnarchiver.getBuildReports(buildReportsArtifact, jobDirectory);
+
+                        if (buildReports.getBuildReportPath() != null) {
+                            buildReport = getBuildReport(pullRequest, buildReports.getBuildReportPath());
+                        }
+
+                        modules = getModules(pullRequest, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
+                                pullRequestRepositoryName, sha, true);
+                    } catch (Exception e) {
+                        errorDownloadingBuildReports = true;
+                        LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to analyze build report for artifact "
+                                + buildReportsArtifact.getName(), e);
+                    }
+                }
+
+                workflowReportJobs.add(new WorkflowReportJob(job.getName(),
+                        getFailuresAnchor(job.getId()),
+                        job.getConclusion(),
+                        getFailingStep(job.getSteps()),
+                        getJobUrl(job),
+                        getRawLogsUrl(job, workflowRun.getHeadSha()),
+                        buildReport,
+                        modules,
+                        errorDownloadingBuildReports,
+                        job.getCompletedAt()));
+            }
+
+            if (workflowReportJobs.isEmpty()) {
+                LOG.warn("Pull request #" + pullRequest.getNumber() + " - Report jobs empty");
+                return Optional.empty();
+            }
+
+            WorkflowReport report = new WorkflowReport(sha, workflowReportJobs,
+                    repository.getFullName().equals(pullRequestRepositoryName),
+                    workflowRun.getConclusion(), workflowRun.getHtmlUrl().toString());
+
+            return Optional.of(report);
+        } finally {
+            try {
+                Files.walk(allBuildReportsDirectory)
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            } catch (IOException e) {
+                LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to delete temp directory "
+                        + allBuildReportsDirectory);
+            }
+        }
+    }
+
+    public Optional<WorkflowReport> getErrorReport(GHWorkflowRun workflowRun,
             GHPullRequest pullRequest,
             List<GHWorkflowJob> jobs,
             List<GHArtifact> buildReportsArtifacts) throws IOException {
@@ -81,7 +161,7 @@ public class WorkflowRunAnalyzer {
             for (GHWorkflowJob job : jobs) {
                 if (job.getConclusion() != Conclusion.FAILURE && job.getConclusion() != Conclusion.CANCELLED) {
                     workflowReportJobs.add(new WorkflowReportJob(job.getName(), null, job.getConclusion(), null, null, null,
-                            EMPTY_BUILD_REPORT, Collections.emptyList(), false));
+                            EMPTY_BUILD_REPORT, Collections.emptyList(), false, job.getCompletedAt()));
                     continue;
                 }
 
@@ -103,10 +183,8 @@ public class WorkflowRunAnalyzer {
                             buildReport = getBuildReport(pullRequest, buildReports.getBuildReportPath());
                         }
 
-                        modules = buildReportsArtifactOptional.isPresent()
-                                ? getModules(pullRequest, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
-                                        pullRequestRepositoryName, sha)
-                                : Collections.emptyList();
+                        modules = getModules(pullRequest, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
+                                pullRequestRepositoryName, sha, false);
                     } catch (Exception e) {
                         errorDownloadingBuildReports = true;
                         LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to analyze build report for artifact "
@@ -122,7 +200,8 @@ public class WorkflowRunAnalyzer {
                         getRawLogsUrl(job, workflowRun.getHeadSha()),
                         buildReport,
                         modules,
-                        errorDownloadingBuildReports));
+                        errorDownloadingBuildReports,
+                        job.getCompletedAt()));
             }
 
             if (workflowReportJobs.isEmpty()) {
@@ -167,7 +246,7 @@ public class WorkflowRunAnalyzer {
             Path jobDirectory,
             Set<TestResultsPath> testResultsPaths,
             String pullRequestRepository,
-            String sha) {
+            String sha, boolean keepSuccess) {
         List<WorkflowReportModule> modules = new ArrayList<>();
 
         Map<String, ModuleReports> moduleReportsMap = mapModuleReports(buildReport, testResultsPaths, jobDirectory);
@@ -205,7 +284,7 @@ public class WorkflowRunAnalyzer {
                     reportTestSuites,
                     workflowReportTestCases);
 
-            if (module.hasReportedFailures()) {
+            if (keepSuccess || module.hasReportedFailures()) {
                 modules.add(module);
             }
         }
