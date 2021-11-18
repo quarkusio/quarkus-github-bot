@@ -46,7 +46,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 
 {#if module.testFailures}
 {#for failure : module.testFailures}
-<p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} - {#if checkRun && failure.failureDetail}<a href="{checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{count}">More details</a> - {/if}<a href="{failure.shortenedFailureUrl}">Source on GitHub</a></p>
+<p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} - {#if checkRun && failure.failureDetail}<a href="{checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{failure_count}">More details</a> - {/if}<a href="{failure.shortenedFailureUrl}">Source on GitHub</a></p>
 
 {#if failure.abbreviatedFailureDetail && includeStackTraces}
 <details>
@@ -67,7 +67,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 
 {/if}
 {/for}
-{#if hasNext}
+{#if module_hasNext}
 
 ---
 

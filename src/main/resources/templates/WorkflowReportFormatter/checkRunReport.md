@@ -25,7 +25,7 @@
 ```
 
 {#for failure : module.testFailures}
-<p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} <a id="test-failure-{failure.fullClassName.toLowerCase}-{count}"></a> - <a href="{failure.shortenedFailureUrl}">Source on GitHub</a> - <a href="#user-content-build-summary-top">🠅</a></p>
+<p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} <a id="test-failure-{failure.fullClassName.toLowerCase}-{failure_count}"></a> - <a href="{failure.shortenedFailureUrl}">Source on GitHub</a> - <a href="#user-content-build-summary-top">🠅</a></p>
 
 {#if (failure.abbreviatedFailureDetail && includeStackTraces) || (report.sameRepository && failure.failureErrorLine)}
 <details>
@@ -49,7 +49,7 @@
 <p>We were unable to extract a useful error message.</p>
 {/if}
 {/for}
-{#if hasNext}
+{#if module_hasNext}
 
 ---
 
