@@ -25,7 +25,7 @@ public class CheckIssueEditorialRules {
         GHIssue issue = issuePayload.getIssue();
         String body = issue.getBody();
 
-        if (!body.contains(ZULIP_URL)) {
+        if (body == null || !body.contains(ZULIP_URL)) {
             return;
         }
 
