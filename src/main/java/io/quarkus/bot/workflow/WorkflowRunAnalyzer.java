@@ -252,12 +252,12 @@ public class WorkflowRunAnalyzer {
     }
 
     private String getJobUrl(GHWorkflowJob job) {
-        return urlShortener.shorten(job.getHtmlUrl() + "?check_suite_focus=true");
+        return urlShortener.shorten(job.getHtmlUrl().toString());
     }
 
     private String getRawLogsUrl(GHWorkflowJob job, String sha) {
-        return urlShortener.shorten(job.getHtmlUrl().toString().replace("/runs/", "/commit/" + sha + "/checks/")
-                + "/logs");
+        return urlShortener.shorten(job.getRepository().getHtmlUrl().toString() +
+                "/commit/" + sha + "/checks/" + job.getId() + "/logs");
     }
 
     private static String getFailureUrl(String repository, String sha, String moduleName, ReportTestCase reportTestCase) {
