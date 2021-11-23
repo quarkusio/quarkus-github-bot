@@ -110,7 +110,7 @@ public class WorkflowRunAnalyzer {
                     } catch (Exception e) {
                         errorDownloadingBuildReports = true;
                         LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to analyze build report for artifact "
-                                + buildReportsArtifact.getName());
+                                + buildReportsArtifact.getName(), e);
                     }
                 }
 
