@@ -21,7 +21,8 @@
         <version.formatter.plugin>2.17.0</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
 
-        <quarkus-github-app.version>1.2.1</quarkus-github-app.version>
+        <quarkus-github-app.version>1.3.0</quarkus-github-app.version>
+        <okhttp.version>4.9.2</okhttp.version>
         <glob.version>0.9.0</glob.version>
         <build-reporting-maven-extension.version>1.0.5</build-reporting-maven-extension.version>
     </properties>
@@ -62,6 +63,11 @@
             <groupId>com.hrakaroo</groupId>
             <artifactId>glob</artifactId>
             <version>${glob.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.surefire</groupId>
