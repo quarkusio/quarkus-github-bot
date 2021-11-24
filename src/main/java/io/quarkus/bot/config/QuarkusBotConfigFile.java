@@ -16,6 +16,8 @@ public class QuarkusBotConfigFile {
         public List<TriageRule> rules = new ArrayList<>();
 
         public QE qe = new QE();
+
+        public Discussions discussions = new Discussions();
     }
 
     public static class TriageRule {
@@ -43,5 +45,19 @@ public class QuarkusBotConfigFile {
     public static class QE {
         @JsonDeserialize(as = TreeSet.class)
         public Set<String> notify = new TreeSet<>();
+    }
+
+    public static class Discussions {
+
+        /**
+         * This is a list of numeric ids.
+         * <p>
+         * Note that it's a bit tricky to get this id as it's not present in the GraphQL API. You have to generate an event and
+         * have a look at what is in the payload.
+         */
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<Long> monitoredCategories = new TreeSet<>();
+
+        public boolean logCategories = false;
     }
 }
