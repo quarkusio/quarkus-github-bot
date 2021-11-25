@@ -49,7 +49,7 @@
 <p>We were unable to extract a useful error message.</p>
 {/if}
 {/for}
-{#if module_hasNext}
+{#if job_hasNext}
 
 ---
 
