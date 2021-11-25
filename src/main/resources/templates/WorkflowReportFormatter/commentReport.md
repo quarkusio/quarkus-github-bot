@@ -67,7 +67,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 
 {/if}
 {/for}
-{#if module_hasNext}
+{#if job_hasNext}
 
 ---
 
