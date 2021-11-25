@@ -2,7 +2,9 @@ package io.quarkus.bot;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
@@ -111,13 +113,17 @@ class TriageDiscussion {
         }
 
         try {
-            gitHubGraphQLClient.executeSync(String.format("mutation {\n"
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("labelableId", discussion.getNodeId());
+            variables.put("labelIds", labelIds.toArray(new String[0]));
+
+            gitHubGraphQLClient.executeSync("mutation AddLabels($labelableId: String!, $labelIds: [String!]!) {\n"
                     + "  addLabelsToLabelable(input: {\n"
-                    + "    labelableId: \"%1$s\",\n"
-                    + "    labelIds: [%2$s]}) {\n"
+                    + "    labelableId: $labelableId,\n"
+                    + "    labelIds: $labelIds}) {\n"
                     + "        clientMutationId\n"
                     + "  }\n"
-                    + "}", discussion.getNodeId(), labelIds.stream().collect(Collectors.joining("\", \"", "\"", "\""))));
+                    + "}", variables);
         } catch (ExecutionException | InterruptedException e) {
             LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add labels: " + String.join(", ", labels));
         }
@@ -126,13 +132,17 @@ class TriageDiscussion {
     private static void addComment(DynamicGraphQLClient gitHubGraphQLClient, GHRepositoryDiscussion discussion,
             String comment) {
         try {
-            gitHubGraphQLClient.executeSync(String.format("mutation {\n"
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("discussionId", discussion.getNodeId());
+            variables.put("comment", comment);
+
+            gitHubGraphQLClient.executeSync("mutation AddComment($discussionId: String!, $comment: String!) {\n"
                     + "  addDiscussionComment(input: {\n"
-                    + "    discussionId: \"%1$s\",\n"
-                    + "    body: \"%2$s\"}) {\n"
+                    + "    discussionId: $discussionId,\n"
+                    + "    body: $comment }) {\n"
                     + "        clientMutationId\n"
                     + "  }\n"
-                    + "}", discussion.getNodeId(), comment.replace("\"", "\\\"")));
+                    + "}", variables);
         } catch (ExecutionException | InterruptedException e) {
             LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add comment: " + comment);
         }
