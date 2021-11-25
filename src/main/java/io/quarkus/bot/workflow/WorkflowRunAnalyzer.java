@@ -96,9 +96,12 @@ public class WorkflowRunAnalyzer {
                 if (buildReportsArtifactOptional.isPresent()) {
                     GHArtifact buildReportsArtifact = buildReportsArtifactOptional.get();
                     Path jobDirectory = allBuildReportsDirectory.resolve(buildReportsArtifact.getName());
-                    try {
-                        BuildReports buildReports = buildReportsUnarchiver.getBuildReports(buildReportsArtifact, jobDirectory);
 
+                    Optional<BuildReports> buildReportsOptional = buildReportsUnarchiver.getBuildReports(pullRequest,
+                            buildReportsArtifact, jobDirectory);
+
+                    if (buildReportsOptional.isPresent()) {
+                        BuildReports buildReports = buildReportsOptional.get();
                         if (buildReports.getBuildReportPath() != null) {
                             buildReport = getBuildReport(pullRequest, buildReports.getBuildReportPath());
                         }
@@ -107,10 +110,10 @@ public class WorkflowRunAnalyzer {
                                 ? getModules(pullRequest, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
                                         pullRequestRepositoryName, sha)
                                 : Collections.emptyList();
-                    } catch (Exception e) {
+                    } else {
                         errorDownloadingBuildReports = true;
                         LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to analyze build report for artifact "
-                                + buildReportsArtifact.getName(), e);
+                                + buildReportsArtifact.getName() + " - see exceptions above");
                     }
                 }
 
