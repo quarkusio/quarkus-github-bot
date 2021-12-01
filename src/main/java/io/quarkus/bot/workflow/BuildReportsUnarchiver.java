@@ -17,6 +17,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHPullRequest;
@@ -25,6 +26,8 @@ import io.quarkus.bot.workflow.urlshortener.UrlShortener;
 
 @ApplicationScoped
 class BuildReportsUnarchiver {
+
+    private static final Logger LOG = Logger.getLogger(BuildReportsUnarchiver.class);
 
     private static final Path MAVEN_SUREFIRE_REPORTS_PATH = Path.of("target", "surefire-reports");
     private static final Path MAVEN_FAILSAFE_REPORTS_PATH = Path.of("target", "failsafe-reports");
@@ -37,11 +40,18 @@ class BuildReportsUnarchiver {
             GHArtifact buildReportsArtifact,
             Path jobDirectory) throws IOException {
         ArtifactIsDownloaded artifactIsDownloaded = new ArtifactIsDownloaded(pullRequest, buildReportsArtifact, jobDirectory);
-        Awaitility.await()
-                .atMost(Duration.ofMinutes(5))
-                .pollDelay(Duration.ofSeconds(5))
-                .pollInterval(Duration.ofSeconds(30))
-                .until(artifactIsDownloaded);
+
+        try {
+            Awaitility.await()
+                    .atMost(Duration.ofMinutes(5))
+                    .pollDelay(Duration.ofSeconds(5))
+                    .pollInterval(Duration.ofSeconds(30))
+                    .until(artifactIsDownloaded);
+        } catch (ConditionTimeoutException e) {
+            LOG.warn("Pull request #" + pullRequest.getNumber()
+                    + " - Unable to download the artifacts in a timely manner, ignoring them");
+            return Optional.empty();
+        }
 
         return artifactIsDownloaded.getBuildReports();
     }
