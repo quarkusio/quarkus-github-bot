@@ -174,14 +174,18 @@ follow the steps outlined in https://quarkiverse.github.io/quarkiverse-docs/quar
 
 GitHub permissions required:
 
-* Actions - `Read only`
+* Actions - `Read & Write`
+* Checks - `Read & Write`
 * Contents - `Read only`
+* Discussions - `Read & Write`
 * Issues - `Read & Write`
 * Pull Requests - `Read & Write`
 
 Events to subscribe to:
 
+* Discussions
 * Issues
+* Label
 * Pull Request
 * Workflow run
 * Workflow dispatch
