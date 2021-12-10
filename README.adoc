@@ -110,6 +110,22 @@ triage:
         - integration-tests/amazon-lambda
 ----
 
+=== Triage discussions
+
+The rules applied for issues and pull requests are also applied to discussions, as long as the category is monitored.
+Typically, in the case of the Quarkus main repository, we are only monitoring the `Q&A` category.
+
+Monitoring a category is enabled with:
+
+[source, yaml]
+----
+triage:
+  discussions:
+    monitoredCategories: [33575230]
+----
+
+The number is the numeric id as present in the JSON event payload.
+
 === Notify QE
 
 When the `triage/qe?` label is added to an issue or a pull request, the QE team is pinged.
@@ -146,6 +162,10 @@ The bot will automatically remove these labels when they are outdated:
 
 * `triage/needs-triage` from closed issues
 * `waiting-for-ci` from closed pull requests
+
+=== Enforce color for specific labels
+
+The bot enforces a specific color for any label created that starts with `area/` so that all these labels are consistent.
 
 == Contributing
 
