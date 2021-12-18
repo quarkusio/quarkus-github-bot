@@ -33,7 +33,7 @@ class TriageDiscussion {
     @Inject
     QuarkusBotConfig quarkusBotConfig;
 
-    void triageIssue(@Discussion.Created GHEventPayload.Discussion discussionPayload,
+    void triageIssue(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
             @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
 
