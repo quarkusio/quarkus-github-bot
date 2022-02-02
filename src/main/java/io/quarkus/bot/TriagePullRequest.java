@@ -3,6 +3,7 @@ package io.quarkus.bot;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -49,6 +50,7 @@ class TriagePullRequest {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Set<String> labels = new TreeSet<>();
         Set<String> mentions = new TreeSet<>();
+        List<String> comments = new ArrayList<>();
         boolean isBackportsBranch = pullRequest.getHead().getRef().contains(BACKPORTS_BRANCH);
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
@@ -66,6 +68,9 @@ class TriagePullRequest {
                         }
                     }
                 }
+                if (rule.comment != null && !rule.comment.isBlank()) {
+                    comments.add(rule.comment);
+                }
             }
         }
 
@@ -81,10 +86,14 @@ class TriagePullRequest {
         }
 
         if (!mentions.isEmpty()) {
+            comments.add("/cc @" + String.join(", @", mentions));
+        }
+
+        if (!comments.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
-                pullRequest.comment("/cc @" + String.join(", @", mentions));
+                pullRequest.comment(String.join("\n\n", comments));
             } else {
-                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Mentions: " + String.join(", ", mentions));
+                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Comment: " + String.join(", ", comments));
             }
         }
     }

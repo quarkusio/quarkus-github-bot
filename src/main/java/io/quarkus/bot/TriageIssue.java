@@ -1,6 +1,8 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -37,6 +39,7 @@ class TriageIssue {
         GHIssue issue = issuePayload.getIssue();
         Set<String> labels = new TreeSet<>();
         Set<String> mentions = new TreeSet<>();
+        List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (Triage.matchRule(issue.getTitle(), issue.getBody(), rule)) {
@@ -50,6 +53,9 @@ class TriageIssue {
                         }
                     }
                 }
+                if (rule.comment != null && !rule.comment.isBlank()) {
+                    comments.add(rule.comment);
+                }
             }
         }
 
@@ -62,10 +68,14 @@ class TriageIssue {
         }
 
         if (!mentions.isEmpty()) {
+            comments.add("/cc @" + String.join(", @", mentions));
+        }
+
+        if (!comments.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
-                issue.comment("/cc @" + String.join(", @", mentions));
+                issue.comment(String.join("\n\n", comments));
             } else {
-                LOG.info("Issue #" + issue.getNumber() + " - Mentions: " + String.join(", ", mentions));
+                LOG.info("Issue #" + issue.getNumber() + " - Comment: " + String.join(", ", comments));
             }
         }
 

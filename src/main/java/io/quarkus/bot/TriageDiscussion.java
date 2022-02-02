@@ -1,9 +1,11 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -54,6 +56,7 @@ class TriageDiscussion {
 
         Set<String> labels = new TreeSet<>();
         Set<String> mentions = new TreeSet<>();
+        List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (Triage.matchRule(discussion.getTitle(), discussion.getBody(), rule)) {
@@ -67,6 +70,9 @@ class TriageDiscussion {
                         }
                     }
                 }
+                if (rule.comment != null && !rule.comment.isBlank()) {
+                    comments.add(rule.comment);
+                }
             }
         }
 
@@ -79,10 +85,14 @@ class TriageDiscussion {
         }
 
         if (!mentions.isEmpty()) {
+            comments.add("/cc @" + String.join(", @", mentions));
+        }
+
+        if (!comments.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
-                addComment(gitHubGraphQLClient, discussion, "/cc @" + String.join(", @", mentions));
+                addComment(gitHubGraphQLClient, discussion, String.join("\n\n", comments));
             } else {
-                LOG.info("Discussion #" + discussion.getNumber() + " - Mentions: " + String.join(", ", mentions));
+                LOG.info("Pull Request #" + discussion.getNumber() + " - Comment: " + String.join(", ", comments));
             }
         }
 
