@@ -1,14 +1,15 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -23,6 +24,7 @@ import io.quarkus.bot.config.QuarkusBotConfig;
 import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
@@ -54,6 +56,7 @@ class TriageDiscussion {
 
         Set<String> labels = new TreeSet<>();
         Set<String> mentions = new TreeSet<>();
+        List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (Triage.matchRule(discussion.getTitle(), discussion.getBody(), rule)) {
@@ -67,6 +70,9 @@ class TriageDiscussion {
                         }
                     }
                 }
+                if (Strings.isNotBlank(rule.comment)) {
+                    comments.add(rule.comment);
+                }
             }
         }
 
@@ -79,10 +85,14 @@ class TriageDiscussion {
         }
 
         if (!mentions.isEmpty()) {
+            comments.add("/cc @" + String.join(", @", mentions));
+        }
+
+        for (String comment : comments) {
             if (!quarkusBotConfig.isDryRun()) {
-                addComment(gitHubGraphQLClient, discussion, "/cc @" + String.join(", @", mentions));
+                addComment(gitHubGraphQLClient, discussion, comment);
             } else {
-                LOG.info("Discussion #" + discussion.getNumber() + " - Mentions: " + String.join(", ", mentions));
+                LOG.info("Discussion #" + discussion.getNumber() + " - Add comment: " + comment);
             }
         }
 

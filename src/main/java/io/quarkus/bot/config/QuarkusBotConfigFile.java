@@ -39,6 +39,8 @@ public class QuarkusBotConfigFile {
         @JsonDeserialize(as = TreeSet.class)
         public Set<String> notify = new TreeSet<>();
 
+        public String comment;
+
         public boolean notifyInPullRequest;
     }
 
