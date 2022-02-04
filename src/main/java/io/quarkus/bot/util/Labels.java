@@ -19,6 +19,13 @@ public class Labels {
     public static final String TRIAGE_QE = "triage/qe?";
     public static final String TRIAGE_BACKPORT_PREFIX = "triage/backport";
 
+    public static final String KIND_BUG = "kind/bug";
+    public static final String KIND_ENHANCEMENT = "kind/enhancement";
+    public static final String KIND_NEW_FEATURE = "kind/new-feature";
+    public static final String KIND_COMPONENT_UPGRADE = "kind/component-upgrade";
+    public static final String KIND_BUGFIX = "kind/bugfix";
+    public static final Set<String> KIND_LABELS = Set.of(KIND_BUG, KIND_ENHANCEMENT, KIND_NEW_FEATURE);
+
     private Labels() {
     }
 
