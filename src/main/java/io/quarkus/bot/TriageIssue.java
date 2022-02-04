@@ -19,6 +19,7 @@ import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 
 class TriageIssue {
@@ -53,7 +54,7 @@ class TriageIssue {
                         }
                     }
                 }
-                if (rule.comment != null && !rule.comment.isBlank()) {
+                if (Strings.isNotBlank(rule.comment)) {
                     comments.add(rule.comment);
                 }
             }
@@ -71,11 +72,11 @@ class TriageIssue {
             comments.add("/cc @" + String.join(", @", mentions));
         }
 
-        if (!comments.isEmpty()) {
+        for (String comment : comments) {
             if (!quarkusBotConfig.isDryRun()) {
-                issue.comment(String.join("\n\n", comments));
+                issue.comment(comment);
             } else {
-                LOG.info("Issue #" + issue.getNumber() + " - Comment: " + String.join(", ", comments));
+                LOG.info("Issue #" + issue.getNumber() + " - Add comment: " + comment);
             }
         }
 

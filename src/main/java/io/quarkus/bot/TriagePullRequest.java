@@ -23,6 +23,7 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.QuarkusBotConfig;
 import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
+import io.quarkus.bot.util.Strings;
 
 class TriagePullRequest {
 
@@ -68,7 +69,7 @@ class TriagePullRequest {
                         }
                     }
                 }
-                if (rule.comment != null && !rule.comment.isBlank()) {
+                if (Strings.isNotBlank(rule.comment)) {
                     comments.add(rule.comment);
                 }
             }
@@ -89,11 +90,11 @@ class TriagePullRequest {
             comments.add("/cc @" + String.join(", @", mentions));
         }
 
-        if (!comments.isEmpty()) {
+        for (String comment : comments) {
             if (!quarkusBotConfig.isDryRun()) {
-                pullRequest.comment(String.join("\n\n", comments));
+                pullRequest.comment(comment);
             } else {
-                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Comment: " + String.join(", ", comments));
+                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Add comment: " + comment);
             }
         }
     }

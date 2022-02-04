@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -25,6 +24,7 @@ import io.quarkus.bot.config.QuarkusBotConfig;
 import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
@@ -70,7 +70,7 @@ class TriageDiscussion {
                         }
                     }
                 }
-                if (rule.comment != null && !rule.comment.isBlank()) {
+                if (Strings.isNotBlank(rule.comment)) {
                     comments.add(rule.comment);
                 }
             }
@@ -88,11 +88,11 @@ class TriageDiscussion {
             comments.add("/cc @" + String.join(", @", mentions));
         }
 
-        if (!comments.isEmpty()) {
+        for (String comment : comments) {
             if (!quarkusBotConfig.isDryRun()) {
-                addComment(gitHubGraphQLClient, discussion, String.join("\n\n", comments));
+                addComment(gitHubGraphQLClient, discussion, comment);
             } else {
-                LOG.info("Pull Request #" + discussion.getNumber() + " - Comment: " + String.join(", ", comments));
+                LOG.info("Discussion #" + discussion.getNumber() + " - Add comment: " + comment);
             }
         }
 
