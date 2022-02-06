@@ -5,16 +5,11 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.enterprise.context.ApplicationScoped;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-@ApplicationScoped
 public class IssueExtractor {
 
     private final Pattern pattern;
 
-    public IssueExtractor(@ConfigProperty(name = "backports.repository") String repository) {
+    public IssueExtractor(String repository) {
         pattern = Pattern.compile(
                 "\\b(?:(?:fix(?:e[sd])?|(?:(?:resolve|close)[sd]?))):?\\s+(?:https?:\\/\\/github.com\\/"
                         + Pattern.quote(repository) + "\\/issues\\/|#)(\\d+)",
