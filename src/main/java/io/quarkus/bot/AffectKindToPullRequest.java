@@ -32,13 +32,8 @@ class AffectKindToPullRequest {
             return;
         }
 
-        // this doesn't work, we get a NPE for it:
-        // Cannot invoke "org.kohsuke.github.GitHub.intern(org.kohsuke.github.GHUser)" because the return value of "org.kohsuke.github.GHIssue.root()" is null
-        //        if (pullRequest.getUser() == null || pullRequest.getUser().getLogin() == null
-        //                || !pullRequest.getUser().getLogin().startsWith(DEPENDABOT)) {
-        //            return;
-        //        }
-        if (!pullRequest.getHead().getRef().startsWith(DEPENDABOT + "/")) {
+        if (pullRequest.getUser() == null || pullRequest.getUser().getLogin() == null
+                || !pullRequest.getUser().getLogin().startsWith(DEPENDABOT)) {
             return;
         }
 
