@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
@@ -20,13 +21,11 @@ import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
 import org.mockito.Answers;
 
-import io.quarkiverse.githubapp.testing.GitHubAppTestingResource;
 import io.quarkus.bot.util.Labels;
-import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@QuarkusTestResource(GitHubAppTestingResource.class)
+@GitHubAppTest
 public class MarkClosedPullRequestInvalidTest {
 
     @Test
