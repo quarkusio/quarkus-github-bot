@@ -21,7 +21,7 @@
         <version.formatter.plugin>2.18.0</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
 
-        <quarkus-github-app.version>1.7.0</quarkus-github-app.version>
+        <quarkus-github-app.version>1.7.1</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
         <build-reporting-maven-extension.version>1.0.5</build-reporting-maven-extension.version>
     </properties>
