@@ -7,7 +7,7 @@ import java.util.TreeSet;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class QuarkusBotConfigFile {
+public class QuarkusGitHubBotConfigFile {
 
     public TriageConfig triage;
 
