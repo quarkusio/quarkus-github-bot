@@ -10,7 +10,7 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHLabel;
 
 import io.quarkiverse.githubapp.event.Label;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.util.Labels;
 
 public class SetAreaLabelColor {
@@ -18,7 +18,7 @@ public class SetAreaLabelColor {
     private static final Logger LOG = Logger.getLogger(SetAreaLabelColor.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     private static final String AREA_LABEL_COLOR = "0366d6";
 

@@ -32,7 +32,7 @@ import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
 import io.quarkiverse.githubapp.event.WorkflowRun;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.workflow.StackTraceUtils;
 import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.bot.workflow.WorkflowReportFormatter;
@@ -54,7 +54,7 @@ public class AnalyzeWorkflowRunResults {
     WorkflowReportFormatter workflowReportFormatter;
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload)
             throws IOException {

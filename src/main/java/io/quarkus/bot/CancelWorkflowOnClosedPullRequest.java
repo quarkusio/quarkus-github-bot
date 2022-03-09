@@ -1,7 +1,7 @@
 package io.quarkus.bot;
 
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.workflow.WorkflowConstants;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
@@ -17,7 +17,7 @@ class CancelWorkflowOnClosedPullRequest {
     private static final Logger LOG = Logger.getLogger(CancelWorkflowOnClosedPullRequest.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     public void onClose(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
 

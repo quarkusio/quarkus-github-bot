@@ -191,7 +191,7 @@ Events to subscribe to:
 * Workflow dispatch
 
 By default, in dev mode, the Bot runs in dry-run so it's logging its actions but do not perform them.
-You can override this behavior by adding `_DEV_QUARKUS_BOT_DRY_RUN=false` to your `.env` file.
+You can override this behavior by adding `_DEV_QUARKUS_GITHUB_BOT_DRY_RUN=false` to your `.env` file.
 
 == Deployment
 

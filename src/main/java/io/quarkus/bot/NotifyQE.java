@@ -3,7 +3,7 @@ package io.quarkus.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.util.Labels;
 import org.jboss.logging.Logger;
@@ -20,7 +20,7 @@ public class NotifyQE {
     private static final Logger LOG = Logger.getLogger(NotifyQE.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void commentOnIssue(@Issue.Labeled GHEventPayload.Issue issuePayload,
             @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {

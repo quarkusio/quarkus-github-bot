@@ -10,7 +10,7 @@ import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.util.Labels;
 
 class MarkClosedPullRequestInvalid {
@@ -18,7 +18,7 @@ class MarkClosedPullRequestInvalid {
     private static final Logger LOG = Logger.getLogger(MarkClosedPullRequestInvalid.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void markClosedPullRequestInvalid(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();

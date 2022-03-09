@@ -10,7 +10,7 @@ import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHLabel;
 
 import io.quarkiverse.githubapp.event.Issue;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.util.Labels;
 
 public class RemoveNeedsTriageLabelFromClosedIssue {
@@ -18,7 +18,7 @@ public class RemoveNeedsTriageLabelFromClosedIssue {
     private static final Logger LOG = Logger.getLogger(RemoveNeedsTriageLabelFromClosedIssue.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void onClose(@Issue.Closed GHEventPayload.Issue issuePayload) throws IOException {
         GHIssue issue = issuePayload.getIssue();

@@ -1,7 +1,7 @@
 package io.quarkus.bot;
 
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.util.Labels;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
@@ -17,7 +17,7 @@ public class RemoveWaitingForCiLabelWhenClosed {
     private static final Logger LOG = Logger.getLogger(RemoveWaitingForCiLabelWhenClosed.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void removeWaitingForCiLabelWhenClosed(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload)
             throws IOException {

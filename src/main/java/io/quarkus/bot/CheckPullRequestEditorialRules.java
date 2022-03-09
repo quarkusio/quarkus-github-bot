@@ -15,7 +15,7 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 
 class CheckPullRequestEditorialRules {
 
@@ -28,7 +28,7 @@ class CheckPullRequestEditorialRules {
     private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void checkPullRequestEditorialRules(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();

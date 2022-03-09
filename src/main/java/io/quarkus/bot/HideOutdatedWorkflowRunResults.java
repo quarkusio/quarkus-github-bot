@@ -15,7 +15,7 @@ import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowRun;
 
 import io.quarkiverse.githubapp.event.WorkflowRun;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.workflow.WorkflowConstants;
 
 public class HideOutdatedWorkflowRunResults {
@@ -29,7 +29,7 @@ public class HideOutdatedWorkflowRunResults {
     private static final String HIDE_MESSAGE_SUFFIX = "\n\n</details>";
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void hideOutdatedWorkflowRunResults(@WorkflowRun.Requested GHEventPayload.WorkflowRun workflowRunPayload)
             throws IOException {
@@ -54,7 +54,7 @@ public class HideOutdatedWorkflowRunResults {
         hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequests.get(0));
     }
 
-    static void hideOutdatedWorkflowRunResults(QuarkusBotConfig quarkusBotConfig, GHPullRequest pullRequest)
+    static void hideOutdatedWorkflowRunResults(QuarkusGitHubBotConfig quarkusBotConfig, GHPullRequest pullRequest)
             throws IOException {
         List<GHIssueComment> comments = pullRequest.getComments();
 

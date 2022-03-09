@@ -20,7 +20,7 @@ import org.kohsuke.github.GHRepositoryDiscussion;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Discussion;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusBotConfigFile;
 import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
 import io.quarkus.bot.util.Labels;
@@ -33,7 +33,7 @@ class TriageDiscussion {
     private static final Logger LOG = Logger.getLogger(TriageDiscussion.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void triageIssue(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
             @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile,
