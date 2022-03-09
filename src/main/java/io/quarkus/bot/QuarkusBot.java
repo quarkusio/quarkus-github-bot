@@ -5,7 +5,7 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.runtime.StartupEvent;
 
 public class QuarkusBot {
@@ -13,7 +13,7 @@ public class QuarkusBot {
     private static final Logger LOG = Logger.getLogger(QuarkusBot.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void init(@Observes StartupEvent startupEvent) {
         if (quarkusBotConfig.isDryRun()) {

@@ -14,9 +14,9 @@ import org.kohsuke.github.GHIssue;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
-import io.quarkus.bot.config.QuarkusBotConfig;
-import io.quarkus.bot.config.QuarkusBotConfigFile;
-import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Strings;
@@ -27,10 +27,10 @@ class TriageIssue {
     private static final Logger LOG = Logger.getLogger(TriageIssue.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void triageIssue(@Issue.Opened GHEventPayload.Issue issuePayload,
-            @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
 
         if (quarkusBotConfigFile == null) {
             LOG.error("Unable to find triage configuration.");

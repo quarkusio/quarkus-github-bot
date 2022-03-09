@@ -11,7 +11,7 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.util.IssueExtractor;
 import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Strings;
@@ -23,7 +23,7 @@ class AffectKindToPullRequest {
     private static final String DEPENDABOT = "dependabot";
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void dependabotComponentUpgrade(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();

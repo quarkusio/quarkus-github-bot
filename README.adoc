@@ -20,9 +20,9 @@ This action checks that the title of a pull request respects some editorial rule
 
 === Triage issues
 
-Based on the `.github/quarkus-bot.yml` file, this rule affects labels to issues and also pings the appropriate people.
+Based on the `.github/quarkus-github-bot.yml` file, this rule affects labels to issues and also pings the appropriate people.
 
-Syntax of the `.github/quarkus-bot.yml` file is as follows:
+Syntax of the `.github/quarkus-github-bot.yml` file is as follows:
 
 [source, yaml]
 ----
@@ -130,7 +130,7 @@ The number is the numeric id as present in the JSON event payload.
 
 When the `triage/qe?` label is added to an issue or a pull request, the QE team is pinged.
 
-The configuration is done in the `quarkus-bot.yml` config file:
+The configuration is done in the `quarkus-github-bot.yml` config file:
 
 [source,yaml]
 ----
@@ -191,7 +191,7 @@ Events to subscribe to:
 * Workflow dispatch
 
 By default, in dev mode, the Bot runs in dry-run so it's logging its actions but do not perform them.
-You can override this behavior by adding `_DEV_QUARKUS_BOT_DRY_RUN=false` to your `.env` file.
+You can override this behavior by adding `_DEV_QUARKUS_GITHUB_BOT_DRY_RUN=false` to your `.env` file.
 
 == Deployment
 

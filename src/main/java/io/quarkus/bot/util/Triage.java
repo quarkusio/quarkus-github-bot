@@ -7,7 +7,7 @@ import javax.el.ValueExpression;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.bot.config.QuarkusBotConfigFile.TriageRule;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.el.SimpleELContext;
 
 public final class Triage {

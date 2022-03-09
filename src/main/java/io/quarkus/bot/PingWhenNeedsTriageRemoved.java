@@ -13,18 +13,18 @@ import org.kohsuke.github.GHLabel;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
-import io.quarkus.bot.config.QuarkusBotConfig;
-import io.quarkus.bot.config.QuarkusBotConfigFile;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Labels;
 
 public class PingWhenNeedsTriageRemoved {
     private static final Logger LOG = Logger.getLogger(PingWhenNeedsTriageRemoved.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void pingWhenNeedsTriageRemoved(@Issue.Unlabeled GHEventPayload.Issue issuePayload,
-            @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
 
         if (quarkusBotConfigFile == null) {
             LOG.error("Unable to find triage configuration.");
@@ -43,7 +43,7 @@ public class PingWhenNeedsTriageRemoved {
 
         Set<String> mentions = new TreeSet<>();
 
-        for (QuarkusBotConfigFile.TriageRule rule : quarkusBotConfigFile.triage.rules) {
+        for (QuarkusGitHubBotConfigFile.TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (matchRule(issue, rule)) {
                 if (!rule.notify.isEmpty()) {
                     for (String mention : rule.notify) {
@@ -67,7 +67,7 @@ public class PingWhenNeedsTriageRemoved {
         }
     }
 
-    private static boolean matchRule(GHIssue issue, QuarkusBotConfigFile.TriageRule rule) {
+    private static boolean matchRule(GHIssue issue, QuarkusGitHubBotConfigFile.TriageRule rule) {
         if (rule.labels.isEmpty() || rule.notify.isEmpty()) {
             return false;
         }

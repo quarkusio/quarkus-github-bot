@@ -3,8 +3,8 @@ package io.quarkus.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
-import io.quarkus.bot.config.QuarkusBotConfigFile;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Labels;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
@@ -20,21 +20,21 @@ public class NotifyQE {
     private static final Logger LOG = Logger.getLogger(NotifyQE.class);
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void commentOnIssue(@Issue.Labeled GHEventPayload.Issue issuePayload,
-            @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
 
         comment(quarkusBotConfigFile, issuePayload.getIssue(), issuePayload.getLabel());
     }
 
     void commentOnPullRequest(@PullRequest.Labeled GHEventPayload.PullRequest pullRequestPayload,
-            @ConfigFile("quarkus-bot.yml") QuarkusBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
 
         comment(quarkusBotConfigFile, pullRequestPayload.getPullRequest(), pullRequestPayload.getLabel());
     }
 
-    private void comment(QuarkusBotConfigFile quarkusBotConfigFile, GHIssue issue, GHLabel label) throws IOException {
+    private void comment(QuarkusGitHubBotConfigFile quarkusBotConfigFile, GHIssue issue, GHLabel label) throws IOException {
         if (quarkusBotConfigFile == null) {
             LOG.error("Unable to find triage configuration.");
             return;

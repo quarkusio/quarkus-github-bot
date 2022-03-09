@@ -18,7 +18,7 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.QuarkusBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
 
@@ -31,7 +31,7 @@ class AffectMilestone {
     private static final String MAIN_MILESTONE_SUFFIX = "- main";
 
     @Inject
-    QuarkusBotConfig quarkusBotConfig;
+    QuarkusGitHubBotConfig quarkusBotConfig;
 
     void affectMilestone(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
