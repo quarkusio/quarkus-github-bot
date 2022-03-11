@@ -20,7 +20,8 @@ public class IssueOpenedTest {
     void triage() throws IOException {
         given().github(mocks -> mocks.configFileFromString(
                 "quarkus-github-bot.yml",
-                "triage:\n"
+                "features: [ ALL ]\n"
+                        + "triage:\n"
                         + "  rules:\n"
                         + "    - title: test\n"
                         + "      labels: [area/test1, area/test2]"))
@@ -37,7 +38,8 @@ public class IssueOpenedTest {
     void triageComment() throws IOException {
         given().github(mocks -> mocks.configFileFromString(
                 "quarkus-github-bot.yml",
-                "triage:\n"
+                "features: [ ALL ]\n"
+                        + "triage:\n"
                         + "  rules:\n"
                         + "    - title: test\n"
                         + "      comment: 'This is a security issue'"))

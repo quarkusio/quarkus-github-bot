@@ -31,8 +31,11 @@ import org.kohsuke.github.GHWorkflowJob;
 import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.WorkflowRun;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.workflow.StackTraceUtils;
 import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.bot.workflow.WorkflowReportFormatter;
@@ -56,8 +59,12 @@ public class AnalyzeWorkflowRunResults {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload)
-            throws IOException {
+    void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.ANALYZE_WORKFLOW_RUN_RESULTS.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHWorkflowRun workflowRun = workflowRunPayload.getWorkflowRun();
         GHWorkflow workflow = workflowRunPayload.getWorkflow();
 

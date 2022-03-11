@@ -20,6 +20,7 @@ import com.hrakaroo.glob.MatchingEngine;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
@@ -42,9 +43,11 @@ class TriagePullRequest {
     void triageIssue(
             @PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
 
-        if (quarkusBotConfigFile == null) {
-            LOG.error("Unable to find triage configuration.");
+        if (quarkusBotConfigFile.triage.rules.isEmpty()) {
             return;
         }
 

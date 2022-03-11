@@ -1,15 +1,16 @@
 package io.quarkus.bot.it;
 
-import io.quarkiverse.githubapp.testing.GitHubAppTest;
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
+import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.IOException;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import org.junit.jupiter.api.Test;
+import org.kohsuke.github.GHEvent;
+
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
+import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @GitHubAppTest
@@ -17,7 +18,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleEndsWithDot() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-ends-with-dot.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-ends-with-dot.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
@@ -35,7 +39,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithLowercase() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-starts-with-lowercase.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-lowercase.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
@@ -53,7 +60,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithgRPC() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-starts-with-gRPC.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-gRPC.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verifyNoMoreInteractions(mocks.ghObjects());
@@ -62,7 +72,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleContainsIssueNumber() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-contains-issue-number.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-contains-issue-number.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
@@ -81,7 +94,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithFeat() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-starts-with-feat.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-feat.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
@@ -100,7 +116,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithFix() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-starts-with-fix.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-fix.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
@@ -119,7 +138,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithChore() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-starts-with-chore.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-chore.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
@@ -138,7 +160,10 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithDocs() throws IOException {
-        when().payloadFromClasspath("/pullrequest-opened-title-starts-with-docs.json")
+        given().github(mocks -> mocks.configFileFromString(
+                "quarkus-github-bot.yml",
+                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-docs.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))

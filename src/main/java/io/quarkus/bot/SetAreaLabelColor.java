@@ -9,8 +9,11 @@ import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHLabel;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Label;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Labels;
 
 public class SetAreaLabelColor {
@@ -22,7 +25,12 @@ public class SetAreaLabelColor {
 
     private static final String AREA_LABEL_COLOR = "0366d6";
 
-    void setAreaLabelColor(@Label.Created GHEventPayload.Label labelPayload) throws IOException {
+    void setAreaLabelColor(@Label.Created GHEventPayload.Label labelPayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.SET_AREA_LABEL_COLOR.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHLabel label = labelPayload.getLabel();
 
         if (!label.getName().startsWith(Labels.AREA_PREFIX)

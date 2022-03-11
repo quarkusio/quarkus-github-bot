@@ -14,8 +14,11 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowRun;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.WorkflowRun;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.workflow.WorkflowConstants;
 
 public class HideOutdatedWorkflowRunResults {
@@ -31,8 +34,12 @@ public class HideOutdatedWorkflowRunResults {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void hideOutdatedWorkflowRunResults(@WorkflowRun.Requested GHEventPayload.WorkflowRun workflowRunPayload)
-            throws IOException {
+    void hideOutdatedWorkflowRunResults(@WorkflowRun.Requested GHEventPayload.WorkflowRun workflowRunPayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.ANALYZE_WORKFLOW_RUN_RESULTS.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHWorkflowRun workflowRun = workflowRunPayload.getWorkflowRun();
         GHWorkflow workflow = workflowRunPayload.getWorkflow();
 
