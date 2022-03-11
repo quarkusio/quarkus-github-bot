@@ -9,8 +9,11 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHLabel;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Labels;
 
 public class RemoveNeedsTriageLabelFromClosedIssue {
@@ -20,7 +23,12 @@ public class RemoveNeedsTriageLabelFromClosedIssue {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void onClose(@Issue.Closed GHEventPayload.Issue issuePayload) throws IOException {
+    void onClose(@Issue.Closed GHEventPayload.Issue issuePayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHIssue issue = issuePayload.getIssue();
         for (GHLabel label : issue.getLabels()) {
             if (label.getName().equals(Labels.TRIAGE_NEEDS_TRIAGE)) {

@@ -3,6 +3,7 @@ package io.quarkus.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Labels;
@@ -24,12 +25,18 @@ public class NotifyQE {
 
     void commentOnIssue(@Issue.Labeled GHEventPayload.Issue issuePayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.NOTIFY_QE.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
 
         comment(quarkusBotConfigFile, issuePayload.getIssue(), issuePayload.getLabel());
     }
 
     void commentOnPullRequest(@PullRequest.Labeled GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.NOTIFY_QE.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
 
         comment(quarkusBotConfigFile, pullRequestPayload.getPullRequest(), pullRequestPayload.getLabel());
     }

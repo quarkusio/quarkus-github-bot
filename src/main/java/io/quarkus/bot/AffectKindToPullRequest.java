@@ -10,8 +10,11 @@ import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.IssueExtractor;
 import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Strings;
@@ -25,7 +28,12 @@ class AffectKindToPullRequest {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void dependabotComponentUpgrade(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
+    void dependabotComponentUpgrade(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.QUARKUS_REPOSITORY_WORKFLOW.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
 
         if (!pullRequest.isMerged()) {
@@ -44,7 +52,12 @@ class AffectKindToPullRequest {
         }
     }
 
-    void fromIssues(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
+    void fromIssues(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.QUARKUS_REPOSITORY_WORKFLOW.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
 
         if (!pullRequest.isMerged() || Strings.isBlank(pullRequest.getBody())) {

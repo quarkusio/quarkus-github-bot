@@ -1,6 +1,7 @@
 package io.quarkus.bot.config;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -9,7 +10,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public class QuarkusGitHubBotConfigFile {
 
-    public TriageConfig triage;
+    @JsonDeserialize(as = HashSet.class)
+    Set<Feature> features = new HashSet<>();
+
+    public TriageConfig triage = new TriageConfig();
 
     public static class TriageConfig {
 
@@ -61,5 +65,9 @@ public class QuarkusGitHubBotConfigFile {
         public Set<Long> monitoredCategories = new TreeSet<>();
 
         public boolean logCategories = false;
+    }
+
+    boolean isFeatureEnabled(Feature feature) {
+        return features.contains(Feature.ALL) || features.contains(feature);
     }
 }

@@ -13,6 +13,7 @@ import org.kohsuke.github.GHLabel;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Labels;
@@ -25,9 +26,7 @@ public class PingWhenNeedsTriageRemoved {
 
     void pingWhenNeedsTriageRemoved(@Issue.Unlabeled GHEventPayload.Issue issuePayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
-
-        if (quarkusBotConfigFile == null) {
-            LOG.error("Unable to find triage configuration.");
+        if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
 

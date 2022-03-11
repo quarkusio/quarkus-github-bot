@@ -8,8 +8,11 @@ import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssue;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 
 public class CheckIssueEditorialRules {
     private static final Logger LOG = Logger.getLogger(CheckIssueEditorialRules.class);
@@ -21,7 +24,12 @@ public class CheckIssueEditorialRules {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void onOpen(@Issue.Opened GHEventPayload.Issue issuePayload) throws IOException {
+    void onOpen(@Issue.Opened GHEventPayload.Issue issuePayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.CHECK_EDITORIAL_RULES.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHIssue issue = issuePayload.getIssue();
         String body = issue.getBody();
 

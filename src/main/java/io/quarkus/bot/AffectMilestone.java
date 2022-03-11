@@ -17,9 +17,13 @@ import org.kohsuke.github.GHMilestone;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 
+import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.GHIssues;
+import io.quarkus.bot.util.IssueExtractor;
 import io.quarkus.bot.util.Labels;
 
 class AffectMilestone {
@@ -33,7 +37,12 @@ class AffectMilestone {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void affectMilestone(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload) throws IOException {
+    void affectMilestone(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload,
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+        if (!Feature.QUARKUS_REPOSITORY_WORKFLOW.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         GHRepository repository = pullRequestPayload.getRepository();
         String targetBranch = pullRequest.getBase().getRef();
@@ -115,22 +124,11 @@ class AffectMilestone {
         return null;
     }
 
-    public Set<Integer> extractCurrentRepositoryIssueNumbers(GHRepository repository, String pullRequestBody) {
+    private Set<Integer> extractCurrentRepositoryIssueNumbers(GHRepository repository, String pullRequestBody) {
         if (pullRequestBody == null || pullRequestBody.trim().isEmpty()) {
             return Collections.emptySet();
         }
 
-        Pattern issueExtractionPattern = Pattern.compile(
-                "\\b(?:(?:fix(?:e[sd])?|(?:(?:resolve|close)[sd]?))):?\\s+(?:https?:\\/\\/github.com\\/"
-                        + Pattern.quote(repository.getFullName()) + "\\/issues\\/|#)(\\d+)",
-                Pattern.CASE_INSENSITIVE);
-
-        Set<Integer> result = new TreeSet<>();
-        Matcher matcher = issueExtractionPattern.matcher(pullRequestBody);
-        while (matcher.find()) {
-            Integer issueNumber = Integer.valueOf(matcher.group(1));
-            result.add(issueNumber);
-        }
-        return result;
+        return new IssueExtractor(repository.getFullName()).extractIssueNumbers(pullRequestBody);
     }
 }

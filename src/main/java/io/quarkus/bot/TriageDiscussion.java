@@ -20,6 +20,7 @@ import org.kohsuke.github.GHRepositoryDiscussion;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Discussion;
+import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
@@ -38,9 +39,11 @@ class TriageDiscussion {
     void triageIssue(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
+        if (!Feature.TRIAGE_DISCUSSIONS.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
 
-        if (quarkusBotConfigFile == null) {
-            LOG.error("Unable to find triage configuration.");
+        if (quarkusBotConfigFile.triage.rules.isEmpty()) {
             return;
         }
 
