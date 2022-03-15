@@ -29,10 +29,12 @@ public class HideOutdatedWorkflowRunResults {
 
     private static final Logger LOG = Logger.getLogger(HideOutdatedWorkflowRunResults.class);
 
-    private static final String HIDE_MESSAGE_PREFIX = "_This workflow status is outdated as a new workflow run has been triggered._\n"
-            + "\n"
-            + "<details>\n"
-            + "\n";
+    private static final String HIDE_MESSAGE_PREFIX = """
+            _This workflow status is outdated as a new workflow run has been triggered._
+
+            <details>
+
+            """;
     private static final String HIDE_MESSAGE_SUFFIX = "\n\n</details>";
 
     @Inject

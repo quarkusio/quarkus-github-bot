@@ -130,13 +130,14 @@ class TriageDiscussion {
             variables.put("labelableId", discussion.getNodeId());
             variables.put("labelIds", labelIds.toArray(new String[0]));
 
-            gitHubGraphQLClient.executeSync("mutation AddLabels($labelableId: String!, $labelIds: [String!]!) {\n"
-                    + "  addLabelsToLabelable(input: {\n"
-                    + "    labelableId: $labelableId,\n"
-                    + "    labelIds: $labelIds}) {\n"
-                    + "        clientMutationId\n"
-                    + "  }\n"
-                    + "}", variables);
+            gitHubGraphQLClient.executeSync("""
+                    mutation AddLabels($labelableId: String!, $labelIds: [String!]!) {
+                      addLabelsToLabelable(input: {
+                        labelableId: $labelableId,
+                        labelIds: $labelIds}) {
+                            clientMutationId
+                      }
+                    }""", variables);
         } catch (ExecutionException | InterruptedException e) {
             LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add labels: " + String.join(", ", labels));
         }
@@ -149,13 +150,14 @@ class TriageDiscussion {
             variables.put("discussionId", discussion.getNodeId());
             variables.put("comment", comment);
 
-            gitHubGraphQLClient.executeSync("mutation AddComment($discussionId: String!, $comment: String!) {\n"
-                    + "  addDiscussionComment(input: {\n"
-                    + "    discussionId: $discussionId,\n"
-                    + "    body: $comment }) {\n"
-                    + "        clientMutationId\n"
-                    + "  }\n"
-                    + "}", variables);
+            gitHubGraphQLClient.executeSync("""
+                    mutation AddComment($discussionId: String!, $comment: String!) {
+                      addDiscussionComment(input: {
+                        discussionId: $discussionId,
+                        body: $comment }) {
+                            clientMutationId
+                      }
+                    }""", variables);
         } catch (ExecutionException | InterruptedException e) {
             LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add comment: " + comment);
         }
