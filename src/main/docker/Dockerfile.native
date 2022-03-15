@@ -24,4 +24,6 @@ COPY --chown=1001:root target/*-runner /work/application
 EXPOSE 8080
 USER 1001
 
-CMD ["./application", "-Dquarkus.http.host=0.0.0.0", "-Xmx100m"]
+ENV QUARKUS_OPTS=-Dquarkus.http.host=0.0.0.0 -Xmx150m
+
+CMD ["./application", "-Dquarkus.http.host=0.0.0.0", "-Xmx150m"]
