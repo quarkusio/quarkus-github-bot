@@ -30,13 +30,11 @@ public class HideOutdatedWorkflowRunResults {
     private static final Logger LOG = Logger.getLogger(HideOutdatedWorkflowRunResults.class);
 
     private static final String HIDE_MESSAGE_PREFIX = """
-            _This workflow status is outdated as a new workflow run has been triggered._
-
-            <details>
+            ---
+            > :waning_crescent_moon: **_This workflow status is outdated as a new workflow run has been triggered._**
+            ---
 
             """;
-    private static final String HIDE_MESSAGE_SUFFIX = "\n\n</details>";
-
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
@@ -82,7 +80,6 @@ public class HideOutdatedWorkflowRunResults {
             updatedComment.append(HIDE_MESSAGE_PREFIX);
             updatedComment.append(comment.getBody().replace(WorkflowConstants.MESSAGE_ID_ACTIVE,
                     WorkflowConstants.MESSAGE_ID_HIDDEN));
-            updatedComment.append(HIDE_MESSAGE_SUFFIX);
 
             if (!quarkusBotConfig.isDryRun()) {
                 try {
