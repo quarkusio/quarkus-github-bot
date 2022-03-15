@@ -17,6 +17,8 @@ public class QuarkusGitHubBotConfigFile {
 
     public TriageConfig triage = new TriageConfig();
 
+    public WorkflowRunAnalysisConfig workflowRunAnalysis = new WorkflowRunAnalysisConfig();
+
     public static class TriageConfig {
 
         public List<TriageRule> rules = new ArrayList<>();
@@ -67,6 +69,12 @@ public class QuarkusGitHubBotConfigFile {
         public Set<Long> monitoredCategories = new TreeSet<>();
 
         public boolean logCategories = false;
+    }
+
+    public static class WorkflowRunAnalysisConfig {
+
+        @JsonDeserialize(as = HashSet.class)
+        public Set<String> workflows = new HashSet<>();
     }
 
     boolean isFeatureEnabled(Feature feature) {

@@ -44,11 +44,15 @@ public class HideOutdatedWorkflowRunResults {
         if (!Feature.ANALYZE_WORKFLOW_RUN_RESULTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
+        if (quarkusBotConfigFile.workflowRunAnalysis.workflows == null ||
+                quarkusBotConfigFile.workflowRunAnalysis.workflows.isEmpty()) {
+            return;
+        }
 
         GHWorkflowRun workflowRun = workflowRunPayload.getWorkflowRun();
         GHWorkflow workflow = workflowRunPayload.getWorkflow();
 
-        if (!WorkflowConstants.QUARKUS_CI_WORKFLOW_NAME.equals(workflow.getName())) {
+        if (!quarkusBotConfigFile.workflowRunAnalysis.workflows.contains(workflow.getName())) {
             return;
         }
         if (workflowRun.getEvent() != GHEvent.PULL_REQUEST) {
