@@ -48,8 +48,12 @@ class CheckPullRequestEditorialRules {
             return;
         }
 
-        StringBuilder comment = new StringBuilder("Thanks for your pull request!\n\n" +
-                "The title of your pull request does not follow our editorial rules. Could you have a look?\n\n");
+        StringBuilder comment = new StringBuilder("""
+                Thanks for your pull request!
+
+                The title of your pull request does not follow our editorial rules. Could you have a look?
+
+                """);
         for (String errorMessage : errorMessages) {
             comment.append("- ").append(errorMessage).append("\n");
         }

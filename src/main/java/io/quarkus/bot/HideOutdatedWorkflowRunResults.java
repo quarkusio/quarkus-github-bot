@@ -1,10 +1,14 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
@@ -25,17 +29,18 @@ public class HideOutdatedWorkflowRunResults {
 
     private static final Logger LOG = Logger.getLogger(HideOutdatedWorkflowRunResults.class);
 
-    private static final String HIDE_MESSAGE_PREFIX = "_This workflow status is outdated as a new workflow run has been triggered._\n"
-            + "\n"
-            + "<details>\n"
-            + "\n";
-    private static final String HIDE_MESSAGE_SUFFIX = "\n\n</details>";
+    private static final String HIDE_MESSAGE_PREFIX = """
+            ---
+            > :waning_crescent_moon: **_This workflow status is outdated as a new workflow run has been triggered._**
+            ---
 
+            """;
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void hideOutdatedWorkflowRunResults(@WorkflowRun.Requested GHEventPayload.WorkflowRun workflowRunPayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.ANALYZE_WORKFLOW_RUN_RESULTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -58,10 +63,11 @@ public class HideOutdatedWorkflowRunResults {
             return;
         }
 
-        hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequests.get(0));
+        hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequests.get(0), gitHubGraphQLClient);
     }
 
-    static void hideOutdatedWorkflowRunResults(QuarkusGitHubBotConfig quarkusBotConfig, GHPullRequest pullRequest)
+    static void hideOutdatedWorkflowRunResults(QuarkusGitHubBotConfig quarkusBotConfig, GHPullRequest pullRequest,
+            DynamicGraphQLClient gitHubGraphQLClient)
             throws IOException {
         List<GHIssueComment> comments = pullRequest.getComments();
 
@@ -74,7 +80,6 @@ public class HideOutdatedWorkflowRunResults {
             updatedComment.append(HIDE_MESSAGE_PREFIX);
             updatedComment.append(comment.getBody().replace(WorkflowConstants.MESSAGE_ID_ACTIVE,
                     WorkflowConstants.MESSAGE_ID_HIDDEN));
-            updatedComment.append(HIDE_MESSAGE_SUFFIX);
 
             if (!quarkusBotConfig.isDryRun()) {
                 try {
@@ -84,10 +89,35 @@ public class HideOutdatedWorkflowRunResults {
                             "Unable to hide outdated workflow run status for comment " + comment.getId() + " of pull request #"
                                     + pullRequest.getNumber());
                 }
+                try {
+                    minimizeOutdatedComment(gitHubGraphQLClient, comment);
+                } catch (ExecutionException | InterruptedException e) {
+                    LOG.error(
+                            "Unable to minimize outdated workflow run status for comment " + comment.getId()
+                                    + " of pull request #"
+                                    + pullRequest.getNumber());
+                }
             } else {
                 LOG.info(
                         "Pull request #" + pullRequest.getNumber() + " - Hide outdated workflow run status " + comment.getId());
             }
         }
+    }
+
+    static void minimizeOutdatedComment(DynamicGraphQLClient gitHubGraphQLClient, GHIssueComment comment)
+            throws ExecutionException, InterruptedException {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("subjectId", comment.getNodeId());
+        gitHubGraphQLClient.executeSync("""
+                mutation MinimizeOutdatedContent($subjectId: ID!) {
+                  minimizeComment(input: {
+                    subjectId: $subjectId,
+                    classifier: OUTDATED}) {
+                      minimizedComment {
+                        isMinimized
+                      }
+                    }
+                }
+                """, variables);
     }
 }
