@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
@@ -60,7 +61,8 @@ public class AnalyzeWorkflowRunResults {
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.ANALYZE_WORKFLOW_RUN_RESULTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -101,7 +103,7 @@ public class AnalyzeWorkflowRunResults {
         }
         GHPullRequest pullRequest = pullRequestOptional.get();
 
-        HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest);
+        HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest, gitHubGraphQLClient);
 
         if (pullRequest.isDraft()) {
             return;
