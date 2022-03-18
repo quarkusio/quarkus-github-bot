@@ -27,6 +27,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
+import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 class TriageDiscussion {
@@ -130,14 +131,19 @@ class TriageDiscussion {
             variables.put("labelableId", discussion.getNodeId());
             variables.put("labelIds", labelIds.toArray(new String[0]));
 
-            gitHubGraphQLClient.executeSync("""
-                    mutation AddLabels($labelableId: String!, $labelIds: [String!]!) {
+            Response response = gitHubGraphQLClient.executeSync("""
+                    mutation AddLabels($labelableId: ID!, $labelIds: [ID!]!) {
                       addLabelsToLabelable(input: {
                         labelableId: $labelableId,
                         labelIds: $labelIds}) {
                             clientMutationId
                       }
                     }""", variables);
+
+            if (response.hasError()) {
+                LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add labels: " + String.join(", ", labels)
+                        + " - " + response.getErrors());
+            }
         } catch (ExecutionException | InterruptedException e) {
             LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add labels: " + String.join(", ", labels));
         }
@@ -150,14 +156,19 @@ class TriageDiscussion {
             variables.put("discussionId", discussion.getNodeId());
             variables.put("comment", comment);
 
-            gitHubGraphQLClient.executeSync("""
-                    mutation AddComment($discussionId: String!, $comment: String!) {
+            Response response = gitHubGraphQLClient.executeSync("""
+                    mutation AddComment($discussionId: ID!, $comment: String!) {
                       addDiscussionComment(input: {
                         discussionId: $discussionId,
                         body: $comment }) {
                             clientMutationId
                       }
                     }""", variables);
+
+            if (response.hasError()) {
+                LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add comment: " + comment
+                        + " - " + response.getErrors());
+            }
         } catch (ExecutionException | InterruptedException e) {
             LOG.info("Discussion #" + discussion.getNumber() + " - Unable to add comment: " + comment);
         }

@@ -13,7 +13,7 @@
 {/if}
 
 {#for module in job.modules}
-#### :package: {module.name}
+#### :package: {module.name ? module.name : "Root project"}
 
 {#if module.testFailures}
 ```diff
