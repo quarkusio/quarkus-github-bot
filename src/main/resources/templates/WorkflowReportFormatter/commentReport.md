@@ -42,7 +42,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 {/if}
 
 {#for module in job.modules}
-#### :package: {module.name}
+#### :package: {module.name ? module.name : "Root project"}
 
 {#if module.testFailures}
 {#for failure : module.testFailures}
