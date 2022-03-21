@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class QuarkusGitHubBotConfigFile {
 
     @JsonDeserialize(as = HashSet.class)
