@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
@@ -25,12 +24,14 @@ import org.kohsuke.github.GHCheckRunBuilder.Annotation;
 import org.kohsuke.github.GHCheckRunBuilder.Output;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowJob;
 import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.GHWorkflowRun.Conclusion;
+import org.kohsuke.github.GitHub;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.WorkflowRun;
@@ -39,11 +40,13 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.workflow.StackTraceUtils;
 import io.quarkus.bot.workflow.WorkflowConstants;
+import io.quarkus.bot.workflow.WorkflowContext;
 import io.quarkus.bot.workflow.WorkflowReportFormatter;
 import io.quarkus.bot.workflow.WorkflowRunAnalyzer;
 import io.quarkus.bot.workflow.report.WorkflowReport;
 import io.quarkus.bot.workflow.report.WorkflowReportJob;
 import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 public class AnalyzeWorkflowRunResults {
 
@@ -62,7 +65,7 @@ public class AnalyzeWorkflowRunResults {
 
     void analyzeWorkflowResults(@WorkflowRun.Completed GHEventPayload.WorkflowRun workflowRunPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
-            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
+            GitHub gitHub, DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.ANALYZE_WORKFLOW_RUN_RESULTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -75,9 +78,6 @@ public class AnalyzeWorkflowRunResults {
         GHWorkflow workflow = workflowRunPayload.getWorkflow();
 
         if (!quarkusBotConfigFile.workflowRunAnalysis.workflows.contains(workflow.getName())) {
-            return;
-        }
-        if (workflowRun.getEvent() != GHEvent.PULL_REQUEST) {
             return;
         }
 
@@ -100,23 +100,105 @@ public class AnalyzeWorkflowRunResults {
             artifactsAvailable = false;
         }
 
-        Optional<GHPullRequest> pullRequestOptional = getAssociatedPullRequest(workflowRun, artifacts);
-        if (pullRequestOptional.isEmpty()) {
-            LOG.error("Workflow run #" + workflowRun.getId() + " - Unable to find the associated pull request");
-            return;
+        if (workflowRun.getEvent() == GHEvent.PULL_REQUEST) {
+            Optional<GHPullRequest> pullRequestOptional = getAssociatedPullRequest(workflowRun, artifacts);
+
+            if (pullRequestOptional.isEmpty()) {
+                LOG.error("Workflow run #" + workflowRun.getId() + " - Unable to find the associated pull request");
+                return;
+            }
+
+            GHPullRequest pullRequest = pullRequestOptional.get();
+            WorkflowContext workflowContext = new WorkflowContext(pullRequest);
+
+            HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, workflowContext, pullRequest,
+                    gitHubGraphQLClient);
+
+            if (workflowRun.getConclusion() != Conclusion.FAILURE) {
+                return;
+            }
+
+            Optional<String> reportCommentOptional = generateReportComment(workflowRun, workflowContext,
+                    artifacts, artifactsAvailable);
+
+            if (reportCommentOptional.isEmpty()) {
+                return;
+            }
+
+            String reportComment = reportCommentOptional.get();
+
+            if (!quarkusBotConfig.isDryRun()) {
+                pullRequest.comment(reportComment);
+            } else {
+                LOG.info("Pull request #" + pullRequest.getNumber() + " - Add test failures:\n" + reportComment);
+            }
+        } else {
+            Optional<GHIssue> reportIssueOptional = getAssociatedReportIssue(gitHub, workflowRun, artifacts);
+
+            if (reportIssueOptional.isEmpty()) {
+                return;
+            }
+
+            GHIssue reportIssue = reportIssueOptional.get();
+            WorkflowContext workflowContext = new WorkflowContext(reportIssue);
+
+            HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, workflowContext, reportIssue,
+                    gitHubGraphQLClient);
+
+            if (workflowRun.getConclusion() == Conclusion.SUCCESS
+                    && reportIssue.getState() == GHIssueState.OPEN) {
+                String fixedComment = ":heavy_check_mark: **Build fixed:**\n* Link to latest CI run: "
+                        + workflowRun.getHtmlUrl().toString();
+
+                if (!quarkusBotConfig.isDryRun()) {
+                    reportIssue.comment(fixedComment);
+                    reportIssue.close();
+                } else {
+                    LOG.info("Issue #" + reportIssue.getNumber() + " - Add comment: " + fixedComment);
+                    LOG.info("Issue #" + reportIssue.getNumber() + " - Closing report issue");
+                }
+                return;
+            }
+
+            if (workflowRun.getConclusion() != Conclusion.FAILURE) {
+                return;
+            }
+
+            if (!quarkusBotConfig.isDryRun()) {
+                reportIssue.reopen();
+            } else {
+                LOG.info("Issue #" + reportIssue.getNumber() + " - Reopening report issue");
+            }
+
+            Optional<String> reportCommentOptional = generateReportComment(workflowRun, workflowContext,
+                    artifacts, artifactsAvailable);
+
+            if (reportCommentOptional.isEmpty()) {
+                // not able to generate a proper report but let's post a default comment anyway
+                String defaultFailureComment = "The build is failing and we were not able to generate a report:\n* Link to latest CI run: "
+                        + workflowRun.getHtmlUrl().toString();
+
+                if (!quarkusBotConfig.isDryRun()) {
+                    reportIssue.comment(defaultFailureComment);
+                } else {
+                    LOG.info("Issue #" + reportIssue.getNumber() + " - Add comment: " + defaultFailureComment);
+                }
+                return;
+            }
+
+            String reportComment = reportCommentOptional.get();
+
+            if (!quarkusBotConfig.isDryRun()) {
+                reportIssue.comment(reportComment);
+            } else {
+                LOG.info("Issue #" + reportIssue.getNumber() + " - Add test failures:\n" + reportComment);
+            }
         }
-        GHPullRequest pullRequest = pullRequestOptional.get();
+    }
 
-        HideOutdatedWorkflowRunResults.hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequest, gitHubGraphQLClient);
-
-        if (pullRequest.isDraft()) {
-            return;
-        }
-
-        if (workflowRun.getConclusion() != Conclusion.FAILURE) {
-            return;
-        }
-
+    private Optional<String> generateReportComment(GHWorkflowRun workflowRun, WorkflowContext workflowContext,
+            List<GHArtifact> artifacts,
+            boolean artifactsAvailable) throws IOException {
         List<GHArtifact> surefireReportsArtifacts = artifacts
                 .stream()
                 .filter(a -> a.getName().startsWith(WorkflowConstants.BUILD_REPORTS_ARTIFACT_PREFIX))
@@ -128,33 +210,30 @@ public class AnalyzeWorkflowRunResults {
                 .sorted(GHWorkflowJobComparator.INSTANCE)
                 .collect(Collectors.toList());
 
-        Optional<WorkflowReport> workflowReportOptional = workflowRunAnalyzer.getReport(workflowRun, pullRequest, jobs,
+        Optional<WorkflowReport> workflowReportOptional = workflowRunAnalyzer.getReport(workflowRun, workflowContext, jobs,
                 surefireReportsArtifacts);
         if (workflowReportOptional.isEmpty()) {
-            return;
+            return Optional.empty();
         }
 
         WorkflowReport workflowReport = workflowReportOptional.get();
 
-        Optional<GHCheckRun> checkRunOptional = createCheckRun(workflowRun, pullRequest, artifactsAvailable, workflowReport);
+        Optional<GHCheckRun> checkRunOptional = createCheckRun(workflowRun, workflowContext, artifactsAvailable,
+                workflowReport);
 
-        String commentReport = workflowReportFormatter.getCommentReport(workflowReport,
+        String reportComment = workflowReportFormatter.getReportComment(workflowReport,
                 artifactsAvailable,
                 checkRunOptional.orElse(null),
                 WorkflowConstants.MESSAGE_ID_ACTIVE,
                 true);
-        if (commentReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
-            commentReport = workflowReportFormatter.getCommentReport(workflowReport,
+        if (reportComment.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
+            reportComment = workflowReportFormatter.getReportComment(workflowReport,
                     artifactsAvailable,
                     checkRunOptional.orElse(null),
                     WorkflowConstants.MESSAGE_ID_ACTIVE,
                     false);
         }
-        if (!quarkusBotConfig.isDryRun()) {
-            pullRequest.comment(commentReport);
-        } else {
-            LOG.info("Pull request #" + pullRequest.getNumber() + " - Add test failures:\n" + commentReport);
-        }
+        return Optional.of(reportComment);
     }
 
     /**
@@ -188,7 +267,29 @@ public class AnalyzeWorkflowRunResults {
         return Optional.empty();
     }
 
-    private Optional<GHCheckRun> createCheckRun(GHWorkflowRun workflowRun, GHPullRequest pullRequest,
+    /**
+     * It is possible to associate a build with an issue to report to.
+     */
+    private Optional<GHIssue> getAssociatedReportIssue(GitHub gitHub, GHWorkflowRun workflowRun, List<GHArtifact> artifacts)
+            throws NumberFormatException, IOException {
+        Optional<GHArtifact> reportIssueNumberArtifact = artifacts.stream()
+                .filter(a -> a.getName().startsWith(WorkflowConstants.REPORT_ISSUE_NUMBER_PREFIX)).findFirst();
+        if (!reportIssueNumberArtifact.isEmpty()) {
+            String issueReference = reportIssueNumberArtifact.get().getName()
+                    .replace(WorkflowConstants.REPORT_ISSUE_NUMBER_PREFIX, "");
+            if (issueReference.contains("#")) {
+                String[] issueReferenceParts = issueReference.split("#", 2);
+                return Optional
+                        .of(gitHub.getRepository(issueReferenceParts[0]).getIssue(Integer.valueOf(issueReferenceParts[1])));
+            }
+
+            return Optional.of(workflowRun.getRepository().getIssue(Integer.valueOf(issueReference)));
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<GHCheckRun> createCheckRun(GHWorkflowRun workflowRun, WorkflowContext workflowContext,
             boolean artifactsAvailable, WorkflowReport workflowReport) {
         if (!workflowReport.hasTestFailures() || quarkusBotConfig.isDryRun()) {
             return Optional.empty();
@@ -196,7 +297,8 @@ public class AnalyzeWorkflowRunResults {
 
         try {
             String name = "Build summary for " + workflowRun.getHeadSha();
-            String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, pullRequest, artifactsAvailable);
+            String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, workflowContext,
+                    artifactsAvailable);
             String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
             if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
                 checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
@@ -238,7 +340,7 @@ public class AnalyzeWorkflowRunResults {
 
             return Optional.of(checkRunBuilder.create());
         } catch (Exception e) {
-            LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to create check run for test failures", e);
+            LOG.error(workflowContext.getLogContext() + " - Unable to create check run for test failures", e);
             return Optional.empty();
         }
     }
