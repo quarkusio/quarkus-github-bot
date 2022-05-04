@@ -27,7 +27,6 @@ import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.apache.maven.plugins.surefire.report.SurefireReportParser;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
-import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflowJob;
 import org.kohsuke.github.GHWorkflowJob.Step;
@@ -62,16 +61,15 @@ public class WorkflowRunAnalyzer {
     UrlShortener urlShortener;
 
     public Optional<WorkflowReport> getReport(GHWorkflowRun workflowRun,
-            GHPullRequest pullRequest,
+            WorkflowContext workflowContext,
             List<GHWorkflowJob> jobs,
             List<GHArtifact> buildReportsArtifacts) throws IOException {
         if (jobs.isEmpty()) {
-            LOG.error("Pull request #" + pullRequest.getNumber() + " - No jobs found");
+            LOG.error(workflowContext.getLogContext() + " - No jobs found");
             return Optional.empty();
         }
 
         GHRepository workflowRunRepository = workflowRun.getRepository();
-        String pullRequestRepositoryName = pullRequest.getHead().getRepository().getFullName();
         String sha = workflowRun.getHeadSha();
         Path allBuildReportsDirectory = Files.createTempDirectory("build-reports-analyzer-");
 
@@ -97,22 +95,22 @@ public class WorkflowRunAnalyzer {
                     GHArtifact buildReportsArtifact = buildReportsArtifactOptional.get();
                     Path jobDirectory = allBuildReportsDirectory.resolve(buildReportsArtifact.getName());
 
-                    Optional<BuildReports> buildReportsOptional = buildReportsUnarchiver.getBuildReports(pullRequest,
+                    Optional<BuildReports> buildReportsOptional = buildReportsUnarchiver.getBuildReports(workflowContext,
                             buildReportsArtifact, jobDirectory);
 
                     if (buildReportsOptional.isPresent()) {
                         BuildReports buildReports = buildReportsOptional.get();
                         if (buildReports.getBuildReportPath() != null) {
-                            buildReport = getBuildReport(pullRequest, buildReports.getBuildReportPath());
+                            buildReport = getBuildReport(workflowContext, buildReports.getBuildReportPath());
                         }
 
                         modules = buildReportsArtifactOptional.isPresent()
-                                ? getModules(pullRequest, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
-                                        pullRequestRepositoryName, sha)
+                                ? getModules(workflowContext, buildReport, jobDirectory, buildReports.getTestResultsPaths(),
+                                        sha)
                                 : Collections.emptyList();
                     } else {
                         errorDownloadingBuildReports = true;
-                        LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to analyze build report for artifact "
+                        LOG.error(workflowContext.getLogContext() + " - Unable to analyze build report for artifact "
                                 + buildReportsArtifact.getName() + " - see exceptions above");
                     }
                 }
@@ -129,12 +127,12 @@ public class WorkflowRunAnalyzer {
             }
 
             if (workflowReportJobs.isEmpty()) {
-                LOG.warn("Pull request #" + pullRequest.getNumber() + " - Report jobs empty");
+                LOG.warn(workflowContext.getLogContext() + " - Report jobs empty");
                 return Optional.empty();
             }
 
             WorkflowReport report = new WorkflowReport(sha, workflowReportJobs,
-                    workflowRunRepository.getFullName().equals(pullRequestRepositoryName),
+                    workflowRunRepository.getFullName().equals(workflowContext.getRepository()),
                     workflowRun.getConclusion(), workflowRun.getHtmlUrl().toString());
 
             return Optional.of(report);
@@ -145,13 +143,13 @@ public class WorkflowRunAnalyzer {
                         .map(Path::toFile)
                         .forEach(File::delete);
             } catch (IOException e) {
-                LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to delete temp directory "
+                LOG.error(workflowContext.getLogContext() + " - Unable to delete temp directory "
                         + allBuildReportsDirectory);
             }
         }
     }
 
-    private static BuildReport getBuildReport(GHPullRequest pullRequest, Path buildReportPath) {
+    private static BuildReport getBuildReport(WorkflowContext workflowContext, Path buildReportPath) {
         if (buildReportPath == null) {
             return new BuildReport();
         }
@@ -159,17 +157,17 @@ public class WorkflowRunAnalyzer {
         try {
             return OBJECT_MAPPER.readValue(buildReportPath.toFile(), BuildReport.class);
         } catch (Exception e) {
-            LOG.error("Pull Request #" + pullRequest.getNumber() + " - Unable to deserialize "
+            LOG.error(workflowContext.getLogContext() + " - Unable to deserialize "
                     + WorkflowConstants.BUILD_REPORT_PATH, e);
             return new BuildReport();
         }
     }
 
-    private List<WorkflowReportModule> getModules(GHPullRequest pullRequest,
+    private List<WorkflowReportModule> getModules(
+            WorkflowContext workflowContext,
             BuildReport buildReport,
             Path jobDirectory,
             Set<TestResultsPath> testResultsPaths,
-            String pullRequestRepository,
             String sha) {
         List<WorkflowReportModule> modules = new ArrayList<>();
 
@@ -193,11 +191,11 @@ public class WorkflowRunAnalyzer {
                                     WorkflowUtils.getFilePath(moduleName, rtc.getFullClassName()),
                                     rtc,
                                     StackTraceUtils.firstLines(StackTraceUtils.abbreviate(rtc.getFailureDetail(), 1000), 3),
-                                    getFailureUrl(pullRequestRepository, sha, moduleName, rtc),
-                                    urlShortener.shorten(getFailureUrl(pullRequestRepository, sha, moduleName, rtc))))
+                                    getFailureUrl(workflowContext.getRepository(), sha, moduleName, rtc),
+                                    urlShortener.shorten(getFailureUrl(workflowContext.getRepository(), sha, moduleName, rtc))))
                             .collect(Collectors.toList()));
                 } catch (Exception e) {
-                    LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to parse test results for file "
+                    LOG.error(workflowContext.getLogContext() + " - Unable to parse test results for file "
                             + testResultPath.getPath(), e);
                 }
             }

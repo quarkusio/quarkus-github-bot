@@ -20,7 +20,6 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
-import org.kohsuke.github.GHPullRequest;
 
 import io.quarkus.bot.workflow.urlshortener.UrlShortener;
 
@@ -36,10 +35,11 @@ class BuildReportsUnarchiver {
     @Inject
     UrlShortener urlShortener;
 
-    public Optional<BuildReports> getBuildReports(GHPullRequest pullRequest,
+    public Optional<BuildReports> getBuildReports(WorkflowContext workflowContext,
             GHArtifact buildReportsArtifact,
             Path jobDirectory) throws IOException {
-        ArtifactIsDownloaded artifactIsDownloaded = new ArtifactIsDownloaded(pullRequest, buildReportsArtifact, jobDirectory);
+        ArtifactIsDownloaded artifactIsDownloaded = new ArtifactIsDownloaded(workflowContext, buildReportsArtifact,
+                jobDirectory);
 
         try {
             Awaitility.await()
@@ -48,7 +48,7 @@ class BuildReportsUnarchiver {
                     .pollInterval(Duration.ofSeconds(30))
                     .until(artifactIsDownloaded);
         } catch (ConditionTimeoutException e) {
-            LOG.warn("Pull request #" + pullRequest.getNumber()
+            LOG.warn(workflowContext.getLogContext()
                     + " - Unable to download the artifacts in a timely manner, ignoring them");
             return Optional.empty();
         }
@@ -158,16 +158,16 @@ class BuildReportsUnarchiver {
 
         private static final Logger LOG = Logger.getLogger(ArtifactIsDownloaded.class);
 
-        private final GHPullRequest pullRequest;
+        private final WorkflowContext workflowContext;
         private final GHArtifact buildReportsArtifact;
         private final Path jobDirectory;
         private BuildReports buildReports = null;
         private int retry = 0;
 
-        private ArtifactIsDownloaded(GHPullRequest pullRequest,
+        private ArtifactIsDownloaded(WorkflowContext workflowContext,
                 GHArtifact buildReportsArtifact,
                 Path jobDirectory) {
-            this.pullRequest = pullRequest;
+            this.workflowContext = workflowContext;
             this.buildReportsArtifact = buildReportsArtifact;
             this.jobDirectory = jobDirectory;
         }
@@ -180,7 +180,7 @@ class BuildReportsUnarchiver {
                         .download((is) -> unzip(is, jobDirectory));
                 return true;
             } catch (Exception e) {
-                LOG.error("Pull request #" + pullRequest.getNumber() + " - Unable to download artifact "
+                LOG.error(workflowContext.getLogContext() + " - Unable to download artifact "
                         + buildReportsArtifact.getName() + "- retry #" + retry, e);
                 return false;
             }

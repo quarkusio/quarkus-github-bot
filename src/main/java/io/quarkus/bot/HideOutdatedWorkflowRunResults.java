@@ -8,10 +8,10 @@ import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
@@ -24,6 +24,8 @@ import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.workflow.WorkflowConstants;
+import io.quarkus.bot.workflow.WorkflowContext;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 public class HideOutdatedWorkflowRunResults {
 
@@ -67,13 +69,15 @@ public class HideOutdatedWorkflowRunResults {
             return;
         }
 
-        hideOutdatedWorkflowRunResults(quarkusBotConfig, pullRequests.get(0), gitHubGraphQLClient);
+        hideOutdatedWorkflowRunResults(quarkusBotConfig, new WorkflowContext(pullRequests.get(0)), pullRequests.get(0),
+                gitHubGraphQLClient);
     }
 
-    static void hideOutdatedWorkflowRunResults(QuarkusGitHubBotConfig quarkusBotConfig, GHPullRequest pullRequest,
+    static void hideOutdatedWorkflowRunResults(QuarkusGitHubBotConfig quarkusBotConfig,
+            WorkflowContext workflowContext, GHIssue issue,
             DynamicGraphQLClient gitHubGraphQLClient)
             throws IOException {
-        List<GHIssueComment> comments = pullRequest.getComments();
+        List<GHIssueComment> comments = issue.getComments();
 
         for (GHIssueComment comment : comments) {
             if (!comment.getBody().contains(WorkflowConstants.MESSAGE_ID_ACTIVE)) {
@@ -89,21 +93,17 @@ public class HideOutdatedWorkflowRunResults {
                 try {
                     comment.update(updatedComment.toString());
                 } catch (IOException e) {
-                    LOG.error(
-                            "Unable to hide outdated workflow run status for comment " + comment.getId() + " of pull request #"
-                                    + pullRequest.getNumber());
+                    LOG.error(workflowContext.getLogContext() +
+                            " - Unable to hide outdated workflow run status for comment " + comment.getId());
                 }
                 try {
                     minimizeOutdatedComment(gitHubGraphQLClient, comment);
                 } catch (ExecutionException | InterruptedException e) {
-                    LOG.error(
-                            "Unable to minimize outdated workflow run status for comment " + comment.getId()
-                                    + " of pull request #"
-                                    + pullRequest.getNumber());
+                    LOG.error(workflowContext.getLogContext() +
+                            " - Unable to minimize outdated workflow run status for comment " + comment.getId());
                 }
             } else {
-                LOG.info(
-                        "Pull request #" + pullRequest.getNumber() + " - Hide outdated workflow run status " + comment.getId());
+                LOG.info(workflowContext.getLogContext() + " - Hide outdated workflow run status " + comment.getId());
             }
         }
     }
