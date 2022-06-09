@@ -6,8 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.quarkus.bot</groupId>
     <artifactId>quarkus-bot</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>${revision}</version>
     <properties>
+        <revision>999-SNAPSHOT</revision>
         <compiler-plugin.version>3.10.1</compiler-plugin.version>
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.source>17</maven.compiler.source>
@@ -19,6 +20,7 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <surefire-plugin.version>3.0.0-M6</surefire-plugin.version>
+        <version.buildnumber.plugin>1.4</version.buildnumber.plugin>
         <version.formatter.plugin>2.18.0</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
 
@@ -98,6 +100,27 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>${version.buildnumber.plugin}</version>
+                <executions>
+                    <execution>
+                        <id>get-scm-revision</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                        <configuration>
+                            <doCheck>false</doCheck>
+                            <doUpdate>false</doUpdate>
+                            <revisionOnScmFailure>UNKNOWN</revisionOnScmFailure>
+                            <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+                            <shortRevisionLength>7</shortRevisionLength>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
@@ -187,4 +210,10 @@
             </properties>
         </profile>
     </profiles>
+    <scm>
+        <connection>scm:git:git@github.com:quarkusio/quarkus-github-bot.git</connection>
+        <developerConnection>scm:git:git@github.com:quarkusio/quarkus-github-bot.git</developerConnection>
+        <url>http://github.com/quarkusio/quarkus-github-bot</url>
+        <tag>HEAD</tag>
+    </scm>
 </project>
