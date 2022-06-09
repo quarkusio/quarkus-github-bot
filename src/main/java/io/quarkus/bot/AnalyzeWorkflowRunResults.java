@@ -326,10 +326,10 @@ public class AnalyzeWorkflowRunResults {
                                     .firstLines(StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
                                             GITHUB_FIELD_LENGTH_HARD_LIMIT), 3)
                                     : "The test failed.")
-                                            .withTitle(StringUtils.abbreviate(workflowReportJob.getName(), 255))
-                                            .withRawDetails(
-                                                    StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
-                                                            GITHUB_FIELD_LENGTH_HARD_LIMIT)));
+                            .withTitle(StringUtils.abbreviate(workflowReportJob.getName(), 255))
+                            .withRawDetails(
+                                    StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
+                                            GITHUB_FIELD_LENGTH_HARD_LIMIT)));
                 }
             }
 
