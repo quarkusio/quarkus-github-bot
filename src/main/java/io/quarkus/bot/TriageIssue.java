@@ -22,6 +22,7 @@ import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
+import org.kohsuke.github.GHLabel;
 
 class TriageIssue {
 
@@ -62,6 +63,9 @@ class TriageIssue {
                 }
             }
         }
+
+        // remove from the set the labels already present on the pull request
+        issue.getLabels().stream().map(GHLabel::getName).forEach(labels::remove);
 
         if (!labels.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
