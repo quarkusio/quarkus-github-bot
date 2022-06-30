@@ -37,7 +37,7 @@ class TriageDiscussion {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void triageIssue(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
+    void triageDiscussion(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.TRIAGE_DISCUSSIONS.isEnabled(quarkusBotConfigFile)) {
@@ -63,7 +63,7 @@ class TriageDiscussion {
         List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
-            if (Triage.matchRule(discussion.getTitle(), discussion.getBody(), rule)) {
+            if (Triage.matchRuleFromDescription(discussion.getTitle(), discussion.getBody(), rule)) {
                 if (!rule.labels.isEmpty()) {
                     labels.addAll(rule.labels);
                 }
