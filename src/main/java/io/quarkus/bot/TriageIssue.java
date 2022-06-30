@@ -46,7 +46,7 @@ class TriageIssue {
         List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
-            if (Triage.matchRule(issue.getTitle(), issue.getBody(), rule)) {
+            if (Triage.matchRuleFromDescription(issue.getTitle(), issue.getBody(), rule)) {
                 if (!rule.labels.isEmpty()) {
                     labels.addAll(rule.labels);
                 }

@@ -10,13 +10,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import io.quarkus.bot.util.Triage;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHPullRequestFileDetail;
-
-import com.hrakaroo.glob.GlobPattern;
-import com.hrakaroo.glob.MatchingEngine;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
@@ -58,23 +55,8 @@ class TriagePullRequest {
         boolean isBackportsBranch = pullRequest.getHead().getRef().contains(BACKPORTS_BRANCH);
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
-            if (matchRule(pullRequest, rule)) {
-                if (!rule.labels.isEmpty()) {
-                    labels.addAll(rule.labels);
-                }
-
-                if (!rule.notify.isEmpty() && rule.notifyInPullRequest
-                        && PullRequest.Opened.NAME.equals(pullRequestPayload.getAction())
-                        && !isBackportsBranch) {
-                    for (String mention : rule.notify) {
-                        if (!mention.equals(pullRequest.getUser().getLogin())) {
-                            mentions.add(mention);
-                        }
-                    }
-                }
-                if (Strings.isNotBlank(rule.comment)) {
-                    comments.add(rule.comment);
-                }
+            if (Triage.matchRuleFromChangedFiles(pullRequest, rule)) {
+                applyRule(pullRequestPayload, pullRequest, isBackportsBranch, rule, labels, mentions, comments);
             }
         }
 
@@ -102,6 +84,26 @@ class TriagePullRequest {
         }
     }
 
+    private void applyRule(GHEventPayload.PullRequest pullRequestPayload, GHPullRequest pullRequest, boolean isBackportsBranch,
+            TriageRule rule, Set<String> labels, Set<String> mentions, List<String> comments) throws IOException {
+        if (!rule.labels.isEmpty()) {
+            labels.addAll(rule.labels);
+        }
+
+        if (!rule.notify.isEmpty() && rule.notifyInPullRequest
+                && PullRequest.Opened.NAME.equals(pullRequestPayload.getAction())
+                && !isBackportsBranch) {
+            for (String mention : rule.notify) {
+                if (!mention.equals(pullRequest.getUser().getLogin())) {
+                    mentions.add(mention);
+                }
+            }
+        }
+        if (Strings.isNotBlank(rule.comment)) {
+            comments.add(rule.comment);
+        }
+    }
+
     private static Collection<String> limit(Set<String> labels) {
         if (labels.size() <= LABEL_SIZE_LIMIT) {
             return labels;
@@ -110,31 +112,4 @@ class TriagePullRequest {
         return new ArrayList<>(labels).subList(0, LABEL_SIZE_LIMIT);
     }
 
-    private static boolean matchRule(GHPullRequest pullRequest, TriageRule rule) {
-        // for now, we only use the files but we could also use the other rules at some point
-        if (rule.directories.isEmpty()) {
-            return false;
-        }
-
-        for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
-            for (String directory : rule.directories) {
-                if (!directory.contains("*")) {
-                    if (changedFile.getFilename().startsWith(directory)) {
-                        return true;
-                    }
-                } else {
-                    try {
-                        MatchingEngine matchingEngine = GlobPattern.compile(directory);
-                        if (matchingEngine.matches(changedFile.getFilename())) {
-                            return true;
-                        }
-                    } catch (Exception e) {
-                        LOG.error("Error evaluating glob expression: " + directory, e);
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
 }
