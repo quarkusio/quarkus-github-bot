@@ -53,10 +53,21 @@ class TriagePullRequest {
         Set<String> mentions = new TreeSet<>();
         List<String> comments = new ArrayList<>();
         boolean isBackportsBranch = pullRequest.getHead().getRef().contains(BACKPORTS_BRANCH);
+        boolean atLeastOneMatch = false;
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (Triage.matchRuleFromChangedFiles(pullRequest, rule)) {
+                atLeastOneMatch = true;
                 applyRule(pullRequestPayload, pullRequest, isBackportsBranch, rule, labels, mentions, comments);
+            }
+        }
+
+        if (!atLeastOneMatch) {
+            // Fall back to triaging according to the PR title/body
+            for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
+                if (Triage.matchRuleFromDescription(pullRequest.getTitle(), pullRequest.getBody(), rule)) {
+                    applyRule(pullRequestPayload, pullRequest, isBackportsBranch, rule, labels, mentions, comments);
+                }
             }
         }
 
