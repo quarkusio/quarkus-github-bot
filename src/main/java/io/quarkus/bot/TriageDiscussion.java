@@ -37,7 +37,7 @@ class TriageDiscussion {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void triageIssue(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
+    void triageDiscussion(@Discussion.Created @Discussion.CategoryChanged GHEventPayload.Discussion discussionPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.TRIAGE_DISCUSSIONS.isEnabled(quarkusBotConfigFile)) {
