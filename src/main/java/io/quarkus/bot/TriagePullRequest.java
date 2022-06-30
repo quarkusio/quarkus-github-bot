@@ -12,6 +12,7 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
 
@@ -79,7 +80,7 @@ class TriagePullRequest {
         }
 
         // remove from the set the labels already present on the pull request
-        labels.removeAll(pullRequest.getLabels().stream().map(l -> l.getName()).collect(Collectors.toList()));
+        pullRequest.getLabels().stream().map(GHLabel::getName).forEach(labels::remove);
 
         if (!labels.isEmpty()) {
             if (!quarkusBotConfig.isDryRun()) {
