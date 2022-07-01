@@ -7,7 +7,6 @@ import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 
 import io.quarkus.bot.build.reporting.model.BuildStatus;
 import io.quarkus.bot.build.reporting.model.ProjectReport;
-import io.quarkus.bot.workflow.StackTraceUtils;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -15,13 +14,15 @@ public class WorkflowReportModule {
 
     private final String name;
     private final ProjectReport projectReport;
+    private final String projectReportFailure;
     private final List<ReportTestSuite> reportTestSuites;
     private final List<WorkflowReportTestCase> failures;
 
-    public WorkflowReportModule(String name, ProjectReport projectReport, List<ReportTestSuite> reportTestSuites,
-            List<WorkflowReportTestCase> failures) {
+    public WorkflowReportModule(String name, ProjectReport projectReport, String projectReportFailure,
+            List<ReportTestSuite> reportTestSuites, List<WorkflowReportTestCase> failures) {
         this.name = name;
         this.projectReport = projectReport;
+        this.projectReportFailure = projectReportFailure;
         this.reportTestSuites = reportTestSuites;
         this.failures = failures;
     }
@@ -95,7 +96,7 @@ public class WorkflowReportModule {
         return testCount;
     }
 
-    public String getBuildReportFailure() {
-        return projectReport != null ? StackTraceUtils.firstLines(projectReport.getError(), 5) : null;
+    public String getProjectReportFailure() {
+        return projectReportFailure;
     }
 }

@@ -50,15 +50,6 @@ public class WorkflowReport {
         return jobs.stream().filter(j -> j.hasReportedFailures()).collect(Collectors.toList());
     }
 
-    public boolean hasJvmJobsFailing() {
-        for (WorkflowReportJob job : jobs) {
-            if (job.isFailing() && job.isJvm()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public boolean hasReportedFailures() {
         return hasBuildReportFailures() || hasTestFailures();
     }

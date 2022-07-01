@@ -14,7 +14,7 @@
 | Status | Name | Step | Failures | Logs | Raw logs |
 | :-:  | --  | --  | :-:  | :-:  | :-:  |
 {#for job in report.jobs}
-{#if job.failing || (report.jvmJobsFailing && job.jvmLinux)}
+{#if workflowReportJobIncludeStrategy.include(report, job)}
 | {job.conclusionEmoji} | {job.name} | {#if job.failingStep}`{job.failingStep}`{/if} | {#if job.reportedFailures}[Failures](#user-content-{job.failuresAnchor}){#else if job.failing}:warning: Check →{/if} | {#if job.url}[Logs]({job.url}){/if} | {#if job.rawLogsUrl}[Raw logs]({job.rawLogsUrl}){/if}
 {/if}
 {/for}

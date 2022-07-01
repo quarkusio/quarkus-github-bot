@@ -2,13 +2,21 @@ package io.quarkus.bot.workflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 
-public class StackTraceUtilsTest {
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+public class StackTraceShortenerTest {
+
+    @Inject
+    StackTraceShortener stackTraceShortener;
 
     @Test
     public void testAbbreviate() {
-        assertThat(StackTraceUtils.abbreviate(
+        assertThat(stackTraceShortener.shorten(
                 "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\n"
                         + "    at io.quarkus.test.common.LauncherUtil.waitForCapturedListeningData(LauncherUtil.java:73)\n"
                         + "    at io.quarkus.test.common.NativeImageLauncher.start(NativeImageLauncher.java:116)\n"
@@ -39,7 +47,7 @@ public class StackTraceUtilsTest {
                                 + "    at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:136)\n"
                                 + "    ... 34 more");
 
-        assertThat(StackTraceUtils.abbreviate("java.lang.AssertionError: \n"
+        assertThat(stackTraceShortener.shorten("java.lang.AssertionError: \n"
                 + "1 expectation failed.\n"
                 + "Response body doesn't match expectation.\n"
                 + "Expected: is \"[decoded][encoded]initial data\"\n"
@@ -294,7 +302,7 @@ public class StackTraceUtilsTest {
                         + "    at io.undertow.servlet.handlers.FilterHandler.handleRequest(FilterHandler.java:84)\n"
                         + "    at io.undertow.servlet.handlers.security.ServletSecurityRoleHandler.handleRequest(S...");
 
-        assertThat(StackTraceUtils.abbreviate("java.net.SocketTimeoutException: Read timed out\n"
+        assertThat(stackTraceShortener.shorten("java.net.SocketTimeoutException: Read timed out\n"
                 + "    at java.base/java.net.SocketInputStream.socketRead0(Native Method)\n"
                 + "    at java.base/java.net.SocketInputStream.socketRead(SocketInputStream.java:115)\n"
                 + "    at java.base/java.net.SocketInputStream.read(SocketInputStream.java:168)\n"
@@ -560,7 +568,7 @@ public class StackTraceUtilsTest {
 
     @Test
     public void testFirstLines() {
-        assertThat(StackTraceUtils.firstLines(
+        assertThat(stackTraceShortener.shorten(
                 "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\n"
                         + "    at io.quarkus.test.common.LauncherUtil.waitForCapturedListeningData(LauncherUtil.java:73)\n"
                         + "    at io.quarkus.test.common.NativeImageLauncher.start(NativeImageLauncher.java:116)\n"
@@ -575,14 +583,14 @@ public class StackTraceUtilsTest {
                         + "    at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:78)\n"
                         + "    at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$5(NodeTestTask.java:136)\n"
                         + "    ... 34 more",
-                3)).isEqualTo(
+                10000, 3)).isEqualTo(
                         "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details\n"
                                 + "    at io.quarkus.test.common.LauncherUtil.waitForCapturedListeningData(LauncherUtil.java:73)\n"
                                 + "    at io.quarkus.test.common.NativeImageLauncher.start(NativeImageLauncher.java:116)");
 
-        assertThat(StackTraceUtils.firstLines(
+        assertThat(stackTraceShortener.shorten(
                 "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details",
-                3)).isEqualTo(
+                10000, 3)).isEqualTo(
                         "java.lang.IllegalStateException: Unable to determine the status of the running process. See the above logs for details");
     }
 }

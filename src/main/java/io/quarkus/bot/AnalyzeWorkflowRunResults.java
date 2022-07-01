@@ -38,13 +38,15 @@ import io.quarkiverse.githubapp.event.WorkflowRun;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
-import io.quarkus.bot.workflow.StackTraceUtils;
+import io.quarkus.bot.workflow.QuarkusWorkflowConstants;
+import io.quarkus.bot.workflow.StackTraceShortener;
 import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.bot.workflow.WorkflowContext;
 import io.quarkus.bot.workflow.WorkflowReportFormatter;
 import io.quarkus.bot.workflow.WorkflowRunAnalyzer;
 import io.quarkus.bot.workflow.report.WorkflowReport;
 import io.quarkus.bot.workflow.report.WorkflowReportJob;
+import io.quarkus.bot.workflow.report.WorkflowReportJobIncludeStrategy;
 import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
@@ -59,6 +61,12 @@ public class AnalyzeWorkflowRunResults {
 
     @Inject
     WorkflowReportFormatter workflowReportFormatter;
+
+    @Inject
+    WorkflowReportJobIncludeStrategy workflowReportJobIncludeStrategy;
+
+    @Inject
+    StackTraceShortener stackTraceShortener;
 
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
@@ -225,13 +233,15 @@ public class AnalyzeWorkflowRunResults {
                 artifactsAvailable,
                 checkRunOptional.orElse(null),
                 WorkflowConstants.MESSAGE_ID_ACTIVE,
-                true);
+                true,
+                workflowReportJobIncludeStrategy);
         if (reportComment.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
             reportComment = workflowReportFormatter.getReportComment(workflowReport,
                     artifactsAvailable,
                     checkRunOptional.orElse(null),
                     WorkflowConstants.MESSAGE_ID_ACTIVE,
-                    false);
+                    false,
+                    workflowReportJobIncludeStrategy);
         }
         return Optional.of(reportComment);
     }
@@ -298,7 +308,7 @@ public class AnalyzeWorkflowRunResults {
         try {
             String name = "Build summary for " + workflowRun.getHeadSha();
             String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, workflowContext,
-                    artifactsAvailable);
+                    artifactsAvailable, workflowReportJobIncludeStrategy);
             String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
             if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
                 checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
@@ -322,13 +332,13 @@ public class AnalyzeWorkflowRunResults {
                                     ? Integer.valueOf(workflowReportTestCase.getFailureErrorLine())
                                     : 1,
                             AnnotationLevel.FAILURE,
-                            StringUtils.isNotBlank(workflowReportTestCase.getFailureDetail()) ? StackTraceUtils
-                                    .firstLines(StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
-                                            GITHUB_FIELD_LENGTH_HARD_LIMIT), 3)
+                            StringUtils.isNotBlank(workflowReportTestCase.getFailureDetail())
+                                    ? stackTraceShortener.shorten(workflowReportTestCase.getFailureDetail(),
+                                            GITHUB_FIELD_LENGTH_HARD_LIMIT, 3)
                                     : "The test failed.")
                             .withTitle(StringUtils.abbreviate(workflowReportJob.getName(), 255))
                             .withRawDetails(
-                                    StackTraceUtils.abbreviate(workflowReportTestCase.getFailureDetail(),
+                                    stackTraceShortener.shorten(workflowReportTestCase.getFailureDetail(),
                                             GITHUB_FIELD_LENGTH_HARD_LIMIT)));
                 }
             }
@@ -349,14 +359,14 @@ public class AnalyzeWorkflowRunResults {
 
         private static final GHWorkflowJobComparator INSTANCE = new GHWorkflowJobComparator();
 
-        private static final String INITIAL_JDK_PREFIX = "Initial JDK ";
-
         @Override
         public int compare(GHWorkflowJob o1, GHWorkflowJob o2) {
-            if (o1.getName().startsWith(INITIAL_JDK_PREFIX) && !o2.getName().startsWith(INITIAL_JDK_PREFIX)) {
+            if (o1.getName().startsWith(QuarkusWorkflowConstants.JOB_NAME_INITIAL_JDK_PREFIX)
+                    && !o2.getName().startsWith(QuarkusWorkflowConstants.JOB_NAME_INITIAL_JDK_PREFIX)) {
                 return -1;
             }
-            if (!o1.getName().startsWith(INITIAL_JDK_PREFIX) && o2.getName().startsWith(INITIAL_JDK_PREFIX)) {
+            if (!o1.getName().startsWith(QuarkusWorkflowConstants.JOB_NAME_INITIAL_JDK_PREFIX)
+                    && o2.getName().startsWith(QuarkusWorkflowConstants.JOB_NAME_INITIAL_JDK_PREFIX)) {
                 return 1;
             }
 

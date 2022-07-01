@@ -1,20 +1,22 @@
 package io.quarkus.bot;
 
-import io.quarkiverse.githubapp.ConfigFile;
-import io.quarkiverse.githubapp.event.PullRequest;
-import io.quarkus.bot.config.Feature;
-import io.quarkus.bot.config.QuarkusGitHubBotConfig;
-import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
-import io.quarkus.bot.workflow.WorkflowConstants;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHWorkflowRun;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import io.quarkiverse.githubapp.ConfigFile;
+import io.quarkiverse.githubapp.event.PullRequest;
+import io.quarkus.bot.config.Feature;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.workflow.QuarkusWorkflowConstants;
 
 class CancelWorkflowOnClosedPullRequest {
     private static final Logger LOG = Logger.getLogger(CancelWorkflowOnClosedPullRequest.class);
@@ -38,8 +40,8 @@ class CancelWorkflowOnClosedPullRequest {
                 .stream()
                 .filter(workflowRun -> workflowRun.getHeadRepository().getOwnerName()
                         .equals(pullRequest.getHead().getRepository().getOwnerName()))
-                .filter(workflowRun -> WorkflowConstants.QUARKUS_CI_WORKFLOW_NAME.equals(workflowRun.getName()) ||
-                        WorkflowConstants.QUARKUS_DOCUMENTATION_CI_WORKFLOW_NAME.equals(workflowRun.getName()))
+                .filter(workflowRun -> QuarkusWorkflowConstants.QUARKUS_CI_WORKFLOW_NAME.equals(workflowRun.getName()) ||
+                        QuarkusWorkflowConstants.QUARKUS_DOCUMENTATION_CI_WORKFLOW_NAME.equals(workflowRun.getName()))
                 .filter(workflowRun -> workflowRun.getStatus() == GHWorkflowRun.Status.QUEUED
                         || workflowRun.getStatus() == GHWorkflowRun.Status.IN_PROGRESS)
                 .collect(Collectors.toList());

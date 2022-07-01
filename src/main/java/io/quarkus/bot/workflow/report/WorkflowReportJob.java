@@ -7,7 +7,6 @@ import org.kohsuke.github.GHWorkflowRun.Conclusion;
 
 import io.quarkus.bot.build.reporting.model.BuildReport;
 import io.quarkus.bot.build.reporting.model.BuildStatus;
-import io.quarkus.bot.workflow.WorkflowConstants;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
@@ -16,6 +15,7 @@ public class WorkflowReportJob {
     private static final int MODULES_LIMIT = 3;
 
     private final String name;
+    private final String label;
     private final String failuresAnchor;
     private final Conclusion conclusion;
     private final String failingStep;
@@ -26,10 +26,11 @@ public class WorkflowReportJob {
     private final List<WorkflowReportModule> modules;
     private final boolean errorDownloadingSurefireReports;
 
-    public WorkflowReportJob(String name, String failuresAnchor, Conclusion conclusion, String failingStep, String url,
-            String rawLogsUrl, BuildReport buildReport, List<WorkflowReportModule> modules,
+    public WorkflowReportJob(String name, String label, String failuresAnchor, Conclusion conclusion, String failingStep,
+            String url, String rawLogsUrl, BuildReport buildReport, List<WorkflowReportModule> modules,
             boolean errorDownloadingSurefireReports) {
         this.name = name;
+        this.label = label;
         this.failuresAnchor = failuresAnchor;
         this.conclusion = conclusion;
         this.failingStep = failingStep;
@@ -51,6 +52,10 @@ public class WorkflowReportJob {
 
     public String getName() {
         return name;
+    }
+
+    public String getLabel() {
+        return label;
     }
 
     public String getFailuresAnchor() {
@@ -79,14 +84,6 @@ public class WorkflowReportJob {
             default:
                 return ":question:";
         }
-    }
-
-    public boolean isJvm() {
-        return name.startsWith(WorkflowConstants.JVM_TESTS_PREFIX);
-    }
-
-    public boolean isJvmLinux() {
-        return isJvm() && !name.contains(WorkflowConstants.WINDOWS);
     }
 
     public boolean isFailing() {
