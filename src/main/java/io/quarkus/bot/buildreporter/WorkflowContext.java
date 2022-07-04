@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHPullRequest;

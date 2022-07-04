@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,13 +37,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.bot.build.reporting.model.BuildReport;
 import io.quarkus.bot.build.reporting.model.ProjectReport;
-import io.quarkus.bot.workflow.BuildReportsUnarchiver.BuildReports;
-import io.quarkus.bot.workflow.BuildReportsUnarchiver.TestResultsPath;
-import io.quarkus.bot.workflow.report.WorkflowReport;
-import io.quarkus.bot.workflow.report.WorkflowReportJob;
-import io.quarkus.bot.workflow.report.WorkflowReportModule;
-import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
-import io.quarkus.bot.workflow.urlshortener.UrlShortener;
+import io.quarkus.bot.buildreporter.BuildReportsUnarchiver.BuildReports;
+import io.quarkus.bot.buildreporter.BuildReportsUnarchiver.TestResultsPath;
+import io.quarkus.bot.buildreporter.report.WorkflowReport;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJob;
+import io.quarkus.bot.buildreporter.report.WorkflowReportModule;
+import io.quarkus.bot.buildreporter.report.WorkflowReportTestCase;
+import io.quarkus.bot.buildreporter.urlshortener.UrlShortener;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @ApplicationScoped

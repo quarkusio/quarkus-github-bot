@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,7 +12,8 @@ public class BuildReporterConfig {
     private final Comparator<GHWorkflowJob> workflowJobComparator;
     private final Set<String> monitoredWorkflows;
 
-    private BuildReporterConfig(boolean dryRun, Comparator<GHWorkflowJob> workflowJobComparator, Set<String> monitoredWorkflows) {
+    private BuildReporterConfig(boolean dryRun, Comparator<GHWorkflowJob> workflowJobComparator,
+            Set<String> monitoredWorkflows) {
         this.dryRun = dryRun;
         this.workflowJobComparator = workflowJobComparator;
         this.monitoredWorkflows = monitoredWorkflows;

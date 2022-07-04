@@ -7,6 +7,8 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 
+import io.quarkus.bot.buildreporter.StackTraceShortener;
+
 @Singleton
 public final class QuarkusStackTraceShortener implements StackTraceShortener {
 

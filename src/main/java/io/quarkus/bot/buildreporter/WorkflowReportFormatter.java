@@ -1,11 +1,11 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import javax.enterprise.context.ApplicationScoped;
 
 import org.kohsuke.github.GHCheckRun;
 
-import io.quarkus.bot.workflow.report.WorkflowReport;
-import io.quarkus.bot.workflow.report.WorkflowReportJobIncludeStrategy;
+import io.quarkus.bot.buildreporter.report.WorkflowReport;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJobIncludeStrategy;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 

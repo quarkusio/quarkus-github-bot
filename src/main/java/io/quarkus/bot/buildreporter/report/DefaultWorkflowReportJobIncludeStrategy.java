@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow.report;
+package io.quarkus.bot.buildreporter.report;
 
 import javax.inject.Singleton;
 

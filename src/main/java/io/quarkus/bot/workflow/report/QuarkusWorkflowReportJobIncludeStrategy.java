@@ -2,6 +2,9 @@ package io.quarkus.bot.workflow.report;
 
 import javax.inject.Singleton;
 
+import io.quarkus.bot.buildreporter.report.WorkflowReport;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJob;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJobIncludeStrategy;
 import io.quarkus.bot.workflow.QuarkusWorkflowConstants;
 
 @Singleton
@@ -17,7 +20,7 @@ public class QuarkusWorkflowReportJobIncludeStrategy implements WorkflowReportJo
         // (no Docker support on Windows) and thus does not provide a similar coverage as the Linux
         // jobs. Having it green does not mean that things were OK globally.
         if (isJvmTests(job)) {
-            if(isWindows(job)) {
+            if (isWindows(job)) {
                 return false;
             }
 

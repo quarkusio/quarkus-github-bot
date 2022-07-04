@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow.urlshortener;
+package io.quarkus.bot.buildreporter.urlshortener;
 
 import java.net.URI;
 import java.net.URLEncoder;

@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -38,10 +38,10 @@ import org.kohsuke.github.GHWorkflowRun.Conclusion;
 import org.kohsuke.github.GitHub;
 
 import io.quarkiverse.githubapp.event.Actions;
-import io.quarkus.bot.workflow.report.WorkflowReport;
-import io.quarkus.bot.workflow.report.WorkflowReportJob;
-import io.quarkus.bot.workflow.report.WorkflowReportJobIncludeStrategy;
-import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
+import io.quarkus.bot.buildreporter.report.WorkflowReport;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJob;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJobIncludeStrategy;
+import io.quarkus.bot.buildreporter.report.WorkflowReportTestCase;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 @Singleton
