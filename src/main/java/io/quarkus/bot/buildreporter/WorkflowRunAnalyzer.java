@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,13 +37,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.bot.build.reporting.model.BuildReport;
 import io.quarkus.bot.build.reporting.model.ProjectReport;
-import io.quarkus.bot.workflow.BuildReportsUnarchiver.BuildReports;
-import io.quarkus.bot.workflow.BuildReportsUnarchiver.TestResultsPath;
-import io.quarkus.bot.workflow.report.WorkflowReport;
-import io.quarkus.bot.workflow.report.WorkflowReportJob;
-import io.quarkus.bot.workflow.report.WorkflowReportModule;
-import io.quarkus.bot.workflow.report.WorkflowReportTestCase;
-import io.quarkus.bot.workflow.urlshortener.UrlShortener;
+import io.quarkus.bot.buildreporter.BuildReportsUnarchiver.BuildReports;
+import io.quarkus.bot.buildreporter.BuildReportsUnarchiver.TestResultsPath;
+import io.quarkus.bot.buildreporter.report.WorkflowReport;
+import io.quarkus.bot.buildreporter.report.WorkflowReportJob;
+import io.quarkus.bot.buildreporter.report.WorkflowReportModule;
+import io.quarkus.bot.buildreporter.report.WorkflowReportTestCase;
+import io.quarkus.bot.buildreporter.urlshortener.UrlShortener;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @ApplicationScoped
@@ -56,6 +56,12 @@ public class WorkflowRunAnalyzer {
 
     @Inject
     BuildReportsUnarchiver buildReportsUnarchiver;
+
+    @Inject
+    WorkflowJobLabeller workflowJobLabeller;
+
+    @Inject
+    StackTraceShortener stackTraceShortener;
 
     @Inject
     UrlShortener urlShortener;
@@ -78,7 +84,8 @@ public class WorkflowRunAnalyzer {
 
             for (GHWorkflowJob job : jobs) {
                 if (job.getConclusion() != Conclusion.FAILURE && job.getConclusion() != Conclusion.CANCELLED) {
-                    workflowReportJobs.add(new WorkflowReportJob(job.getName(), null, job.getConclusion(), null, null, null,
+                    workflowReportJobs.add(new WorkflowReportJob(job.getName(), workflowJobLabeller.label(job.getName()),
+                            null, job.getConclusion(), null, null, null,
                             EMPTY_BUILD_REPORT, Collections.emptyList(), false));
                     continue;
                 }
@@ -116,6 +123,7 @@ public class WorkflowRunAnalyzer {
                 }
 
                 workflowReportJobs.add(new WorkflowReportJob(job.getName(),
+                        workflowJobLabeller.label(job.getName()),
                         getFailuresAnchor(job.getId()),
                         job.getConclusion(),
                         getFailingStep(job.getSteps()),
@@ -190,7 +198,7 @@ public class WorkflowRunAnalyzer {
                             .map(rtc -> new WorkflowReportTestCase(
                                     WorkflowUtils.getFilePath(moduleName, rtc.getFullClassName()),
                                     rtc,
-                                    StackTraceUtils.firstLines(StackTraceUtils.abbreviate(rtc.getFailureDetail(), 1000), 3),
+                                    stackTraceShortener.shorten(rtc.getFailureDetail(), 1000, 3),
                                     getFailureUrl(workflowContext.getRepository(), sha, moduleName, rtc),
                                     urlShortener.shorten(getFailureUrl(workflowContext.getRepository(), sha, moduleName, rtc))))
                             .collect(Collectors.toList()));
@@ -203,6 +211,8 @@ public class WorkflowRunAnalyzer {
             WorkflowReportModule module = new WorkflowReportModule(
                     moduleName,
                     moduleReports.getProjectReport(),
+                    moduleReports.getProjectReport() != null ? firstLines(moduleReports.getProjectReport().getError(), 5)
+                            : null,
                     reportTestSuites,
                     workflowReportTestCases);
 
@@ -276,6 +286,14 @@ public class WorkflowRunAnalyzer {
             sb.append("#L").append(reportTestCase.getFailureErrorLine());
         }
         return sb.toString();
+    }
+
+    private static String firstLines(String string, int numberOfLines) {
+        if (string == null || string.isBlank()) {
+            return null;
+        }
+
+        return string.lines().limit(numberOfLines).collect(Collectors.joining("\n"));
     }
 
     private static class ModuleReports {

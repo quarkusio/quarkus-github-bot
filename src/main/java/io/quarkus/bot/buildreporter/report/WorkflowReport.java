@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow.report;
+package io.quarkus.bot.buildreporter.report;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,15 +48,6 @@ public class WorkflowReport {
 
     public List<WorkflowReportJob> getJobsWithReportedFailures() {
         return jobs.stream().filter(j -> j.hasReportedFailures()).collect(Collectors.toList());
-    }
-
-    public boolean hasJvmJobsFailing() {
-        for (WorkflowReportJob job : jobs) {
-            if (job.isFailing() && job.isJvm()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public boolean hasReportedFailures() {

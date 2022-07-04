@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow;
+package io.quarkus.bot.buildreporter;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,7 +21,7 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 
-import io.quarkus.bot.workflow.urlshortener.UrlShortener;
+import io.quarkus.bot.buildreporter.urlshortener.UrlShortener;
 
 @ApplicationScoped
 class BuildReportsUnarchiver {

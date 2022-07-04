@@ -43,8 +43,8 @@
 {/if}
 
 {/for}
-{#else if module.buildReportFailure}
-<p>✖ <code>{module.buildReportFailure}</code></p>
+{#else if module.projectReportFailure}
+<p>✖ <code>{module.projectReportFailure}</code></p>
 {#else}
 <p>We were unable to extract a useful error message.</p>
 {/if}

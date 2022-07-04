@@ -1,4 +1,4 @@
-package io.quarkus.bot.workflow.report;
+package io.quarkus.bot.buildreporter.report;
 
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
 
