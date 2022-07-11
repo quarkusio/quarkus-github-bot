@@ -90,6 +90,13 @@ For pull requests, each rule can be triggered by:
 
 * `directories` - if any file in the commits of the pull requests match, trigger the rule. This is not a regexp (it uses `startsWith`) but glob type expression are supported too `extensions/test/**`.
 
+If no rule is triggered based on directories, a second pass will be executed; in that second pass, rules can be triggered by:
+
+* `title` - if the title matches this regular expression (case insensitively), trigger the rule
+* `body` - if the body (i.e. description) matches this regular expression (case insensitively), trigger the rule
+* `titleBody` - if either the title or the body (i.e. description) match this regular expression (case insensitively), trigger the rule
+* `expression` - allows to write a Jakarta EL expression testing `title`, `body` or `titleBody`. Be careful when writing expressions, better ping `@gsmet` in the pull request when creating/updating an expression.
+
 If the rule is triggered, the following action will be executed:
 
 * `labels` - will add the labels to the issue
