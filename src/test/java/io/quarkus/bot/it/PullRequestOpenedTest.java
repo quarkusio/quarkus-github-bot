@@ -253,6 +253,40 @@ public class PullRequestOpenedTest {
     }
 
     @Test
+    void triageFromChangedFilesAndDescription() throws IOException {
+        given()
+                .github(mocks -> {
+                    mocks.configFileFromString(
+                            "quarkus-github-bot.yml",
+                            """
+                                    features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]
+                                    triage:
+                                      rules:
+                                        - title: keyword
+                                          directories:
+                                            - foo/*
+                                            - bar/*
+                                          labels: [area/test1, area/test2]
+                                        - title: somethingelse
+                                          directories:
+                                            - foobar
+                                          labels: [area/test3]
+                                          allowSecondPass: true""");
+                    PagedIterable<GHPullRequestFileDetail> changedFilesMocks = MockHelper.mockPagedIterable(
+                            MockHelper.mockGHPullRequestFileDetail("foobar/pom.xml"));
+                    when(mocks.pullRequest(527350930).listFiles())
+                            .thenReturn(changedFilesMocks);
+                })
+                .when().payloadFromClasspath("/pullrequest-opened-title-contains-keyword.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verify(mocks.pullRequest(527350930))
+                            .addLabels("area/test1", "area/test2", "area/test3");
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
+
+    @Test
     void triageComment() throws IOException {
         given()
                 .github(mocks -> {

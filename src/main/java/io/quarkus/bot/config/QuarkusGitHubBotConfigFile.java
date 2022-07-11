@@ -48,6 +48,8 @@ public class QuarkusGitHubBotConfigFile {
         public String comment;
 
         public boolean notifyInPullRequest;
+
+        public boolean allowSecondPass = false;
     }
 
     public static class QE {

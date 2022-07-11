@@ -53,17 +53,20 @@ class TriagePullRequest {
         Set<String> mentions = new TreeSet<>();
         List<String> comments = new ArrayList<>();
         boolean isBackportsBranch = pullRequest.getHead().getRef().contains(BACKPORTS_BRANCH);
-        boolean atLeastOneMatch = false;
+        // The second pass is allowed if either:
+        // - no rule matched in the first pass
+        // - OR all matching rules from the first pass explicitly allow the second pass
+        boolean allowSecondPass = true;
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (Triage.matchRuleFromChangedFiles(pullRequest, rule)) {
-                atLeastOneMatch = true;
+                allowSecondPass = allowSecondPass && rule.allowSecondPass;
                 applyRule(pullRequestPayload, pullRequest, isBackportsBranch, rule, labels, mentions, comments);
             }
         }
 
-        if (!atLeastOneMatch) {
-            // Fall back to triaging according to the PR title/body
+        if (allowSecondPass) {
+            // Do a second pass, triaging according to the PR title/body
             for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
                 if (Triage.matchRuleFromDescription(pullRequest.getTitle(), pullRequest.getBody(), rule)) {
                     applyRule(pullRequestPayload, pullRequest, isBackportsBranch, rule, labels, mentions, comments);
