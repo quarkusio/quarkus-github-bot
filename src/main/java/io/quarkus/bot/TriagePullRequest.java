@@ -37,7 +37,7 @@ class TriagePullRequest {
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    void triageIssue(
+    void triagePullRequest(
             @PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
         if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
