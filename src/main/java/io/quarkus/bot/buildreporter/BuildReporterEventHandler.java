@@ -244,12 +244,23 @@ public class BuildReporterEventHandler {
                 checkRunOptional.orElse(null),
                 WorkflowConstants.MESSAGE_ID_ACTIVE,
                 true,
+                true,
                 workflowReportJobIncludeStrategy);
         if (reportComment.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
             reportComment = workflowReportFormatter.getReportComment(workflowReport,
                     artifactsAvailable,
                     checkRunOptional.orElse(null),
                     WorkflowConstants.MESSAGE_ID_ACTIVE,
+                    false,
+                    true,
+                    workflowReportJobIncludeStrategy);
+        }
+        if (reportComment.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
+            reportComment = workflowReportFormatter.getReportComment(workflowReport,
+                    artifactsAvailable,
+                    checkRunOptional.orElse(null),
+                    WorkflowConstants.MESSAGE_ID_ACTIVE,
+                    false,
                     false,
                     workflowReportJobIncludeStrategy);
         }
@@ -321,9 +332,12 @@ public class BuildReporterEventHandler {
             String name = "Build summary for " + workflowRun.getHeadSha();
             String summary = workflowReportFormatter.getCheckRunReportSummary(workflowReport, workflowContext,
                     artifactsAvailable, workflowReportJobIncludeStrategy);
-            String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true);
+            String checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, true, true);
             if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
-                checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false);
+                checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false, true);
+            }
+            if (checkRunReport.length() > GITHUB_FIELD_LENGTH_HARD_LIMIT) {
+                checkRunReport = workflowReportFormatter.getCheckRunReport(workflowReport, false, false);
             }
 
             Output checkRunOutput = new Output(name, summary).withText(checkRunReport);
