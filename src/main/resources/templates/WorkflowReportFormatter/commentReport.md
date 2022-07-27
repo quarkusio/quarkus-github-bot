@@ -2,6 +2,9 @@
 :no_entry_sign: This workflow run has been cancelled.
 
 {/if}
+{#if !includeStackTraces}:warning: Unable to include the stracktraces as the report was too long. See annotations below for the details.{/if}
+{#if !includeFailureLinks}:warning: Unable to include the failure links as the report was too long. See annotations below for the details.{/if}
+
 {#if report.failure && !report.jobsFailing}
 ✖ This workflow run has failed but no jobs reported an error. Something weird happened, please check [the workflow run page]({report.workflowRunUrl}) carefully: it might be an issue with the workflow configuration itself.
 
@@ -46,7 +49,7 @@ Full information is available in the [Build summary check run]({checkRun.htmlUrl
 
 {#if module.testFailures}
 {#for failure : module.testFailures}
-<p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if} - {#if checkRun && failure.failureDetail}<a href="{checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{failure_count}">More details</a> - {/if}<a href="{failure.shortenedFailureUrl}">Source on GitHub</a></p>
+<p>✖ <code>{failure.fullName}</code>{#if failure.failureErrorLine} line <code>{failure.failureErrorLine}</code>{/if}{#if includeFailureLinks} - {#if checkRun && failure.failureDetail}<a href="{checkRun.htmlUrl}#user-content-test-failure-{failure.fullClassName.toLowerCase}-{failure_count}">More details</a> - {/if}<a href="{failure.shortenedFailureUrl}">Source on GitHub</a>{/if}</p>
 
 {#if failure.abbreviatedFailureDetail && includeStackTraces}
 <details>

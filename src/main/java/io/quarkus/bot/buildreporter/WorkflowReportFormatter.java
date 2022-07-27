@@ -18,15 +18,15 @@ public class WorkflowReportFormatter {
                 .render();
     }
 
-    public String getCheckRunReport(WorkflowReport report, boolean includeStackTraces) {
-        return Templates.checkRunReport(report, includeStackTraces).render();
+    public String getCheckRunReport(WorkflowReport report, boolean includeStackTraces, boolean includeFailureLinks) {
+        return Templates.checkRunReport(report, includeStackTraces, includeFailureLinks).render();
     }
 
     public String getReportComment(WorkflowReport report, boolean artifactsAvailable, GHCheckRun checkRun,
-            String messageIdActive, boolean includeStackTraces,
+            String messageIdActive, boolean includeStackTraces, boolean includeFailureLinks,
             WorkflowReportJobIncludeStrategy workflowReportJobIncludeStrategy) {
         return Templates.commentReport(report, artifactsAvailable, checkRun, messageIdActive, includeStackTraces,
-                workflowReportJobIncludeStrategy).render();
+                includeFailureLinks, workflowReportJobIncludeStrategy).render();
     }
 
     @CheckedTemplate
@@ -35,10 +35,11 @@ public class WorkflowReportFormatter {
         public static native TemplateInstance checkRunReportSummary(WorkflowReport report, WorkflowContext workflowContext,
                 boolean artifactsAvailable, WorkflowReportJobIncludeStrategy workflowReportJobIncludeStrategy);
 
-        public static native TemplateInstance checkRunReport(WorkflowReport report, boolean includeStackTraces);
+        public static native TemplateInstance checkRunReport(WorkflowReport report, boolean includeStackTraces,
+                boolean includeFailureLinks);
 
         public static native TemplateInstance commentReport(WorkflowReport report, boolean artifactsAvailable,
-                GHCheckRun checkRun, String messageIdActive, boolean includeStackTraces,
+                GHCheckRun checkRun, String messageIdActive, boolean includeStackTraces, boolean includeFailureLinks,
                 WorkflowReportJobIncludeStrategy workflowReportJobIncludeStrategy);
     }
 }
