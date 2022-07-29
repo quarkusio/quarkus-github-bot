@@ -120,12 +120,7 @@ triage:
 
 === Push issues/pull requests to a project
 
-[NOTE]
-====
-This feature only works with the new GitHub projects, not the classic ones.
-====
-
-You can push issues which gets the label `area/hibernate-validator` with the following configuration:
+For new projects, you can push issues which gets the label `area/hibernate-validator` with the following configuration:
 
 [source, yaml]
 ----
@@ -138,10 +133,23 @@ projects:
       status: Todo
 ----
 
+For classic projects, use the following snippet (note the `projectsClassic` root):
+
+[source, yaml]
+----
+projectsClassic:
+  rules:
+    - labels: [area/hibernate-validator]
+      project: 1
+      issues: true
+      pullRequests: false
+      status: Todo
+----
+
 * `labels` defines the list of labels for which the rule will be applied. Any time one of the labels is added to an issue/pull request, it will be added to the project (if not already in it).
 * `project` is the id of the project as seen in the URL
 * `issues` and `pullRequests` are false by default
-* `status` defines the name of the column in which the item will be added. `Todo` is the default.
+* `status` defines the name of the column in which the item will be added e.g. `Todo`, `Backlog`. It is mandatory.
 
 === Triage discussions
 

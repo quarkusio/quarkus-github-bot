@@ -3,6 +3,7 @@ package io.quarkus.bot;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -12,7 +13,12 @@ import javax.json.JsonObject;
 
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHLabel;
+import org.kohsuke.github.GHProject;
+import org.kohsuke.github.GHProjectColumn;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.HttpException;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
@@ -32,27 +38,30 @@ public class PushToProjects {
     private static final Logger LOG = Logger.getLogger(PushToProjects.class);
 
     private static final String STATUS_FIELD_NAME = "Status";
-    private static final String DEFAULT_STATUS_NAME = "Todo";
 
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
 
-    Map<Integer, String> projectMapping = new ConcurrentHashMap<>();
+    Map<Integer, String> projectNodeIdMapping = new ConcurrentHashMap<>();
+    Map<RepositoryProjectNumber, Long> classicProjectIdMapping = new ConcurrentHashMap<>();
 
     void issueLabeled(@Issue.Labeled GHEventPayload.Issue issuePayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            GitHub gitHub,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.PUSH_TO_PROJECTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
 
         doProjectPush("Issue #" + issuePayload.getIssue().getNumber() + ", label " + issuePayload.getLabel().getName(),
-                issuePayload.getOrganization().getLogin(),
-                issuePayload.getLabel(), issuePayload.getIssue().getNodeId(), true, quarkusBotConfigFile, gitHubGraphQLClient);
+                issuePayload.getOrganization().getLogin(), issuePayload.getIssue(),
+                issuePayload.getLabel(), issuePayload.getIssue().getNodeId(), true, quarkusBotConfigFile,
+                gitHub, gitHubGraphQLClient);
     }
 
     void pullRequestLabeled(@PullRequest.Labeled GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            GitHub gitHub,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.PUSH_TO_PROJECTS.isEnabled(quarkusBotConfigFile)) {
             return;
@@ -61,14 +70,15 @@ public class PushToProjects {
         doProjectPush(
                 "Pull request #" + pullRequestPayload.getPullRequest().getNumber() + ", label "
                         + pullRequestPayload.getLabel().getName(),
-                pullRequestPayload.getOrganization().getLogin(),
+                pullRequestPayload.getOrganization().getLogin(), pullRequestPayload.getPullRequest(),
                 pullRequestPayload.getLabel(), pullRequestPayload.getPullRequest().getNodeId(), true, quarkusBotConfigFile,
-                gitHubGraphQLClient);
+                gitHub, gitHubGraphQLClient);
     }
 
-    private void doProjectPush(String context, String organization, GHLabel label, String itemId, boolean isIssue,
-            QuarkusGitHubBotConfigFile quarkusBotConfigFile,
-            DynamicGraphQLClient gitHubGraphQLClient) {
+    private void doProjectPush(String context, String organization, GHIssue issue, GHLabel label, String itemId,
+            boolean isIssue,
+            QuarkusGitHubBotConfigFile quarkusBotConfigFile, GitHub gitHub,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         for (ProjectTriageRule projectTriageRule : quarkusBotConfigFile.projects.rules) {
             if (isIssue && !projectTriageRule.issues) {
                 continue;
@@ -78,7 +88,7 @@ public class PushToProjects {
             }
 
             if (Labels.matches(projectTriageRule.labels, label.getName())) {
-                String projectId = projectMapping.computeIfAbsent(projectTriageRule.project,
+                String projectId = projectNodeIdMapping.computeIfAbsent(projectTriageRule.project,
                         p -> getProjectNodeId(gitHubGraphQLClient, organization, p));
 
                 if (projectId == null) {
@@ -92,6 +102,58 @@ public class PushToProjects {
                     LOG.info(context + " - Add " + context + " to project " + projectTriageRule.project);
                 }
             }
+        }
+
+        for (ProjectTriageRule projectTriageRule : quarkusBotConfigFile.projectsClassic.rules) {
+            if (isIssue && !projectTriageRule.issues) {
+                continue;
+            }
+            if (!isIssue && !projectTriageRule.pullRequests) {
+                continue;
+            }
+
+            if (Labels.matches(projectTriageRule.labels, label.getName())) {
+                RepositoryProjectNumber repositoryProjectNumber = new RepositoryProjectNumber(
+                        issue.getRepository().getFullName(), projectTriageRule.project);
+                Long projectId = classicProjectIdMapping.computeIfAbsent(repositoryProjectNumber,
+                        rpn -> getClassicProjectId(issue, projectTriageRule.project));
+
+                GHProject project = gitHub.getProject(projectId);
+                Optional<GHProjectColumn> projectColumnOptional = project.listColumns().toList().stream()
+                        .filter(c -> c.getName().equals(projectTriageRule.status))
+                        .findFirst();
+
+                if (projectColumnOptional.isEmpty()) {
+                    throw new IllegalStateException("Unable to find column " + projectTriageRule.status + " in classic project "
+                            + projectTriageRule.project);
+                }
+
+                GHProjectColumn projectColumn = projectColumnOptional.get();
+                try {
+                    projectColumn.createCard(issue);
+                } catch (HttpException e) {
+                    // the item is already part of the board and we can't add it
+                }
+            }
+        }
+    }
+
+    private static Long getClassicProjectId(GHIssue issue, Integer projectNumber) {
+        try {
+            Optional<Long> projectId = issue.getRepository().listProjects().toList().stream()
+                    .filter(p -> projectNumber == p.getNumber())
+                    .map(p -> p.getId())
+                    .findFirst();
+
+            if (projectId.isEmpty()) {
+                throw new IllegalStateException("Unable to find project id for project " + projectNumber
+                        + " in repository " + issue.getRepository().getFullName());
+            }
+
+            return projectId.get();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to find project id for project " + projectNumber
+                    + " in repository " + issue.getRepository().getFullName(), e);
         }
     }
 
@@ -172,8 +234,8 @@ public class PushToProjects {
                     .filter(o -> o.containsKey("name"))
                     .anyMatch(o -> STATUS_FIELD_NAME.equals(o.getString("name")));
 
-            if (!isAlreadyInProject) {
-                updateStatus(gitHubGraphQLClient, projectId, itemId, statusName == null ? DEFAULT_STATUS_NAME : statusName);
+            if (statusName != null && !isAlreadyInProject) {
+                updateStatus(gitHubGraphQLClient, projectId, itemId, statusName);
             }
         } catch (ExecutionException | InterruptedException e) {
             throw new IllegalStateException("Unable to add item " + contentId + " to project " + projectId, e);
@@ -279,6 +341,37 @@ public class PushToProjects {
             return Map.entry(statusFieldId, statusValueId.get());
         } catch (ExecutionException | InterruptedException e) {
             throw new IllegalStateException("Unable to get Status field for project " + projectId, e);
+        }
+    }
+
+    private static class RepositoryProjectNumber {
+
+        private final String repository;
+        private final Integer projectNumber;
+
+        RepositoryProjectNumber(String repository, Integer projectNumber) {
+            this.repository = repository;
+            this.projectNumber = projectNumber;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            RepositoryProjectNumber other = (RepositoryProjectNumber) obj;
+            return Objects.equals(projectNumber, other.projectNumber) && Objects.equals(repository, other.repository);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(projectNumber, repository);
         }
     }
 }

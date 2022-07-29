@@ -19,6 +19,8 @@ public class QuarkusGitHubBotConfigFile {
 
     public Projects projects = new Projects();
 
+    public ProjectsClassic projectsClassic = new ProjectsClassic();
+
     public static class TriageConfig {
 
         public List<TriageRule> rules = new ArrayList<>();
@@ -80,6 +82,11 @@ public class QuarkusGitHubBotConfigFile {
     }
 
     public static class Projects {
+
+        public List<ProjectTriageRule> rules = new ArrayList<>();
+    }
+
+    public static class ProjectsClassic {
 
         public List<ProjectTriageRule> rules = new ArrayList<>();
     }
