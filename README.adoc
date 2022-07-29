@@ -118,6 +118,31 @@ triage:
         - integration-tests/amazon-lambda
 ----
 
+=== Push issues/pull requests to a project
+
+[NOTE]
+====
+This feature only works with the new GitHub projects, not the classic ones.
+====
+
+You can push issues which gets the label `area/hibernate-validator` with the following configuration:
+
+[source, yaml]
+----
+projects:
+  rules:
+    - labels: [area/hibernate-validator]
+      project: 1
+      issues: true
+      pullRequests: false
+      status: Todo
+----
+
+* `labels` defines the list of labels for which the rule will be applied. Any time one of the labels is added to an issue/pull request, it will be added to the project (if not already in it).
+* `project` is the id of the project as seen in the URL
+* `issues` and `pullRequests` are false by default
+* `status` defines the name of the column in which the item will be added. `Todo` is the default.
+
 === Triage discussions
 
 The rules applied for issues and pull requests are also applied to discussions, as long as the category is monitored.

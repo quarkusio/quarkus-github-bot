@@ -46,4 +46,14 @@ public class Labels {
 
         return new ArrayList<>(labels).subList(0, LABEL_SIZE_LIMIT);
     }
+
+    public static boolean matches(Set<String> labels, String labelCandidate) {
+        for (String label : labels) {
+            if (label.equals(labelCandidate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

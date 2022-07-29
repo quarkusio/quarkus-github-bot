@@ -9,7 +9,8 @@ public enum Feature {
     QUARKUS_REPOSITORY_WORKFLOW,
     SET_AREA_LABEL_COLOR,
     TRIAGE_ISSUES_AND_PULL_REQUESTS,
-    TRIAGE_DISCUSSIONS;
+    TRIAGE_DISCUSSIONS,
+    PUSH_TO_PROJECTS;
 
     public boolean isEnabled(QuarkusGitHubBotConfigFile quarkusBotConfigFile) {
         if (quarkusBotConfigFile == null) {
