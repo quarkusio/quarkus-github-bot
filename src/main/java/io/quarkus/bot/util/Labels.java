@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
+import org.kohsuke.github.GHLabel;
+
 public class Labels {
 
     /**
@@ -47,9 +49,19 @@ public class Labels {
         return new ArrayList<>(labels).subList(0, LABEL_SIZE_LIMIT);
     }
 
-    public static boolean matches(Set<String> labels, String labelCandidate) {
+    public static boolean matchesName(Collection<String> labels, String labelCandidate) {
         for (String label : labels) {
             if (label.equals(labelCandidate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean matches(Collection<GHLabel> labels, String labelCandidate) {
+        for (GHLabel label : labels) {
+            if (label.getName().equals(labelCandidate)) {
                 return true;
             }
         }

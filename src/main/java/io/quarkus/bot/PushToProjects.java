@@ -67,6 +67,11 @@ public class PushToProjects {
             return;
         }
 
+        // do not add to projects pull requests related to infra, typically the backport pull requests
+        if (Labels.matches(pullRequestPayload.getPullRequest().getLabels(), Labels.AREA_INFRA)) {
+            return;
+        }
+
         doProjectPush(
                 "Pull request #" + pullRequestPayload.getPullRequest().getNumber() + ", label "
                         + pullRequestPayload.getLabel().getName(),
@@ -87,7 +92,7 @@ public class PushToProjects {
                 continue;
             }
 
-            if (Labels.matches(projectTriageRule.labels, label.getName())) {
+            if (Labels.matchesName(projectTriageRule.labels, label.getName())) {
                 String projectId = projectNodeIdMapping.computeIfAbsent(projectTriageRule.project,
                         p -> getProjectNodeId(gitHubGraphQLClient, organization, p));
 
@@ -112,7 +117,7 @@ public class PushToProjects {
                 continue;
             }
 
-            if (Labels.matches(projectTriageRule.labels, label.getName())) {
+            if (Labels.matchesName(projectTriageRule.labels, label.getName())) {
                 RepositoryProjectNumber repositoryProjectNumber = new RepositoryProjectNumber(
                         issue.getRepository().getFullName(), projectTriageRule.project);
                 Long projectId = classicProjectIdMapping.computeIfAbsent(repositoryProjectNumber,
