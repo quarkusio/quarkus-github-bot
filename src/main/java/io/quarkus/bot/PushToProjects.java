@@ -76,7 +76,7 @@ public class PushToProjects {
                 "Pull request #" + pullRequestPayload.getPullRequest().getNumber() + ", label "
                         + pullRequestPayload.getLabel().getName(),
                 pullRequestPayload.getOrganization().getLogin(), pullRequestPayload.getPullRequest(),
-                pullRequestPayload.getLabel(), pullRequestPayload.getPullRequest().getNodeId(), true, quarkusBotConfigFile,
+                pullRequestPayload.getLabel(), pullRequestPayload.getPullRequest().getNodeId(), false, quarkusBotConfigFile,
                 gitHub, gitHubGraphQLClient);
     }
 
