@@ -90,6 +90,11 @@
             <version>${build-reporting-maven-extension.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.graalvm.nativeimage</groupId>
+            <artifactId>svm</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>io.quarkiverse.githubapp</groupId>
             <artifactId>quarkus-github-app-testing</artifactId>
             <version>${quarkus-github-app.version}</version>
