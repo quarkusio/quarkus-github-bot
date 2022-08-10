@@ -53,6 +53,10 @@ public class PushToProjects {
             return;
         }
 
+        if (issuePayload.getOrganization() == null) {
+            return;
+        }
+
         doProjectPush("Issue #" + issuePayload.getIssue().getNumber() + ", label " + issuePayload.getLabel().getName(),
                 issuePayload.getOrganization().getLogin(), issuePayload.getIssue(),
                 issuePayload.getLabel(), issuePayload.getIssue().getNodeId(), true, quarkusBotConfigFile,
@@ -64,6 +68,10 @@ public class PushToProjects {
             GitHub gitHub,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.PUSH_TO_PROJECTS.isEnabled(quarkusBotConfigFile)) {
+            return;
+        }
+
+        if (pullRequestPayload.getOrganization() == null) {
             return;
         }
 
