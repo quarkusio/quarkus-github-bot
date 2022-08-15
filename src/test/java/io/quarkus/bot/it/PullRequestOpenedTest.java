@@ -1,12 +1,7 @@
 package io.quarkus.bot.it;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
+import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHEvent;
@@ -14,8 +9,13 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.PagedIterable;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.quarkiverse.githubapp.testing.GitHubAppTest;
-import io.quarkus.test.junit.QuarkusTest;
+import java.io.IOException;
+
+import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @GitHubAppTest
@@ -215,6 +215,7 @@ public class PullRequestOpenedTest {
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
                             .addLabels("area/test1", "area/test2");
+                    verify(mocks.pullRequest(527350930), times(2)).listFiles();
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
@@ -248,6 +249,7 @@ public class PullRequestOpenedTest {
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
                             .addLabels("area/test1", "area/test2");
+                    verify(mocks.pullRequest(527350930), times(2)).listFiles();
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
@@ -282,6 +284,7 @@ public class PullRequestOpenedTest {
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
                             .addLabels("area/test1", "area/test2", "area/test3");
+                    verify(mocks.pullRequest(527350930), times(2)).listFiles();
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
@@ -310,6 +313,7 @@ public class PullRequestOpenedTest {
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(527350930))
                             .comment("This is an urgent PR");
+                    verify(mocks.pullRequest(527350930)).listFiles();
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
