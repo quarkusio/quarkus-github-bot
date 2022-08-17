@@ -193,6 +193,48 @@ When a workflow run associated to a pull request is completed, a report is gener
 
 > image::documentation/screenshots/workflow-run-report.png[]
 
+=== Approve workflow runs
+
+This rule applies more fine-grained protections to workflow runs
+than is provided by the basic GitHub settings. If a repository
+is https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository[set up to only allow workflow runs from committers],
+the bot can automatically approve some workflows which meet a set of rules.
+
+Syntax of the `.github/quarkus-github-bot.yml` file is as follows:
+
+[source, yaml]
+----
+features: [ APPROVE_WORKFLOWS ]
+workflows:
+      rules:
+        - allow:
+            directories:
+             - ./src
+             - ./documentation
+             files:
+             - README.md
+            users:
+              minContributions: 5
+        unless:
+           directories:
+             - ./github
+           files:
+             - bad.xml
+----
+
+Workflows will be allowed if they meet one of the rules in the `allow` section,
+unless one of the rules in the `unless` section is triggered.
+
+In the example above, any file called `README.md` would be allowed, except for `./github/README.md`.
+Users who had made at least 5 commits to the repository would be allowed to make any changes,
+except to `bad.xml` and any files in `.github`. Other users could make changes to `./src` or `./documentation`.
+
+If the rule is triggered, the following actions will be executed:
+
+* `approve` - will approve the workflow which needs approval
+
+If the workflow is not approved, it will be left untouched, for a human approver to look at.
+
 === Mark closed pull requests as invalid
 
 If a pull request is closed without being merged, we automatically add the `triage/invalid` label to the pull request.
