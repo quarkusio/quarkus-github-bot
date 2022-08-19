@@ -26,7 +26,7 @@
 
         <quarkus-github-app.version>1.11.0</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
-        <build-reporting-maven-extension.version>1.0.5</build-reporting-maven-extension.version>
+        <build-reporter.version>2.0.0</build-reporter.version>
         <assertj.version>3.23.1</assertj.version>
     </properties>
     <dependencyManagement>
@@ -86,8 +86,8 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus.bot</groupId>
-            <artifactId>build-reporting-maven-extension-model</artifactId>
-            <version>${build-reporting-maven-extension.version}</version>
+            <artifactId>build-reporter-github-actions</artifactId>
+            <version>${build-reporter.version}</version>
         </dependency>
         <dependency>
             <groupId>org.graalvm.nativeimage</groupId>
