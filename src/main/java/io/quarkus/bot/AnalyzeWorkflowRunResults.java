@@ -11,8 +11,8 @@ import org.kohsuke.github.GitHub;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.WorkflowRun;
-import io.quarkus.bot.buildreporter.BuildReporterConfig;
-import io.quarkus.bot.buildreporter.BuildReporterEventHandler;
+import io.quarkus.bot.buildreporter.githubactions.BuildReporterConfig;
+import io.quarkus.bot.buildreporter.githubactions.BuildReporterEventHandler;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;

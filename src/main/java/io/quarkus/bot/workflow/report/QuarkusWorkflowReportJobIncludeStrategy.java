@@ -2,9 +2,9 @@ package io.quarkus.bot.workflow.report;
 
 import javax.inject.Singleton;
 
-import io.quarkus.bot.buildreporter.report.WorkflowReport;
-import io.quarkus.bot.buildreporter.report.WorkflowReportJob;
-import io.quarkus.bot.buildreporter.report.WorkflowReportJobIncludeStrategy;
+import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReport;
+import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReportJob;
+import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReportJobIncludeStrategy;
 import io.quarkus.bot.workflow.QuarkusWorkflowConstants;
 
 @Singleton

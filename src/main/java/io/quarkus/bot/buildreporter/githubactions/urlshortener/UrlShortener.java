@@ -1,4 +1,4 @@
-package io.quarkus.bot.buildreporter.urlshortener;
+package io.quarkus.bot.buildreporter.githubactions.urlshortener;
 
 public interface UrlShortener {
 

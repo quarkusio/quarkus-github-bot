@@ -1,4 +1,4 @@
-package io.quarkus.bot.buildreporter.report;
+package io.quarkus.bot.buildreporter.githubactions.report;
 
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
 
