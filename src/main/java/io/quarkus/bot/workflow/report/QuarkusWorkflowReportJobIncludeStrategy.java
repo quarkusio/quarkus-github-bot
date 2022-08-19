@@ -2,6 +2,7 @@ package io.quarkus.bot.workflow.report;
 
 import javax.inject.Singleton;
 
+import io.quarkus.bot.buildreporter.githubactions.WorkflowConstants;
 import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReport;
 import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReportJob;
 import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReportJobIncludeStrategy;
@@ -12,6 +13,12 @@ public class QuarkusWorkflowReportJobIncludeStrategy implements WorkflowReportJo
 
     @Override
     public boolean include(WorkflowReport report, WorkflowReportJob job) {
+        if (QuarkusWorkflowConstants.JOB_NAME_BUILD_REPORT.equals(job.getName())) {
+            return false;
+        }
+        if (job.getName().startsWith(WorkflowConstants.BUILD_SUMMARY_CHECK_RUN_PREFIX)) {
+            return false;
+        }
         if (job.isFailing()) {
             return true;
         }
