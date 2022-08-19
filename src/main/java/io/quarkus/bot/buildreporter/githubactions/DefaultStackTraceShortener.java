@@ -1,4 +1,4 @@
-package io.quarkus.bot.buildreporter;
+package io.quarkus.bot.buildreporter.githubactions;
 
 import javax.inject.Singleton;
 

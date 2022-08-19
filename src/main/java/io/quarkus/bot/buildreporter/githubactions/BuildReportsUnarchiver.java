@@ -1,4 +1,4 @@
-package io.quarkus.bot.buildreporter;
+package io.quarkus.bot.buildreporter.githubactions;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,7 +21,7 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHArtifact;
 
-import io.quarkus.bot.buildreporter.urlshortener.UrlShortener;
+import io.quarkus.bot.buildreporter.githubactions.urlshortener.UrlShortener;
 
 @ApplicationScoped
 class BuildReportsUnarchiver {

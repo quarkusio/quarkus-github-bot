@@ -1,4 +1,4 @@
-package io.quarkus.bot.buildreporter.report;
+package io.quarkus.bot.buildreporter.githubactions.report;
 
 import java.util.List;
 import java.util.stream.Collectors;

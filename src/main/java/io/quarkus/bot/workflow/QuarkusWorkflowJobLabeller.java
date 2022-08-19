@@ -2,7 +2,7 @@ package io.quarkus.bot.workflow;
 
 import javax.inject.Singleton;
 
-import io.quarkus.bot.buildreporter.WorkflowJobLabeller;
+import io.quarkus.bot.buildreporter.githubactions.WorkflowJobLabeller;
 
 @Singleton
 public class QuarkusWorkflowJobLabeller implements WorkflowJobLabeller {

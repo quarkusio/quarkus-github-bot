@@ -6,7 +6,7 @@ import javax.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.bot.buildreporter.StackTraceShortener;
+import io.quarkus.bot.buildreporter.githubactions.StackTraceShortener;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
