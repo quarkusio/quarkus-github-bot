@@ -9,4 +9,5 @@ public class QuarkusWorkflowConstants {
     public static final String JOB_NAME_JVM_TESTS_PREFIX = "JVM Tests";
     public static final String JOB_NAME_JDK_PREFIX = "JDK";
     public static final String JOB_NAME_WINDOWS = "Windows";
+    public static final String JOB_NAME_BUILD_REPORT = "Build report";
 }
