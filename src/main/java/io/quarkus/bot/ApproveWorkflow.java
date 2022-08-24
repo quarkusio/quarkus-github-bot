@@ -191,7 +191,7 @@ class ApproveWorkflow {
                     }
                 }
             } catch (InterruptedException | IOException e) {
-                LOG.info("Could not get contributors" + e);
+                LOG.error("Could not get repository contributor statistics", e);
             }
         }
         return null;
