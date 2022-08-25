@@ -6,15 +6,22 @@ import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.PullRequestFilesMatcher;
+import io.quarkus.cache.CacheKey;
+import io.quarkus.cache.CacheResult;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositoryStatistics;
 import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.PagedIterable;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 class ApproveWorkflow {
 
@@ -179,20 +186,39 @@ class ApproveWorkflow {
     }
 
     private GHRepositoryStatistics.ContributorStats getStatsForUser(GHEventPayload.WorkflowRun workflowPayload) {
-        if (workflowPayload.getSender().getLogin() != null) {
-            try {
-                GHRepositoryStatistics statistics = workflowPayload.getRepository().getStatistics();
-                if (statistics != null) {
-                    PagedIterable<GHRepositoryStatistics.ContributorStats> contributors = statistics.getContributorStats();
-                    for (GHRepositoryStatistics.ContributorStats contributor : contributors) {
-                        if (workflowPayload.getSender().getLogin().equals(contributor.getAuthor().getLogin())) {
-                            return contributor;
-                        }
-                    }
-                }
-            } catch (InterruptedException | IOException e) {
-                LOG.error("Could not get repository contributor statistics", e);
-            }
+
+        String login = workflowPayload.getSender().getLogin();
+        if (login != null) {
+            return getStatsForUser(workflowPayload.getRepository(), login);
+        }
+        return null;
+    }
+
+    @CacheResult(cacheName = "contributor-cache")
+    GHRepositoryStatistics.ContributorStats getStatsForUser(GHRepository repository, @CacheKey String login) {
+        try {
+            Map<String, GHRepositoryStatistics.ContributorStats> contributorStats = getContributorStats(repository);
+            return contributorStats.get(login);
+        } catch (IOException | InterruptedException e) {
+            LOG.error("Could not get repository contributor statistics", e);
+        }
+
+        return null;
+    }
+
+    @CacheResult(cacheName = "stats-cache")
+    Map<String, GHRepositoryStatistics.ContributorStats> getContributorStats(GHRepository repository)
+            throws IOException, InterruptedException {
+        GHRepositoryStatistics statistics = repository.getStatistics();
+        if (statistics != null) {
+            PagedIterable<GHRepositoryStatistics.ContributorStats> contributors = statistics.getContributorStats();
+            // Pull the iterable into a list object to force the traversal of the entire list,
+            // since then we get a fully-warmed cache on our first request
+            // Convert to a map for convenience of retrieval
+            List<GHRepositoryStatistics.ContributorStats> statsList = contributors.toList();
+            return statsList.stream()
+                    .collect(
+                            Collectors.toMap(contributorStats -> contributorStats.getAuthor().getLogin(), Function.identity()));
         }
         return null;
     }

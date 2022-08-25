@@ -3,6 +3,7 @@ package io.quarkus.bot.it;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
+import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,10 @@ import static org.mockito.Mockito.withSettings;
 @ExtendWith(MockitoExtension.class)
 public class WorkflowApprovalTest {
 
-    private void setupMockQueriesAndCommits(GitHubMockSetupContext mocks) {
+    // We may change our user stats in individual tests, so wipe caches before each test
+    @CacheInvalidateAll(cacheName = "contributor-cache")
+    @CacheInvalidateAll(cacheName = "stats-cache")
+    void setupMockQueriesAndCommits(GitHubMockSetupContext mocks) {
         GHRepository repoMock = mocks.repository("bot-playground");
         GHPullRequestQueryBuilder workflowRunQueryBuilderMock = mock(GHPullRequestQueryBuilder.class,
                 withSettings().defaultAnswer(Answers.RETURNS_SELF));

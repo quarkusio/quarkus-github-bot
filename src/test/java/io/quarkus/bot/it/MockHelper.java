@@ -5,6 +5,7 @@ import org.kohsuke.github.GHUser;
 import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,11 +25,19 @@ public class MockHelper {
     @SuppressWarnings("unchecked")
     public static <T> PagedIterable<T> mockPagedIterable(T... contentMocks) {
         PagedIterable<T> iterableMock = mock(PagedIterable.class);
+        try {
+            lenient().when(iterableMock.toList()).thenAnswer(ignored2 -> List.of(contentMocks));
+        } catch (IOException e) {
+            // This should never happen
+            // That's a classic unwise comment, but it's a mock, so surely we're safe? :)
+            throw new RuntimeException(e);
+        }
         lenient().when(iterableMock.iterator()).thenAnswer(ignored -> {
             PagedIterator<T> iteratorMock = mock(PagedIterator.class);
             Iterator<T> actualIterator = List.of(contentMocks).iterator();
             when(iteratorMock.next()).thenAnswer(ignored2 -> actualIterator.next());
             lenient().when(iteratorMock.hasNext()).thenAnswer(ignored2 -> actualIterator.hasNext());
+
             return iteratorMock;
         });
         return iterableMock;
