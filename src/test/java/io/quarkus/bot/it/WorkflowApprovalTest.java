@@ -213,8 +213,8 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        files:
-                                            - pom.xml
+                                        directories:
+                                            - "**/pom.xml"
                                       """);
             setupMockQueriesAndCommits(mocks);
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
@@ -242,8 +242,8 @@ public class WorkflowApprovalTest {
                                         directories:
                                           - ./src
                                       unless:
-                                        files:
-                                            - bad.xml
+                                        directories:
+                                            - "**/bad.xml"
                                       """);
             setupMockQueriesAndCommits(mocks);
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
@@ -271,8 +271,8 @@ public class WorkflowApprovalTest {
                                         directories:
                                           - ./src
                                       unless:
-                                        files:
-                                            - bad.xml
+                                        directories:
+                                            - "**/bad.xml"
                                       """);
             setupMockQueriesAndCommits(mocks);
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
@@ -375,8 +375,8 @@ public class WorkflowApprovalTest {
                                         users:
                                           minContributions: 5
                                       unless:
-                                        files:
-                                         - bad.xml
+                                        directories:
+                                         - "**/bad.xml"
                               """);
             setupMockQueriesAndCommits(mocks);
             setupMockUsers(mocks);
@@ -405,8 +405,8 @@ public class WorkflowApprovalTest {
                                     directories:
                                       - ./src
                                   unless:
-                                    files:
-                                      - bad.xml
+                                    directories:
+                                      - "**/bad.xml"
                           """))
                 .when().payloadFromClasspath("/workflow-from-committer.json")
                 .event(GHEvent.WORKFLOW_RUN)

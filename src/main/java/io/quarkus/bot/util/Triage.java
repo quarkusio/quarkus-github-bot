@@ -83,7 +83,7 @@ public final class Triage {
         }
 
         PullRequestFilesMatcher prMatcher = new PullRequestFilesMatcher(pullRequest);
-        if (prMatcher.changedFilesMatchDirectory(rule.directories)) {
+        if (prMatcher.changedFilesMatch(rule.directories)) {
             return true;
         }
 

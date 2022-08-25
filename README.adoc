@@ -210,16 +210,14 @@ workflows:
         - allow:
             directories:
              - ./src
-             - ./documentation
-             files:
-             - README.md
+             - ./doc*
+             - "**/README.md"
             users:
               minContributions: 5
         unless:
            directories:
-             - ./github
-           files:
-             - bad.xml
+             - ./.github
+             - "**/pom.xml"
 ----
 
 Workflows will be allowed if they meet one of the rules in the `allow` section,
@@ -227,7 +225,7 @@ unless one of the rules in the `unless` section is triggered.
 
 In the example above, any file called `README.md` would be allowed, except for `./github/README.md`.
 Users who had made at least 5 commits to the repository would be allowed to make any changes,
-except to `bad.xml` and any files in `.github`. Other users could make changes to `./src` or `./documentation`.
+except to a `pom.xml` or any files in `.github`. Other users could make changes to `./src` or directories whose name started with `./doc`.
 
 If the rule is triggered, the following actions will be executed:
 

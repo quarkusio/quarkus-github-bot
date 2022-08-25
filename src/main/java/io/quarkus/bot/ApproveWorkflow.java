@@ -132,38 +132,12 @@ class ApproveWorkflow {
             return false;
         }
 
-        boolean matches = false;
-
-        PullRequestFilesMatcher prMatcher = new PullRequestFilesMatcher(pullRequest);
-        if (matchDirectories(prMatcher, rule)) {
-            matches = true;
-        } else if (matchFiles(prMatcher, rule)) {
-            matches = true;
-        }
-
-        return matches;
-    }
-
-    private static boolean matchDirectories(PullRequestFilesMatcher prMatcher,
-            QuarkusGitHubBotConfigFile.WorkflowApprovalCondition rule) {
         if (rule.directories == null || rule.directories.isEmpty()) {
             return false;
         }
-        if (prMatcher.changedFilesMatchDirectory(rule.directories)) {
-            return true;
-        }
-        return false;
-    }
 
-    private static boolean matchFiles(PullRequestFilesMatcher prMatcher,
-            QuarkusGitHubBotConfigFile.WorkflowApprovalCondition rule) {
-        if (rule.files == null || rule.files.isEmpty()) {
-            return false;
-        }
-        if (prMatcher.changedFilesMatchFile(rule.files)) {
-            return true;
-        }
-        return false;
+        PullRequestFilesMatcher prMatcher = new PullRequestFilesMatcher(pullRequest);
+        return prMatcher.changedFilesMatch(rule.directories);
     }
 
     private boolean matchRuleForUser(GHRepositoryStatistics.ContributorStats stats,

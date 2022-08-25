@@ -2,6 +2,7 @@ package io.quarkus.bot.util;
 
 import com.hrakaroo.glob.GlobPattern;
 import com.hrakaroo.glob.MatchingEngine;
+import io.quarkus.cache.CacheResult;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
@@ -19,22 +20,25 @@ public class PullRequestFilesMatcher {
         this.pullRequest = pullRequest;
     }
 
-    public boolean changedFilesMatchDirectory(Collection<String> directories) {
-        for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
-            for (String directory : directories) {
+    public boolean changedFilesMatch(Collection<String> filenamePatterns) {
+        PagedIterable<GHPullRequestFileDetail> prFiles = pullRequest.listFiles();
+        if (prFiles != null) {
+            for (GHPullRequestFileDetail changedFile : prFiles) {
+                for (String filenamePattern : filenamePatterns) {
 
-                if (!directory.contains("*")) {
-                    if (changedFile.getFilename().startsWith(directory)) {
-                        return true;
-                    }
-                } else {
-                    try {
-                        MatchingEngine matchingEngine = GlobPattern.compile(directory);
-                        if (matchingEngine.matches(changedFile.getFilename())) {
+                    if (!filenamePattern.contains("*")) {
+                        if (changedFile.getFilename().startsWith(filenamePattern)) {
                             return true;
                         }
-                    } catch (Exception e) {
-                        LOG.error("Error evaluating glob expression: " + directory, e);
+                    } else {
+                        try {
+                            MatchingEngine matchingEngine = compileGlob(filenamePattern);
+                            if (matchingEngine.matches(changedFile.getFilename())) {
+                                return true;
+                            }
+                        } catch (Exception e) {
+                            LOG.error("Error evaluating glob expression: " + filenamePattern, e);
+                        }
                     }
                 }
             }
@@ -42,33 +46,8 @@ public class PullRequestFilesMatcher {
         return false;
     }
 
-    public boolean changedFilesMatchFile(Collection<String> files) {
-
-        PagedIterable<GHPullRequestFileDetail> prFiles = pullRequest.listFiles();
-
-        if (prFiles == null || files == null) {
-            return false;
-        }
-
-        for (GHPullRequestFileDetail changedFile : prFiles) {
-            for (String file : files) {
-
-                if (!file.contains("*")) {
-                    if (changedFile.getFilename().endsWith(file)) {
-                        return true;
-                    }
-                } else {
-                    try {
-                        MatchingEngine matchingEngine = GlobPattern.compile(file);
-                        if (matchingEngine.matches(changedFile.getFilename())) {
-                            return true;
-                        }
-                    } catch (Exception e) {
-                        LOG.error("Error evaluating glob expression: " + file, e);
-                    }
-                }
-            }
-        }
-        return false;
+    @CacheResult(cacheName = "glob-cache")
+    MatchingEngine compileGlob(String filenamePattern) {
+        return GlobPattern.compile(filenamePattern);
     }
 }
