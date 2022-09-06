@@ -42,8 +42,15 @@ public class QuarkusGitHubBotConfigFile {
 
         public String expression;
 
+        /**
+         * @deprecated use files instead
+         */
         @JsonDeserialize(as = TreeSet.class)
+        @Deprecated(forRemoval = true)
         public Set<String> directories = new TreeSet<>();
+
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> files = new TreeSet<>();
 
         @JsonDeserialize(as = TreeSet.class)
         public Set<String> labels = new TreeSet<>();

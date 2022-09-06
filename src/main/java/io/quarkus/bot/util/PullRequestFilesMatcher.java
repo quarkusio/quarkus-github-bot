@@ -21,6 +21,10 @@ public class PullRequestFilesMatcher {
     }
 
     public boolean changedFilesMatch(Collection<String> filenamePatterns) {
+        if (filenamePatterns.isEmpty()) {
+            return false;
+        }
+
         PagedIterable<GHPullRequestFileDetail> prFiles = pullRequest.listFiles();
         if (prFiles != null) {
             for (GHPullRequestFileDetail changedFile : prFiles) {

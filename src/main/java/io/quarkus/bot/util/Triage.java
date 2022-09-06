@@ -78,11 +78,14 @@ public final class Triage {
 
     public static boolean matchRuleFromChangedFiles(GHPullRequest pullRequest, TriageRule rule) {
         // for now, we only use the files but we could also use the other rules at some point
-        if (rule.directories.isEmpty()) {
+        if (rule.directories.isEmpty() && rule.files.isEmpty()) {
             return false;
         }
 
         PullRequestFilesMatcher prMatcher = new PullRequestFilesMatcher(pullRequest);
+        if (prMatcher.changedFilesMatch(rule.files)) {
+            return true;
+        }
         if (prMatcher.changedFilesMatch(rule.directories)) {
             return true;
         }
