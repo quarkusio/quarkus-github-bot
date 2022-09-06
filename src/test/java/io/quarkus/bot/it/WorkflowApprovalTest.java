@@ -77,7 +77,7 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                             - ./src
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -103,7 +103,7 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                             - "*"
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -129,7 +129,7 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                             - ./src
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -155,10 +155,10 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                             - "*"
                                       unless:
-                                         directories:
+                                         files:
                                            - ./github
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -184,10 +184,10 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                             - "*"
                                       unless:
-                                         directories:
+                                         files:
                                            - ./github
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -213,7 +213,7 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                             - "**/pom.xml"
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -239,10 +239,10 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                           - ./src
                                       unless:
-                                        directories:
+                                        files:
                                             - "**/bad.xml"
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -268,10 +268,10 @@ public class WorkflowApprovalTest {
                             workflows:
                                   rules:
                                     - allow:
-                                        directories:
+                                        files:
                                           - ./src
                                       unless:
-                                        directories:
+                                        files:
                                             - "**/bad.xml"
                                       """);
             setupMockQueriesAndCommits(mocks);
@@ -375,7 +375,7 @@ public class WorkflowApprovalTest {
                                         users:
                                           minContributions: 5
                                       unless:
-                                        directories:
+                                        files:
                                          - "**/bad.xml"
                               """);
             setupMockQueriesAndCommits(mocks);
@@ -402,10 +402,10 @@ public class WorkflowApprovalTest {
                         workflows:
                               rules:
                                 - allow:
-                                    directories:
+                                    files:
                                       - ./src
                                   unless:
-                                    directories:
+                                    files:
                                       - "**/bad.xml"
                           """))
                 .when().payloadFromClasspath("/workflow-from-committer.json")

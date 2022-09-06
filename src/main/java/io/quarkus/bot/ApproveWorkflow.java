@@ -60,9 +60,7 @@ class ApproveWorkflow {
 
         if (approval.isApproved()) {
             processApproval(workflowRun);
-
         }
-
     }
 
     private void processApproval(GHWorkflowRun workflowRun) throws IOException {
@@ -132,12 +130,12 @@ class ApproveWorkflow {
             return false;
         }
 
-        if (rule.directories == null || rule.directories.isEmpty()) {
+        if (rule.files == null || rule.files.isEmpty()) {
             return false;
         }
 
         PullRequestFilesMatcher prMatcher = new PullRequestFilesMatcher(pullRequest);
-        return prMatcher.changedFilesMatch(rule.directories);
+        return prMatcher.changedFilesMatch(rule.files);
     }
 
     private boolean matchRuleForUser(GHRepositoryStatistics.ContributorStats stats,

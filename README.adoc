@@ -208,14 +208,14 @@ features: [ APPROVE_WORKFLOWS ]
 workflows:
       rules:
         - allow:
-            directories:
+            files:
              - ./src
              - ./doc*
              - "**/README.md"
             users:
               minContributions: 5
         unless:
-           directories:
+           files:
              - ./.github
              - "**/pom.xml"
 ----

@@ -120,7 +120,6 @@ public class QuarkusGitHubBotConfigFile {
     }
 
     public static class WorkflowApprovalCondition {
-        public List<String> directories;
         public List<String> files;
         public UserRule users;
 
