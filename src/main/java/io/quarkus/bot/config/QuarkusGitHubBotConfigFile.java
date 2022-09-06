@@ -120,7 +120,9 @@ public class QuarkusGitHubBotConfigFile {
     }
 
     public static class WorkflowApprovalCondition {
-        public List<String> files;
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> files = new TreeSet<>();
+
         public UserRule users;
 
     }
