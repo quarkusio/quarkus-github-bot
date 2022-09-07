@@ -214,8 +214,8 @@ workflows:
              - "**/README.md"
             users:
               minContributions: 5
-        unless:
-           files:
+          unless:
+            files:
              - ./.github
              - "**/pom.xml"
 ----
