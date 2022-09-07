@@ -31,7 +31,7 @@ class ApproveWorkflow {
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void evaluatePullRequest(
-            @WorkflowRun GHEventPayload.WorkflowRun workflowPayload,
+            @WorkflowRun.Requested GHEventPayload.WorkflowRun workflowPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
         if (!Feature.APPROVE_WORKFLOWS.isEnabled(quarkusBotConfigFile)) {
             return;
@@ -171,13 +171,16 @@ class ApproveWorkflow {
         try {
             Map<String, GHRepositoryStatistics.ContributorStats> contributorStats = getContributorStats(repository);
             return contributorStats.get(login);
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | NullPointerException e) {
+            // We sometimes see an NPE from PagedIterator, if a fetch does not complete properly and leaves the object in an inconsistent state
+            // Catching these errors allows the null result for this contributor to be cached, which is ok
             LOG.error("Could not get repository contributor statistics", e);
         }
 
         return null;
     }
 
+    // We throw errors at this level to force the cache to retry and populate itself on the next request
     @CacheResult(cacheName = "stats-cache")
     Map<String, GHRepositoryStatistics.ContributorStats> getContributorStats(GHRepository repository)
             throws IOException, InterruptedException {
