@@ -31,13 +31,13 @@ triage:
     - labels: [area/amazon-lambda]
       title: "lambda"
       notify: [patriot1burke, matejvasek]
-      directories:
+      files:
         - extensions/amazon-lambda
         - integration-tests/amazon-lambda
     - labels: [area/persistence]
       title: "db2"
       notify: [aguibert]
-      directories:
+      files:
         - extensions/reactive-db2-client/
         - extensions/jdbc/jdbc-db2/
 ----
@@ -88,9 +88,9 @@ There are a few differences though as it doesn't behave in the exact same way.
 
 For pull requests, each rule can be triggered by:
 
-* `directories` - if any file in the commits of the pull requests match, trigger the rule. This is not a regexp (it uses `startsWith`) but glob type expression are supported too `extensions/test/**`.
+* `files` - if any file in the commits of the pull requests match, trigger the rule. This is not a regexp (it uses `startsWith`) but glob type expression are supported too `extensions/test/**`.
 
-If no rule is triggered based on directories, or if rules are triggered but they all specify `allowSecondPass: true`,
+If no rule is triggered based on files, or if rules are triggered but they all specify `allowSecondPass: true`,
 a second pass will be executed; in that second pass, rules can be triggered by:
 
 * `title` - if the title matches this regular expression (case insensitively), trigger the rule
@@ -113,7 +113,7 @@ triage:
       title: "lambda"
       notify: [patriot1burke, matejvasek]
       notifyInPullRequest: true
-      directories:
+      files:
         - extensions/amazon-lambda
         - integration-tests/amazon-lambda
 ----
@@ -192,6 +192,46 @@ If the milestone cannot be affected, we add a comment to the pull request indica
 When a workflow run associated to a pull request is completed, a report is generated and added as a comment in the pull request:
 
 > image::documentation/screenshots/workflow-run-report.png[]
+
+=== Approve workflow runs
+
+This rule applies more fine-grained protections to workflow runs
+than is provided by the basic GitHub settings. If a repository
+is https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository[set up to only allow workflow runs from committers],
+the bot can automatically approve some workflows which meet a set of rules.
+
+Syntax of the `.github/quarkus-github-bot.yml` file is as follows:
+
+[source, yaml]
+----
+features: [ APPROVE_WORKFLOWS ]
+workflows:
+      rules:
+        - allow:
+            files:
+             - ./src
+             - ./doc*
+             - "**/README.md"
+            users:
+              minContributions: 5
+          unless:
+            files:
+             - ./.github
+             - "**/pom.xml"
+----
+
+Workflows will be allowed if they meet one of the rules in the `allow` section,
+unless one of the rules in the `unless` section is triggered.
+
+In the example above, any file called `README.md` would be allowed, except for `./github/README.md`.
+Users who had made at least 5 commits to the repository would be allowed to make any changes,
+except to a `pom.xml` or any files in `.github`. Other users could make changes to `./src` or directories whose name started with `./doc`.
+
+If the rule is triggered, the following actions will be executed:
+
+* `approve` - will approve the workflow which needs approval
+
+If the workflow is not approved, it will be left untouched, for a human approver to look at.
 
 === Mark closed pull requests as invalid
 

@@ -1,12 +1,12 @@
 package io.quarkus.bot.config;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public class QuarkusGitHubBotConfigFile {
 
@@ -20,6 +20,8 @@ public class QuarkusGitHubBotConfigFile {
     public Projects projects = new Projects();
 
     public ProjectsClassic projectsClassic = new ProjectsClassic();
+
+    public Workflows workflows = new Workflows();
 
     public static class TriageConfig {
 
@@ -40,8 +42,15 @@ public class QuarkusGitHubBotConfigFile {
 
         public String expression;
 
+        /**
+         * @deprecated use files instead
+         */
         @JsonDeserialize(as = TreeSet.class)
+        @Deprecated(forRemoval = true)
         public Set<String> directories = new TreeSet<>();
+
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> files = new TreeSet<>();
 
         @JsonDeserialize(as = TreeSet.class)
         public Set<String> labels = new TreeSet<>();
@@ -81,6 +90,11 @@ public class QuarkusGitHubBotConfigFile {
         public Set<String> workflows = new HashSet<>();
     }
 
+    public static class Workflows {
+
+        public List<WorkflowApprovalRule> rules = new ArrayList<>();
+    }
+
     public static class Projects {
 
         public List<ProjectTriageRule> rules = new ArrayList<>();
@@ -103,6 +117,25 @@ public class QuarkusGitHubBotConfigFile {
         public boolean pullRequests = false;
 
         public String status;
+    }
+
+    public static class WorkflowApprovalRule {
+
+        public WorkflowApprovalCondition allow;
+        public WorkflowApprovalCondition unless;
+
+    }
+
+    public static class WorkflowApprovalCondition {
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> files = new TreeSet<>();
+
+        public UserRule users;
+
+    }
+
+    public static class UserRule {
+        public Integer minContributions;
     }
 
     boolean isFeatureEnabled(Feature feature) {

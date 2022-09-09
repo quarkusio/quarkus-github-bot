@@ -1,18 +1,14 @@
 package io.quarkus.bot.util;
 
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
+import io.quarkus.bot.el.SimpleELContext;
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHPullRequest;
+
 import javax.el.ELContext;
 import javax.el.ELManager;
 import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
-
-import com.hrakaroo.glob.GlobPattern;
-import com.hrakaroo.glob.MatchingEngine;
-import org.jboss.logging.Logger;
-
-import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
-import io.quarkus.bot.el.SimpleELContext;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHPullRequestFileDetail;
 
 public final class Triage {
 
@@ -82,27 +78,16 @@ public final class Triage {
 
     public static boolean matchRuleFromChangedFiles(GHPullRequest pullRequest, TriageRule rule) {
         // for now, we only use the files but we could also use the other rules at some point
-        if (rule.directories.isEmpty()) {
+        if (rule.directories.isEmpty() && rule.files.isEmpty()) {
             return false;
         }
 
-        for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
-            for (String directory : rule.directories) {
-                if (!directory.contains("*")) {
-                    if (changedFile.getFilename().startsWith(directory)) {
-                        return true;
-                    }
-                } else {
-                    try {
-                        MatchingEngine matchingEngine = GlobPattern.compile(directory);
-                        if (matchingEngine.matches(changedFile.getFilename())) {
-                            return true;
-                        }
-                    } catch (Exception e) {
-                        LOG.error("Error evaluating glob expression: " + directory, e);
-                    }
-                }
-            }
+        PullRequestFilesMatcher prMatcher = new PullRequestFilesMatcher(pullRequest);
+        if (prMatcher.changedFilesMatch(rule.files)) {
+            return true;
+        }
+        if (prMatcher.changedFilesMatch(rule.directories)) {
+            return true;
         }
 
         return false;
