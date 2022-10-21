@@ -40,8 +40,8 @@ public class WorkflowApprovalTest {
     // We may change our user stats in individual tests, so wipe caches before each test
     @CacheInvalidateAll(cacheName = "contributor-cache")
     @CacheInvalidateAll(cacheName = "stats-cache")
-    void setupMockQueriesAndCommits(GitHubMockSetupContext mocks) {
-        GHRepository repoMock = mocks.repository("bot-playground");
+    void setupMockQueriesAndCommits(GitHubMockSetupContext mocks, String repository) {
+        GHRepository repoMock = mocks.repository(repository);
         GHPullRequestQueryBuilder workflowRunQueryBuilderMock = mock(GHPullRequestQueryBuilder.class,
                 withSettings().defaultAnswer(Answers.RETURNS_SELF));
         when(repoMock.queryPullRequests())
@@ -55,8 +55,8 @@ public class WorkflowApprovalTest {
         when(head.getSha()).thenReturn("f2b91b5e80e1880f03a91fdde381bb24debf102c");
     }
 
-    private void setupMockUsers(GitHubMockSetupContext mocks) throws InterruptedException, IOException {
-        GHRepository repoMock = mocks.repository("bot-playground");
+    private void setupMockUsers(GitHubMockSetupContext mocks, String repository) throws InterruptedException, IOException {
+        GHRepository repoMock = mocks.repository(repository);
         GHRepositoryStatistics stats = mock(GHRepositoryStatistics.class);
         GHRepositoryStatistics.ContributorStats contributorStats = mock(GHRepositoryStatistics.ContributorStats.class);
         GHUser user = mockUser("holly-test-holly");
@@ -80,7 +80,7 @@ public class WorkflowApprovalTest {
                                         files:
                                             - ./src
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./src/innocuous.java"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -106,7 +106,7 @@ public class WorkflowApprovalTest {
                                         files:
                                             - "*"
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./src/innocuous.java"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -132,7 +132,7 @@ public class WorkflowApprovalTest {
                                         files:
                                             - ./src
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./github/important.yml"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -161,7 +161,7 @@ public class WorkflowApprovalTest {
                                          files:
                                            - ./github
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./github/important.yml"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -190,7 +190,7 @@ public class WorkflowApprovalTest {
                                          files:
                                            - ./github
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./innocuous/important.yml"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -216,7 +216,7 @@ public class WorkflowApprovalTest {
                                         files:
                                             - "**/pom.xml"
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./innocuous/something/pom.xml"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -245,7 +245,7 @@ public class WorkflowApprovalTest {
                                         files:
                                             - "**/bad.xml"
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./src/good.xml"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -274,7 +274,7 @@ public class WorkflowApprovalTest {
                                         files:
                                             - "**/bad.xml"
                                       """);
-            setupMockQueriesAndCommits(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./src/bad.xml"));
             when(pr(mocks).listFiles()).thenReturn(paths);
@@ -300,8 +300,8 @@ public class WorkflowApprovalTest {
                                         users:
                                           minContributions: 5
                                       """);
-            setupMockQueriesAndCommits(mocks);
-            setupMockUsers(mocks);
+            setupMockQueriesAndCommits(mocks, "the-anonymous-one/bot-playground");
+            setupMockUsers(mocks, "the-anonymous-one/bot-playground");
         })
                 .when().payloadFromClasspath("/workflow-unknown-contributor-approval-needed.json")
                 .event(GHEvent.WORKFLOW_RUN)
@@ -323,9 +323,10 @@ public class WorkflowApprovalTest {
                                         users:
                                           minContributions: 5
                                       """);
-            setupMockQueriesAndCommits(mocks);
-            setupMockUsers(mocks);
-            GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("bot-playground").getStatistics()
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
+            setupMockUsers(mocks, "holly-cummins/bot-playground");
+            GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("holly-cummins/bot-playground")
+                    .getStatistics()
                     .getContributorStats().iterator().next();
             when(contributorStats.getTotal()).thenReturn(1);
         })
@@ -349,9 +350,10 @@ public class WorkflowApprovalTest {
                                         users:
                                           minContributions: 5
                               """);
-            setupMockQueriesAndCommits(mocks);
-            setupMockUsers(mocks);
-            GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("bot-playground").getStatistics()
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
+            setupMockUsers(mocks, "holly-cummins/bot-playground");
+            GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("holly-cummins/bot-playground")
+                    .getStatistics()
                     .getContributorStats().iterator().next();
             when(contributorStats.getTotal()).thenReturn(20);
         })
@@ -378,11 +380,12 @@ public class WorkflowApprovalTest {
                                         files:
                                          - "**/bad.xml"
                               """);
-            setupMockQueriesAndCommits(mocks);
-            setupMockUsers(mocks);
+            setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
+            setupMockUsers(mocks, "holly-cummins/bot-playground");
             PagedIterable<GHPullRequestFileDetail> paths = MockHelper
                     .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./src/bad.xml"));
-            GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("bot-playground").getStatistics()
+            GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("holly-cummins/bot-playground")
+                    .getStatistics()
                     .getContributorStats().iterator().next();
             when(contributorStats.getTotal()).thenReturn(20);
         })
