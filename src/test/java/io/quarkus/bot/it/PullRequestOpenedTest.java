@@ -24,9 +24,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleEndsWithDot() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-ends-with-dot.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -45,9 +43,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithLowercase() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-lowercase.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -66,9 +62,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithgRPC() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-gRPC.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -78,9 +72,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleContainsIssueNumber() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-contains-issue-number.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -100,9 +92,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithFeat() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-feat.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -122,9 +112,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithFix() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-fix.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -144,9 +132,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithChore() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-chore.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -166,9 +152,7 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithDocs() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ CHECK_EDITORIAL_RULES ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-docs.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -190,9 +174,8 @@ public class PullRequestOpenedTest {
     void triageFromChangedFiles() throws IOException {
         given()
                 .github(mocks -> {
-                    mocks.configFileFromString(
-                            "quarkus-github-bot.yml",
-                            """
+                    mocks.configFile("quarkus-github-bot.yml")
+                            .fromString("""
                                     features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]
                                     triage:
                                       rules:
@@ -223,9 +206,8 @@ public class PullRequestOpenedTest {
     void triageFromDescription() throws IOException {
         given()
                 .github(mocks -> {
-                    mocks.configFileFromString(
-                            "quarkus-github-bot.yml",
-                            """
+                    mocks.configFile("quarkus-github-bot.yml")
+                            .fromString("""
                                     features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]
                                     triage:
                                       rules:
@@ -256,9 +238,8 @@ public class PullRequestOpenedTest {
     void triageFromChangedFilesAndDescription() throws IOException {
         given()
                 .github(mocks -> {
-                    mocks.configFileFromString(
-                            "quarkus-github-bot.yml",
-                            """
+                    mocks.configFile("quarkus-github-bot.yml")
+                            .fromString("""
                                     features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]
                                     triage:
                                       rules:
@@ -290,9 +271,8 @@ public class PullRequestOpenedTest {
     void triageComment() throws IOException {
         given()
                 .github(mocks -> {
-                    mocks.configFileFromString(
-                            "quarkus-github-bot.yml",
-                            """
+                    mocks.configFile("quarkus-github-bot.yml")
+                            .fromString("""
                                     features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]
                                     triage:
                                       rules:

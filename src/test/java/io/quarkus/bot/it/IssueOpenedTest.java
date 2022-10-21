@@ -18,9 +18,8 @@ public class IssueOpenedTest {
 
     @Test
     void triage() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ ALL ]\n"
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ ALL ]\n"
                         + "triage:\n"
                         + "  rules:\n"
                         + "    - title: test\n"
@@ -36,9 +35,8 @@ public class IssueOpenedTest {
 
     @Test
     void triageComment() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ ALL ]\n"
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ ALL ]\n"
                         + "triage:\n"
                         + "  rules:\n"
                         + "    - title: test\n"

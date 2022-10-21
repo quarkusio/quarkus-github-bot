@@ -31,9 +31,9 @@ public class MarkClosedPullRequestInvalidTest {
     @Test
     void handleLabels() throws IOException {
         given().github(mocks -> {
-            mocks.configFileFromString("quarkus-github-bot.yml", "features: [ ALL ]\n");
+            mocks.configFile("quarkus-github-bot.yml").fromString("features: [ ALL ]\n");
             // this is necessary because this payload also triggers CancelWorkflowOnClosedPullRequest
-            GHRepository repoMock = mocks.repository("GitHubTestAppRepo");
+            GHRepository repoMock = mocks.repository("Luke1432/GitHubTestAppRepo");
             GHWorkflowRunQueryBuilder workflowRunQueryBuilderMock = mock(GHWorkflowRunQueryBuilder.class,
                     withSettings().defaultAnswer(Answers.RETURNS_SELF));
             when(repoMock.queryWorkflowRuns())
