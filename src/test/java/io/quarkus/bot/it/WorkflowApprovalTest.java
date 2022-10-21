@@ -70,9 +70,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAnAllowedDirectoryShouldBeApproved() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -96,9 +95,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAWildcardedDirectoryShouldBeApproved() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -122,9 +120,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToADirectoryWithNoRulesShouldBeSoftRejected() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -148,9 +145,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAnAllowedAndUnlessedDirectoryShouldBeSoftRejected() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -177,9 +173,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAnAllowedDirectoryWithAnIrrelevantUnlessedDirectoryShouldBeAccepted() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -206,9 +201,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAnAllowedFileShouldBeApproved() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -232,9 +226,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAFileInAnAllowedDirectoryWithAnIrrelevantUnlessShouldBeAllowed() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -261,9 +254,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeToAnUnlessedFileInAnAllowedDirectoryShouldBeSoftRejected() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -290,9 +282,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeFromAnUnknownUserShouldBeSoftRejected() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -313,9 +304,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeFromANewishUserShouldBeSoftRejected() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -340,9 +330,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeFromAnEstablishedUserShouldBeAllowed() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -367,9 +356,8 @@ public class WorkflowApprovalTest {
     @Test
     void changeFromAnEstablishedUserToADangerousFileShouldBeSoftRejected() throws Exception {
         given().github(mocks -> {
-            mocks.configFileFromString(
-                    "quarkus-github-bot.yml",
-                    """
+            mocks.configFile("quarkus-github-bot.yml")
+                    .fromString("""
                             features: [ APPROVE_WORKFLOWS ]
                             workflows:
                                   rules:
@@ -382,8 +370,6 @@ public class WorkflowApprovalTest {
                               """);
             setupMockQueriesAndCommits(mocks, "holly-cummins/bot-playground");
             setupMockUsers(mocks, "holly-cummins/bot-playground");
-            PagedIterable<GHPullRequestFileDetail> paths = MockHelper
-                    .mockPagedIterable(MockHelper.mockGHPullRequestFileDetail("./src/bad.xml"));
             GHRepositoryStatistics.ContributorStats contributorStats = mocks.repository("holly-cummins/bot-playground")
                     .getStatistics()
                     .getContributorStats().iterator().next();
@@ -398,9 +384,8 @@ public class WorkflowApprovalTest {
 
     @Test
     void workflowIsPreApprovedShouldDoNothing() throws Exception {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                """
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("""
                         features: [ APPROVE_WORKFLOWS ]
                         workflows:
                               rules:
@@ -421,9 +406,8 @@ public class WorkflowApprovalTest {
 
     @Test
     void noRulesShouldDoNothing() throws Exception {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                """
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("""
                         features: [ APPROVE_WORKFLOWS, ALL ]
                         workflows:
                               rules:

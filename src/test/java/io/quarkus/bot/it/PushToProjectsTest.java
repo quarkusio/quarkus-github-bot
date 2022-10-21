@@ -21,9 +21,8 @@ public class PushToProjectsTest {
     void pullRequestLabeledWithNullOrganization() throws IOException {
 
         given()
-                .github(mocks -> mocks.configFileFromString(
-                        "quarkus-github-bot.yml",
-                        """
+                .github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                        .fromString("""
                                 features: [ PUSH_TO_PROJECTS ]
                                 project:
                                     rules:

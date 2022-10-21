@@ -18,9 +18,7 @@ import io.quarkus.test.junit.QuarkusTest;
 public class CheckIssueEditorialRulesTest {
     @Test
     void validZulipLinkConfirmation() throws IOException {
-        given().github(mocks -> mocks.configFileFromString(
-                "quarkus-github-bot.yml",
-                "features: [ ALL ]\n"))
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ ALL ]\n"))
                 .when().payloadFromClasspath("/issue-opened-zulip.json")
                 .event(GHEvent.ISSUES)
                 .then().github(mocks -> {
