@@ -286,3 +286,23 @@ $ ./deploy-to-openshift.sh
 == License
 
 This project is licensed under the Apache License Version 2.0.
+
+[[contributors]]
+== Contributors ✨
+
+Thanks goes to these wonderful people (https://allcontributors.org/docs/en/emoji-key[emoji key]):
+
+++++
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+++++
+
+This project follows the https://github.com/all-contributors/all-contributors[all-contributors] specification. Contributions of any kind welcome!
