@@ -87,7 +87,8 @@ class TriageIssue {
             }
         }
 
-        if (mentions.isEmpty() && !Labels.hasAreaLabels(labels) && !GHIssues.hasAreaLabel(issue)) {
+        if (mentions.isEmpty() && !Labels.hasAreaLabels(labels) && !GHIssues.hasAreaLabel(issue)
+                && !GHIssues.hasLabel(issue, Labels.KIND_EXTENSION_PROPOSAL)) {
             if (!quarkusBotConfig.isDryRun()) {
                 issue.addLabels(Labels.TRIAGE_NEEDS_TRIAGE);
             } else {
