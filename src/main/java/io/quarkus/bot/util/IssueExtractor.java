@@ -28,16 +28,6 @@ public class IssueExtractor {
                 Pattern.CASE_INSENSITIVE);
     }
 
-    public Set<Integer> extractIssueNumbers(String content) {
-        Set<Integer> result = new TreeSet<>();
-        Matcher matcher = pattern.matcher(content);
-        while (matcher.find()) {
-            Integer issueNumber = Integer.valueOf(matcher.group(1));
-            result.add(issueNumber);
-        }
-        return result;
-    }
-
     public Set<Integer> extractIssueNumbers(GHPullRequest pullRequest, DynamicGraphQLClient gitHubGraphQLClient) {
         Set<Integer> result = new TreeSet<>();
 

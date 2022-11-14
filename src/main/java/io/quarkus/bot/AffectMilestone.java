@@ -23,6 +23,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.IssueExtractor;
 import io.quarkus.bot.util.Labels;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 class AffectMilestone {
 
@@ -36,7 +37,8 @@ class AffectMilestone {
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void affectMilestone(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.QUARKUS_REPOSITORY_WORKFLOW.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -71,7 +73,7 @@ class AffectMilestone {
             }
         }
 
-        Set<Integer> resolvedIssueNumbers = extractCurrentRepositoryIssueNumbers(repository, pullRequest.getBody());
+        Set<Integer> resolvedIssueNumbers = extractCurrentRepositoryIssueNumbers(pullRequest, gitHubGraphQLClient);
         Set<Integer> alreadyAffectedIssues = new TreeSet<>();
 
         for (Integer resolvedIssueNumber : resolvedIssueNumbers) {
@@ -122,11 +124,14 @@ class AffectMilestone {
         return null;
     }
 
-    private Set<Integer> extractCurrentRepositoryIssueNumbers(GHRepository repository, String pullRequestBody) {
+    private Set<Integer> extractCurrentRepositoryIssueNumbers(GHPullRequest pullRequest,
+            DynamicGraphQLClient gitHubGraphQLClient) {
+        String pullRequestBody = pullRequest.getBody();
         if (pullRequestBody == null || pullRequestBody.trim().isEmpty()) {
             return Collections.emptySet();
         }
 
-        return new IssueExtractor(repository.getFullName()).extractIssueNumbers(pullRequestBody);
+        return new IssueExtractor(pullRequest.getRepository().getFullName()).extractIssueNumbers(pullRequest,
+                gitHubGraphQLClient);
     }
 }
