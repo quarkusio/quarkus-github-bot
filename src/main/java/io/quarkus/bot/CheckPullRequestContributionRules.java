@@ -48,7 +48,7 @@ public class CheckPullRequestContributionRules {
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void checkPullRequestContributionRules(
-            @PullRequest.Opened @PullRequest.Reopened @PullRequest.Edited @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
+            @PullRequest.Opened @PullRequest.Reopened @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
 
         if (!Feature.CHECK_CONTRIBUTION_RULES.isEnabled(quarkusBotConfigFile)) {
