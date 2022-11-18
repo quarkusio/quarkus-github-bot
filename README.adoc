@@ -18,6 +18,10 @@ It can be run as a native executable.
 
 This action checks that the title of a pull request respects some editorial rules to make Release Notes more consistent.
 
+=== Check pull request contribution rules
+
+This action checks that pull requests do not contain any merge or fixup commits.
+
 === Triage issues
 
 Based on the `.github/quarkus-github-bot.yml` file, this rule affects labels to issues and also pings the appropriate people.
