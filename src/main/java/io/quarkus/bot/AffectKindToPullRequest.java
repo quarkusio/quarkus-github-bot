@@ -18,6 +18,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.IssueExtractor;
 import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Strings;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 class AffectKindToPullRequest {
 
@@ -53,7 +54,8 @@ class AffectKindToPullRequest {
     }
 
     void fromIssues(@PullRequest.Closed GHEventPayload.PullRequest pullRequestPayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.QUARKUS_REPOSITORY_WORKFLOW.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -65,7 +67,7 @@ class AffectKindToPullRequest {
         }
 
         IssueExtractor issueExtractor = new IssueExtractor(pullRequest.getRepository().getFullName());
-        Set<Integer> issueNumbers = issueExtractor.extractIssueNumbers(pullRequest.getBody());
+        Set<Integer> issueNumbers = issueExtractor.extractIssueNumbers(pullRequest, gitHubGraphQLClient);
 
         Set<String> labels = new HashSet<>();
         for (Integer issueNumber : issueNumbers) {
