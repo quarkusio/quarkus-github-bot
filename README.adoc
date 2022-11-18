@@ -20,7 +20,7 @@ This action checks that the title of a pull request respects some editorial rule
 
 === Check pull request contribution rules
 
-This action checks that the pull request does not contain any merge or any fixup commit.
+This action checks that pull requests do not contain any merge or fixup commits.
 
 === Triage issues
 

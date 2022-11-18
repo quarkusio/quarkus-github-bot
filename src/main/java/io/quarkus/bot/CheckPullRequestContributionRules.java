@@ -34,12 +34,12 @@ public class CheckPullRequestContributionRules {
     public static final String FIXUP_COMMIT_PREFIX = "fixup!";
 
     public static final String MERGE_COMMIT_CHECK_RUN_NAME = "Check Pull Request - Merge commits";
-    public static final String MERGE_COMMIT_ERROR_OUTPUT_TITLE = "Merge commit";
-    public static final String MERGE_COMMIT_ERROR_OUTPUT_SUMMARY = "Pull request that contains merge commit can not be merged";
+    public static final String MERGE_COMMIT_ERROR_OUTPUT_TITLE = "PR contains merge commits";
+    public static final String MERGE_COMMIT_ERROR_OUTPUT_SUMMARY = "Pull request that contains merge commits can not be merged";
 
     public static final String FIXUP_COMMIT_CHECK_RUN_NAME = "Check Pull Request - Fixup commits";
-    public static final String FIXUP_COMMIT_ERROR_OUTPUT_TITLE = "Fixup commit";
-    public static final String FIXUP_COMMIT_ERROR_OUTPUT_SUMMARY = "Pull request that contains fixup commit can not be merged";
+    public static final String FIXUP_COMMIT_ERROR_OUTPUT_TITLE = "PR contains fixup commits";
+    public static final String FIXUP_COMMIT_ERROR_OUTPUT_SUMMARY = "Pull request that contains fixup commits can not be merged";
 
     public static final String ERROR_ANNOTATION_TITLE = "Error - Pull request commit check";
     public static final String ERROR_ANNOTATION_MSG = "[sha=%s ; message=\"%s\"]";
