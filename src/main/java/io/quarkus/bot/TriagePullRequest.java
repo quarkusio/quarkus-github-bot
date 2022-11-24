@@ -20,9 +20,11 @@ import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
+import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 class TriagePullRequest {
 
@@ -40,7 +42,8 @@ class TriagePullRequest {
 
     void triagePullRequest(
             @PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -86,6 +89,7 @@ class TriagePullRequest {
             }
         }
 
+        mentions.removeAlreadyParticipating(GHIssues.getParticipatingUsers(pullRequest, gitHubGraphQLClient));
         if (!mentions.isEmpty()) {
             comments.add("/cc " + mentions.getMentionsString());
         }
