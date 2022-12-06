@@ -52,4 +52,47 @@ public class IssueOpenedTest {
                 });
     }
 
+    @Test
+    void triageBasicNotify() throws IOException {
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ ALL ]\n"
+                        + "triage:\n"
+                        + "  rules:\n"
+                        + "    - title: test\n"
+                        + "      notify: [prodsec]\n"
+                        + "      comment: 'This is a security issue'"))
+                .when().payloadFromClasspath("/issue-opened.json")
+                .event(GHEvent.ISSUES)
+                .then().github(mocks -> {
+                    verify(mocks.issue(750705278))
+                            .comment("/cc @prodsec");
+                    verify(mocks.issue(750705278))
+                            .comment("This is a security issue");
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
+
+    @Test
+    void triageIdNotify() throws IOException {
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ ALL ]\n"
+                        + "triage:\n"
+                        + "  rules:\n"
+                        + "    - id: 'security'\n"
+                        + "      title: test\n"
+                        + "      notify: [prodsec,max]\n"
+                        + "      comment: 'This is a security issue'\n"
+                        + "    - id: 'devtools'\n"
+                        + "      title: test\n"
+                        + "      notify: [max]\n"))
+                .when().payloadFromClasspath("/issue-opened.json")
+                .event(GHEvent.ISSUES)
+                .then().github(mocks -> {
+                    verify(mocks.issue(750705278))
+                            .comment("This is a security issue");
+                    verify(mocks.issue(750705278)).comment("/cc @max(devtools,security),@prodsec(security)");
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
+
 }

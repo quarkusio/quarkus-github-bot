@@ -43,7 +43,7 @@ class TriageIssue {
 
         GHIssue issue = issuePayload.getIssue();
         Set<String> labels = new TreeSet<>();
-        Set<String> mentions = new TreeSet<>();
+        Mentions mentions = new Mentions();
         List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
@@ -54,7 +54,7 @@ class TriageIssue {
                 if (!rule.notify.isEmpty()) {
                     for (String mention : rule.notify) {
                         if (!mention.equals(issue.getUser().getLogin())) {
-                            mentions.add(mention);
+                            mentions.add(mention, rule.id);
                         }
                     }
                 }
@@ -76,7 +76,7 @@ class TriageIssue {
         }
 
         if (!mentions.isEmpty()) {
-            comments.add("/cc @" + String.join(", @", mentions));
+            comments.add("/cc " + mentions.getMentionString());
         }
 
         for (String comment : comments) {
