@@ -77,7 +77,7 @@ class TriageIssue {
         }
 
         if (!mentions.isEmpty()) {
-            comments.add("/cc " + mentions.getMentionString());
+            comments.add("/cc " + mentions.getMentionsString());
         }
 
         for (String comment : comments) {

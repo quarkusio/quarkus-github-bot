@@ -293,4 +293,51 @@ public class PullRequestOpenedTest {
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
+
+    @Test
+    void triageBasicNotify() throws IOException {
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]\n"
+                        + "triage:\n"
+                        + "  rules:\n"
+                        + "    - title: test\n"
+                        + "      notify: [prodsec]\n"
+                        + "      comment: 'This is a security issue'\n"
+                        + "      notifyInPullRequest: true"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-contains-test.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verify(mocks.pullRequest(527350930))
+                            .comment("/cc @prodsec");
+                    verify(mocks.pullRequest(527350930))
+                            .comment("This is a security issue");
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
+
+    @Test
+    void triageIdNotify() throws IOException {
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]\n"
+                        + "triage:\n"
+                        + "  rules:\n"
+                        + "    - id: 'security'\n"
+                        + "      title: test\n"
+                        + "      notify: [prodsec,max]\n"
+                        + "      comment: 'This is a security issue'\n"
+                        + "      notifyInPullRequest: true\n"
+                        + "    - id: 'devtools'\n"
+                        + "      title: test\n"
+                        + "      notify: [max]\n"
+                        + "      notifyInPullRequest: true"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-contains-test.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verify(mocks.pullRequest(527350930))
+                            .comment("This is a security issue");
+                    verify(mocks.pullRequest(527350930))
+                            .comment("/cc @max(devtools,security), @prodsec(security)");
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
 }

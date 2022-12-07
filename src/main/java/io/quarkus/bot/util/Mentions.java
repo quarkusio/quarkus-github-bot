@@ -24,10 +24,6 @@ public class Mentions {
         mentions.put(mention, reasons);
     }
 
-    public void add(String mention) {
-        add(mention, null);
-    }
-
     public boolean isEmpty() {
         return mentions.isEmpty();
     }
@@ -36,7 +32,7 @@ public class Mentions {
      *
      * @return string of form "@mention1, @mention2(reason1,reason2), @mention3(reason1)"
      */
-    public String getMentionString() {
+    public String getMentionsString() {
         return mentions.keySet().stream()
                 .map(key -> {
                     Set<String> reasons = mentions.get(key);

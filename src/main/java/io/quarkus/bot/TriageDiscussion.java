@@ -25,6 +25,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 import io.smallrye.graphql.client.Response;
@@ -59,7 +60,7 @@ class TriageDiscussion {
         }
 
         Set<String> labels = new TreeSet<>();
-        Set<String> mentions = new TreeSet<>();
+        Mentions mentions = new Mentions();
         List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
@@ -70,7 +71,7 @@ class TriageDiscussion {
                 if (!rule.notify.isEmpty()) {
                     for (String mention : rule.notify) {
                         if (!mention.equals(discussion.getUser().getLogin())) {
-                            mentions.add(mention);
+                            mentions.add(mention, rule.id);
                         }
                     }
                 }
@@ -89,7 +90,7 @@ class TriageDiscussion {
         }
 
         if (!mentions.isEmpty()) {
-            comments.add("/cc @" + String.join(", @", mentions));
+            comments.add("/cc " + mentions.getMentionsString());
         }
 
         for (String comment : comments) {
