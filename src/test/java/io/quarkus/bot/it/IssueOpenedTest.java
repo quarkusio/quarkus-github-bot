@@ -90,7 +90,7 @@ public class IssueOpenedTest {
                 .then().github(mocks -> {
                     verify(mocks.issue(750705278))
                             .comment("This is a security issue");
-                    verify(mocks.issue(750705278)).comment("/cc @max(devtools,security),@prodsec(security)");
+                    verify(mocks.issue(750705278)).comment("/cc @max(devtools,security), @prodsec(security)");
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }

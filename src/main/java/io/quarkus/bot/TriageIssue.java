@@ -20,6 +20,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 import org.kohsuke.github.GHLabel;
