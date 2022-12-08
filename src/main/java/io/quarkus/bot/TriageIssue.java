@@ -23,6 +23,8 @@ import io.quarkus.bot.util.Labels;
 import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+
 import org.kohsuke.github.GHLabel;
 
 class TriageIssue {
@@ -33,7 +35,8 @@ class TriageIssue {
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void triageIssue(@Issue.Opened GHEventPayload.Issue issuePayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -76,6 +79,7 @@ class TriageIssue {
             }
         }
 
+        mentions.removeAlreadyParticipating(GHIssues.getParticipatingUsers(issue, gitHubGraphQLClient));
         if (!mentions.isEmpty()) {
             comments.add("/cc " + mentions.getMentionsString());
         }

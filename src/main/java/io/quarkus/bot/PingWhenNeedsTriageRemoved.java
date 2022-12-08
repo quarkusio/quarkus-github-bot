@@ -1,8 +1,6 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.inject.Inject;
 
@@ -16,7 +14,10 @@ import io.quarkiverse.githubapp.event.Issue;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Mentions;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
 public class PingWhenNeedsTriageRemoved {
     private static final Logger LOG = Logger.getLogger(PingWhenNeedsTriageRemoved.class);
@@ -25,7 +26,8 @@ public class PingWhenNeedsTriageRemoved {
     QuarkusGitHubBotConfig quarkusBotConfig;
 
     void pingWhenNeedsTriageRemoved(@Issue.Unlabeled GHEventPayload.Issue issuePayload,
-            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile) throws IOException {
+            @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
+            DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
         if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
             return;
         }
@@ -40,7 +42,7 @@ public class PingWhenNeedsTriageRemoved {
             return;
         }
 
-        Set<String> mentions = new TreeSet<>();
+        Mentions mentions = new Mentions();
 
         for (QuarkusGitHubBotConfigFile.TriageRule rule : quarkusBotConfigFile.triage.rules) {
             if (matchRule(issue, rule)) {
@@ -49,20 +51,22 @@ public class PingWhenNeedsTriageRemoved {
                         if (mention.equals(issue.getUser().getLogin()) || mention.equals(issuePayload.getSender().getLogin())) {
                             continue;
                         }
-                        mentions.add(mention);
+                        mentions.add(mention, rule.id);
                     }
                 }
             }
         }
+
+        mentions.removeAlreadyParticipating(GHIssues.getParticipatingUsers(issue, gitHubGraphQLClient));
 
         if (mentions.isEmpty()) {
             return;
         }
 
         if (!quarkusBotConfig.isDryRun()) {
-            issue.comment("/cc @" + String.join(", @", mentions));
+            issue.comment("/cc " + mentions.getMentionsString());
         } else {
-            LOG.info("Issue #" + issue.getNumber() + " - Ping: " + mentions);
+            LOG.info("Issue #" + issue.getNumber() + " - Ping: " + mentions.getMentionsString());
         }
     }
 
