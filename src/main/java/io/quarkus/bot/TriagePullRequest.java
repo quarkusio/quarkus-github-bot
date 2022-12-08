@@ -20,6 +20,7 @@ import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
+import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 
@@ -50,7 +51,7 @@ class TriagePullRequest {
 
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Set<String> labels = new TreeSet<>();
-        Set<String> mentions = new TreeSet<>();
+        Mentions mentions = new Mentions();
         List<String> comments = new ArrayList<>();
         boolean isBackportsBranch = pullRequest.getHead().getRef().contains(BACKPORTS_BRANCH);
         // The second pass is allowed if either:
@@ -86,7 +87,7 @@ class TriagePullRequest {
         }
 
         if (!mentions.isEmpty()) {
-            comments.add("/cc @" + String.join(", @", mentions));
+            comments.add("/cc " + mentions.getMentionsString());
         }
 
         for (String comment : comments) {
@@ -99,7 +100,7 @@ class TriagePullRequest {
     }
 
     private void applyRule(GHEventPayload.PullRequest pullRequestPayload, GHPullRequest pullRequest, boolean isBackportsBranch,
-            TriageRule rule, Set<String> labels, Set<String> mentions, List<String> comments) throws IOException {
+            TriageRule rule, Set<String> labels, Mentions mentions, List<String> comments) throws IOException {
         if (!rule.labels.isEmpty()) {
             labels.addAll(rule.labels);
         }
@@ -109,7 +110,7 @@ class TriagePullRequest {
                 && !isBackportsBranch) {
             for (String mention : rule.notify) {
                 if (!mention.equals(pullRequest.getUser().getLogin())) {
-                    mentions.add(mention);
+                    mentions.add(mention, rule.id);
                 }
             }
         }

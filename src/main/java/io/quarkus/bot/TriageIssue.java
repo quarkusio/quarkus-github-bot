@@ -20,6 +20,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Labels;
+import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 import org.kohsuke.github.GHLabel;
@@ -43,7 +44,7 @@ class TriageIssue {
 
         GHIssue issue = issuePayload.getIssue();
         Set<String> labels = new TreeSet<>();
-        Set<String> mentions = new TreeSet<>();
+        Mentions mentions = new Mentions();
         List<String> comments = new ArrayList<>();
 
         for (TriageRule rule : quarkusBotConfigFile.triage.rules) {
@@ -54,7 +55,7 @@ class TriageIssue {
                 if (!rule.notify.isEmpty()) {
                     for (String mention : rule.notify) {
                         if (!mention.equals(issue.getUser().getLogin())) {
-                            mentions.add(mention);
+                            mentions.add(mention, rule.id);
                         }
                     }
                 }
@@ -76,7 +77,7 @@ class TriageIssue {
         }
 
         if (!mentions.isEmpty()) {
-            comments.add("/cc @" + String.join(", @", mentions));
+            comments.add("/cc " + mentions.getMentionsString());
         }
 
         for (String comment : comments) {
