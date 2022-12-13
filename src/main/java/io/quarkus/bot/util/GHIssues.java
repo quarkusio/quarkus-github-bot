@@ -53,12 +53,12 @@ public final class GHIssues {
             Map<String, Object> variables = new HashMap<>();
             variables.put("owner", repository.getOwnerName());
             variables.put("repoName", repository.getName());
-            variables.put("number", issue.getNumber());
+            variables.put("prNumber", issue.getNumber());
 
             String graphqlRequest = """
                         query($owner: String! $repoName: String! $prNumber: Int!) {
                             repository(owner: $owner, name: $repoName) {
-                              $objectType(number: $number) {
+                              $objectType(number: $prNumber) {
                                 participants(first: 50) {
                                   edges {
                                     node {
