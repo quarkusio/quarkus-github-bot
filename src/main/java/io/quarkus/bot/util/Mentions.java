@@ -54,7 +54,7 @@ public class Mentions {
                     if (reasons.isEmpty()) {
                         return "@" + es.getKey();
                     } else {
-                        return "@" + es.getKey() + reasons.stream().collect(Collectors.joining(",", "(", ")"));
+                        return "@" + es.getKey() + " " + reasons.stream().collect(Collectors.joining(",", "(", ")"));
                     }
                 })
                 .collect(Collectors.joining(", "));
