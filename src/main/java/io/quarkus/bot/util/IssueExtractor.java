@@ -34,6 +34,7 @@ public class IssueExtractor {
         String prBody = pullRequest.getBody();
         result.addAll(extractFromPRContent(prBody));
         result.addAll(extractWithGraphQLApi(pullRequest, gitHubGraphQLClient));
+
         return result;
     }
 
@@ -64,6 +65,9 @@ public class IssueExtractor {
                                   edges {
                                     node {
                                       number
+                                      repository {
+                                        nameWithOwner
+                                      }
                                     }
                                   }
                                 }
@@ -78,14 +82,17 @@ public class IssueExtractor {
                                 + repository.getFullName() + ": " + response.getErrors());
             }
 
-            return response.getData().getJsonObject("repository")
+            Set<Integer> issueNumbers = response.getData().getJsonObject("repository")
                     .getJsonObject("pullRequest")
                     .getJsonObject("closingIssuesReferences")
                     .getJsonArray("edges").stream()
                     .map(JsonObject.class::cast)
+                    .filter(obj -> pullRequest.getRepository().getFullName()
+                            .equals(obj.getJsonObject("node").getJsonObject("repository").getString("nameWithOwner")))
                     .map(obj -> obj.getJsonObject("node").getInt("number"))
                     .collect(Collectors.toSet());
 
+            return issueNumbers;
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException(
                     "Unable to get closingIssuesReferences for PR #" + pullRequest.getNumber() + " of repository "
