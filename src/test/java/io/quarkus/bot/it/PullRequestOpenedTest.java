@@ -336,7 +336,7 @@ public class PullRequestOpenedTest {
                     verify(mocks.pullRequest(527350930))
                             .comment("This is a security issue");
                     verify(mocks.pullRequest(527350930))
-                            .comment("/cc @max(devtools,security), @prodsec(security)");
+                            .comment("/cc @max (devtools,security), @prodsec (security)");
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
