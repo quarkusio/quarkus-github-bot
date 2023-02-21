@@ -19,7 +19,7 @@
         <quarkus.version>3.0.0.Alpha4</quarkus.version>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <surefire-plugin.version>3.0.0-M8</surefire-plugin.version>
+        <surefire-plugin.version>3.0.0-M9</surefire-plugin.version>
         <version.buildnumber.plugin>3.0.0</version.buildnumber.plugin>
         <version.formatter.plugin>2.22.0</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
