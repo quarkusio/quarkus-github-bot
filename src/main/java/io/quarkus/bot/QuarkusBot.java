@@ -1,7 +1,7 @@
 package io.quarkus.bot;
 
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 

@@ -1,9 +1,9 @@
 package io.quarkus.bot.el;
 
-import javax.el.CompositeELResolver;
-import javax.el.ELResolver;
-import javax.el.ExpressionFactory;
-import javax.el.StandardELContext;
+import jakarta.el.CompositeELResolver;
+import jakarta.el.ELResolver;
+import jakarta.el.ExpressionFactory;
+import jakarta.el.StandardELContext;
 
 public class SimpleELContext extends StandardELContext {
 

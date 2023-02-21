@@ -5,10 +5,10 @@ import io.quarkus.bot.el.SimpleELContext;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 
-import javax.el.ELContext;
-import javax.el.ELManager;
-import javax.el.ExpressionFactory;
-import javax.el.ValueExpression;
+import jakarta.el.ELContext;
+import jakarta.el.ELManager;
+import jakarta.el.ExpressionFactory;
+import jakarta.el.ValueExpression;
 
 public final class Triage {
 

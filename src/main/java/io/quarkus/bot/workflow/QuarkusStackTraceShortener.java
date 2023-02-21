@@ -3,7 +3,7 @@ package io.quarkus.bot.workflow;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 

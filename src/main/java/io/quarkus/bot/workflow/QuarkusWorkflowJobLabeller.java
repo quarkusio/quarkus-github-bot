@@ -1,6 +1,6 @@
 package io.quarkus.bot.workflow;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import io.quarkus.bot.buildreporter.githubactions.WorkflowJobLabeller;
 

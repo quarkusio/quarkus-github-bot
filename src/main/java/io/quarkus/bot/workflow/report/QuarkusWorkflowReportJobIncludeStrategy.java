@@ -1,6 +1,6 @@
 package io.quarkus.bot.workflow.report;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import io.quarkus.bot.buildreporter.githubactions.WorkflowConstants;
 import io.quarkus.bot.buildreporter.githubactions.report.WorkflowReport;

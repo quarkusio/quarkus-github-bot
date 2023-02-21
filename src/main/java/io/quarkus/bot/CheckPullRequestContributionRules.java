@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.jboss.logging.Logger;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.kohsuke.github.GHCheckRunBuilder;
 import org.kohsuke.github.GHCommit;

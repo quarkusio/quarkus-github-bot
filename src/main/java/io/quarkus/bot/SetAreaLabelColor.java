@@ -3,7 +3,7 @@ package io.quarkus.bot;
 import java.io.IOException;
 import java.util.Locale;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
