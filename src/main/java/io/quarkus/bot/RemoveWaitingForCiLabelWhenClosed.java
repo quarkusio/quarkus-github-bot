@@ -11,7 +11,7 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 

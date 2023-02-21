@@ -16,7 +16,7 @@ import org.kohsuke.github.GHRepositoryStatistics;
 import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.PagedIterable;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
