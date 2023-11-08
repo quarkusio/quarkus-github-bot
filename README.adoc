@@ -252,6 +252,11 @@ The bot will automatically remove these labels when they are outdated:
 
 The bot enforces a specific color for any label created that starts with `area/` so that all these labels are consistent.
 
+=== Include `triage/needs-rebase` on unmergeable pull-requests
+
+Pull requests may require a rebase when conflicts appear. The bot adds a `triage/needs-rebase` label on pull requests that cannot be merged and removes it when the pull request is in a mergeable state again.
+
+
 == Contributing
 
 To participate to the development of this GitHub App, create a playground project in your own org and
