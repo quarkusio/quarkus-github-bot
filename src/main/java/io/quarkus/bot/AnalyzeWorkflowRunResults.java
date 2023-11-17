@@ -38,6 +38,7 @@ public class AnalyzeWorkflowRunResults {
                 .dryRun(quarkusBotConfig.isDryRun())
                 .monitoredWorkflows(quarkusBotConfigFile.workflowRunAnalysis.workflows)
                 .workflowJobComparator(QuarkusWorkflowJobComparator.INSTANCE)
+                .enableDevelocity(true)
                 .build();
 
         buildReporterEventHandler.handle(workflowRunPayload, buildReporterConfig, gitHub, gitHubGraphQLClient);
