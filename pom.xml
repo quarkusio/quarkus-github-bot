@@ -19,14 +19,14 @@
         <quarkus.version>3.6.4</quarkus.version>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <surefire-plugin.version>3.2.3</surefire-plugin.version>
+        <surefire-plugin.version>3.2.5</surefire-plugin.version>
         <version.buildnumber.plugin>3.2.0</version.buildnumber.plugin>
         <version.formatter.plugin>2.23.0</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
 
         <quarkus-github-app.version>2.1.1</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
-        <build-reporter.version>3.3.3</build-reporter.version>
+        <build-reporter.version>3.4.1</build-reporter.version>
         <assertj.version>3.25.1</assertj.version>
     </properties>
     <dependencyManagement>
@@ -70,11 +70,6 @@
             <groupId>com.hrakaroo</groupId>
             <artifactId>glob</artifactId>
             <version>${glob.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.surefire</groupId>
-            <artifactId>surefire-report-parser</artifactId>
-            <version>${surefire-plugin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
