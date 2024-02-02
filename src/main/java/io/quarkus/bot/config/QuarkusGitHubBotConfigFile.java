@@ -1,12 +1,12 @@
 package io.quarkus.bot.config;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public class QuarkusGitHubBotConfigFile {
 
@@ -22,6 +22,8 @@ public class QuarkusGitHubBotConfigFile {
     public ProjectsClassic projectsClassic = new ProjectsClassic();
 
     public Workflows workflows = new Workflows();
+
+    public Develocity develocity = new Develocity();
 
     public static class TriageConfig {
 
@@ -138,6 +140,13 @@ public class QuarkusGitHubBotConfigFile {
 
     public static class UserRule {
         public Integer minContributions;
+    }
+
+    public static class Develocity {
+
+        public boolean enabled = false;
+
+        public String url;
     }
 
     boolean isFeatureEnabled(Feature feature) {
