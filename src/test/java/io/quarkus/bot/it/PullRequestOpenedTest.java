@@ -171,6 +171,16 @@ public class PullRequestOpenedTest {
     }
 
     @Test
+    void titleStartsWithMaintenanceBranch() throws IOException {
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_EDITORIAL_RULES ]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-maintenance-branch.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
+
+    @Test
     void triageFromChangedFiles() throws IOException {
         given()
                 .github(mocks -> {
