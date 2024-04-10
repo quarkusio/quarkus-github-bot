@@ -19,6 +19,7 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.util.GHPullRequests;
 import io.quarkus.bot.util.Strings;
 
 class CheckPullRequestEditorialRules {
@@ -40,8 +41,23 @@ class CheckPullRequestEditorialRules {
             return;
         }
 
+        String baseBranch = pullRequestPayload.getPullRequest().getBase().getRef();
+
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        String title = pullRequest.getTitle();
+        String originalTitle = pullRequest.getTitle();
+        String normalizedTitle = GHPullRequests.normalizeTitle(originalTitle, baseBranch);
+
+        System.out.println("baseBranch: " + baseBranch);
+        System.out.println("originalTitle: " + originalTitle);
+        System.out.println("normalizedTitle: " + normalizedTitle);
+
+        if (!originalTitle.equals(normalizedTitle)) {
+            System.out.println("totoz");
+            pullRequest.setTitle(normalizedTitle);
+        }
+
+        // we remove the potential version prefix before checking the editorial rules
+        String title = GHPullRequests.dropVersionSuffix(normalizedTitle, baseBranch);
 
         List<String> errorMessages = getErrorMessages(title);
 
