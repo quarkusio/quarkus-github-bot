@@ -183,8 +183,8 @@
       }
     },
     "base": {
-      "label": "yrodiere:3.2",
-      "ref": "3.2",
+      "label": "yrodiere:main",
+      "ref": "main",
       "sha": "8b2ebeaef765cf01d0765e3e22aed6fb67933624",
       "user": {
         "login": "yrodiere",

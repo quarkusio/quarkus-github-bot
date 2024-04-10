@@ -12,7 +12,7 @@
     "number": 1,
     "state": "open",
     "locked": false,
-    "title": "[3.2] Upgrade postgresql-jdbc to 42.2.18",
+    "title": "Upgrade postgresql-jdbc to 42.2.18",
     "user": {
       "login": "yrodiere",
       "id": 412878,
@@ -183,8 +183,8 @@
       }
     },
     "base": {
-      "label": "yrodiere:3.2",
-      "ref": "3.2",
+      "label": "yrodiere:3.10",
+      "ref": "3.10",
       "sha": "8b2ebeaef765cf01d0765e3e22aed6fb67933624",
       "user": {
         "login": "yrodiere",

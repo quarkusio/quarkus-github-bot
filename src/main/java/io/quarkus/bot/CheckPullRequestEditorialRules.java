@@ -19,6 +19,7 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.util.GHPullRequests;
 import io.quarkus.bot.util.Strings;
 
 class CheckPullRequestEditorialRules {
@@ -27,8 +28,6 @@ class CheckPullRequestEditorialRules {
 
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final Pattern ISSUE_PATTERN = Pattern.compile("#[0-9]+");
-    // for example, (3.2) or [3.2]
-    private static final Pattern MAINTENANCE_BRANCH_PATTERN = Pattern.compile("^(\\[\\d+.\\d+\\]|\\(\\d+.\\d+\\)).*");
     private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs|refactor)[(:].*");
 
     private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
@@ -42,8 +41,23 @@ class CheckPullRequestEditorialRules {
             return;
         }
 
+        String baseBranch = pullRequestPayload.getPullRequest().getBase().getRef();
+
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        String title = pullRequest.getTitle();
+        String originalTitle = pullRequest.getTitle();
+        String normalizedTitle = GHPullRequests.normalizeTitle(originalTitle, baseBranch);
+
+        System.out.println("baseBranch: " + baseBranch);
+        System.out.println("originalTitle: " + originalTitle);
+        System.out.println("normalizedTitle: " + normalizedTitle);
+
+        if (!originalTitle.equals(normalizedTitle)) {
+            System.out.println("totoz");
+            pullRequest.setTitle(normalizedTitle);
+        }
+
+        // we remove the potential version prefix before checking the editorial rules
+        String title = GHPullRequests.dropVersionSuffix(normalizedTitle, baseBranch);
 
         List<String> errorMessages = getErrorMessages(title);
 
@@ -85,7 +99,7 @@ class CheckPullRequestEditorialRules {
             errorMessages.add("title should count at least 2 words to describe the change properly");
         }
         if (!Character.isDigit(title.codePointAt(0)) && !Character.isUpperCase(title.codePointAt(0))
-                && !isUpperCaseException(title) && !MAINTENANCE_BRANCH_PATTERN.matcher(title).matches()) {
+                && !isUpperCaseException(title)) {
             errorMessages.add("title should preferably start with an uppercase character (if it makes sense!)");
         }
         if (ISSUE_PATTERN.matcher(title).find()) {
