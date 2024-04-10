@@ -47,12 +47,7 @@ class CheckPullRequestEditorialRules {
         String originalTitle = pullRequest.getTitle();
         String normalizedTitle = GHPullRequests.normalizeTitle(originalTitle, baseBranch);
 
-        System.out.println("baseBranch: " + baseBranch);
-        System.out.println("originalTitle: " + originalTitle);
-        System.out.println("normalizedTitle: " + normalizedTitle);
-
         if (!originalTitle.equals(normalizedTitle)) {
-            System.out.println("totoz");
             pullRequest.setTitle(normalizedTitle);
         }
 
