@@ -26,6 +26,7 @@ public class GHPullRequestsTest {
         assertThat(GHPullRequests.normalizeTitle("My PR", "3.10")).isEqualTo(("[3.10] My PR"));
         assertThat(GHPullRequests.normalizeTitle("My PR", "main")).isEqualTo(("My PR"));
         assertThat(GHPullRequests.normalizeTitle("(3.8) My PR", "main")).isEqualTo(("(3.8) My PR"));
+        assertThat(GHPullRequests.normalizeTitle("3.8.4 backports 1", "3.8")).isEqualTo(("[3.8] 3.8.4 backports 1"));
         assertThat(GHPullRequests.normalizeTitle("(3.10) My PR", "3.10")).isEqualTo(("[3.10] My PR"));
         assertThat(GHPullRequests.normalizeTitle("[3.8] My PR", "main")).isEqualTo(("[3.8] My PR"));
         assertThat(GHPullRequests.normalizeTitle("[3.8] My PR", "3.8")).isEqualTo(("[3.8] My PR"));
