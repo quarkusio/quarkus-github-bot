@@ -18,6 +18,9 @@ public class GHPullRequestsTest {
         assertThat(GHPullRequests.dropVersionSuffix("[3.9] My PR", "3.8")).isEqualTo(("My PR"));
         assertThat(GHPullRequests.dropVersionSuffix("(3.9) My PR", "3.8")).isEqualTo(("My PR"));
         assertThat(GHPullRequests.dropVersionSuffix("My PR [3.7]", "3.8")).isEqualTo(("My PR [3.7]"));
+        assertThat(GHPullRequests.dropVersionSuffix("3.10.4 Backports 1", "3.10")).isEqualTo(("3.10.4 Backports 1"));
+        assertThat(GHPullRequests.dropVersionSuffix("(3.10) My PR", "3.10")).isEqualTo(("My PR"));
+        assertThat(GHPullRequests.dropVersionSuffix("[3.10] My PR", "3.10")).isEqualTo(("My PR"));
     }
 
     @Test
@@ -34,5 +37,6 @@ public class GHPullRequestsTest {
         assertThat(GHPullRequests.normalizeTitle("(3.9) My PR", "3.8")).isEqualTo(("[3.8] My PR"));
         assertThat(GHPullRequests.normalizeTitle("My PR [3.7]", "3.8")).isEqualTo(("[3.8] My PR [3.7]"));
         assertThat(GHPullRequests.normalizeTitle("2.10 - My PR", "2.10")).isEqualTo(("[2.10] My PR"));
+        assertThat(GHPullRequests.normalizeTitle("3.10.4 Backports 1", "3.10")).isEqualTo(("[3.10] 3.10.4 Backports 1"));
     }
 }
