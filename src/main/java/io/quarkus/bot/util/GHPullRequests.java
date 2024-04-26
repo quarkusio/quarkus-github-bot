@@ -7,7 +7,7 @@ import org.kohsuke.github.GHPullRequest;
 
 public final class GHPullRequests {
 
-    private static final Pattern CLEAN_VERSION_PATTERN = Pattern.compile("^\\[?\\(?[0-9]+\\.[0-9]+\\]?\\)?(?!\\.)[ -]*");
+    private static final Pattern CLEAN_VERSION_PATTERN = Pattern.compile("^\\[?\\(?[0-9]+\\.[0-9]+\\]?\\)?(?![\\.0-9])[ -]*");
 
     public static boolean hasLabel(GHPullRequest pullRequest, String labelName) {
         for (GHLabel label : pullRequest.getLabels()) {
