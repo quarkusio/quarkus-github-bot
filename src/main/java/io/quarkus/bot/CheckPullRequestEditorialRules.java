@@ -44,6 +44,7 @@ class CheckPullRequestEditorialRules {
         String baseBranch = pullRequestPayload.getPullRequest().getBase().getRef();
 
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        String body = pullRequest.getBody();
         String originalTitle = pullRequest.getTitle();
         String normalizedTitle = GHPullRequests.normalizeTitle(originalTitle, baseBranch);
 
@@ -54,19 +55,23 @@ class CheckPullRequestEditorialRules {
         // we remove the potential version prefix before checking the editorial rules
         String title = GHPullRequests.dropVersionSuffix(normalizedTitle, baseBranch);
 
-        List<String> errorMessages = getErrorMessages(title);
+        List<String> titleErrorMessages = getTitleErrorMessages(title);
+        List<String> bodyErrorMessages = getBodyErrorMessages(body);
 
-        if (errorMessages.isEmpty()) {
+        if (titleErrorMessages.isEmpty() && bodyErrorMessages.isEmpty()) {
             return;
         }
 
         StringBuilder comment = new StringBuilder("""
                 Thanks for your pull request!
 
-                The title of your pull request does not follow our editorial rules. Could you have a look?
+                Your pull request does not follow our editorial rules. Could you have a look?
 
                 """);
-        for (String errorMessage : errorMessages) {
+        for (String errorMessage : titleErrorMessages) {
+            comment.append("- ").append(errorMessage).append("\n");
+        }
+        for (String errorMessage : bodyErrorMessages) {
             comment.append("- ").append(errorMessage).append("\n");
         }
 
@@ -77,7 +82,7 @@ class CheckPullRequestEditorialRules {
         }
     }
 
-    private static List<String> getErrorMessages(String title) {
+    private static List<String> getTitleErrorMessages(String title) {
         List<String> errorMessages = new ArrayList<>();
 
         if (title == null || title.isEmpty()) {
@@ -102,6 +107,17 @@ class CheckPullRequestEditorialRules {
         }
         if (FIX_FEAT_CHORE.matcher(title).matches()) {
             errorMessages.add("title should not start with chore/docs/feat/fix/refactor but be a proper sentence");
+        }
+
+        return errorMessages;
+    }
+
+    private static List<String> getBodyErrorMessages(String body) {
+        List<String> errorMessages = new ArrayList<>();
+
+        if (body == null || body.isEmpty()) {
+            return Collections.singletonList(
+                    "description should not be empty, describe your intent or provide link to the issue this PR is fixing");
         }
 
         return errorMessages;
