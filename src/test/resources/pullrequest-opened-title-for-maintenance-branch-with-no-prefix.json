@@ -33,7 +33,7 @@
       "type": "User",
       "site_admin": false
     },
-    "body": "",
+    "body": "Upgrade postgresql-jdbc to 42.2.18",
     "created_at": "2020-11-25T10:43:59Z",
     "updated_at": "2020-11-25T10:43:59Z",
     "closed_at": null,
