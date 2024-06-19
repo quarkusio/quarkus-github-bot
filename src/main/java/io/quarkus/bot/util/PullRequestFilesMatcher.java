@@ -50,6 +50,44 @@ public class PullRequestFilesMatcher {
         return false;
     }
 
+    public boolean changedFilesOnlyMatch(Collection<String> filenamePatterns) {
+        if (filenamePatterns.isEmpty()) {
+            return false;
+        }
+
+        PagedIterable<GHPullRequestFileDetail> prFiles = pullRequest.listFiles();
+        if (prFiles != null) {
+            for (GHPullRequestFileDetail changedFile : prFiles) {
+                if (filenamePatterns.stream().anyMatch(p -> matchFilenamePattern(p, changedFile.getFilename()))) {
+                    continue;
+                }
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean matchFilenamePattern(String filenamePattern, String changedFile) {
+        if (!filenamePattern.contains("*")) {
+            if (changedFile.startsWith(filenamePattern)) {
+                return true;
+            }
+        } else {
+            try {
+                MatchingEngine matchingEngine = compileGlob(filenamePattern);
+                if (matchingEngine.matches(changedFile)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                LOG.error("Error evaluating glob expression: " + filenamePattern, e);
+            }
+        }
+
+        return false;
+    }
+
     @CacheResult(cacheName = "glob-cache")
     MatchingEngine compileGlob(String filenamePattern) {
         return GlobPattern.compile(filenamePattern);

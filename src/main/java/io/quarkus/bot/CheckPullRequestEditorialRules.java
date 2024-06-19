@@ -20,6 +20,7 @@ import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.GHPullRequests;
+import io.quarkus.bot.util.PullRequestFilesMatcher;
 import io.quarkus.bot.util.Strings;
 
 class CheckPullRequestEditorialRules {
@@ -31,6 +32,8 @@ class CheckPullRequestEditorialRules {
     private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs|refactor)[(:].*");
 
     private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
+    private static final List<String> DOC_CHANGES = List.of("docs/src/main/asciidoc/", "README.md", "LICENSE",
+            "CONTRIBUTING.md");
 
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
@@ -56,7 +59,7 @@ class CheckPullRequestEditorialRules {
         String title = GHPullRequests.dropVersionSuffix(normalizedTitle, baseBranch);
 
         List<String> titleErrorMessages = getTitleErrorMessages(title);
-        List<String> bodyErrorMessages = getBodyErrorMessages(body);
+        List<String> bodyErrorMessages = getBodyErrorMessages(body, pullRequest);
 
         if (titleErrorMessages.isEmpty() && bodyErrorMessages.isEmpty()) {
             return;
@@ -112,12 +115,12 @@ class CheckPullRequestEditorialRules {
         return errorMessages;
     }
 
-    private static List<String> getBodyErrorMessages(String body) {
+    private static List<String> getBodyErrorMessages(String body, GHPullRequest pullRequest) throws IOException {
         List<String> errorMessages = new ArrayList<>();
 
-        if (body == null || body.isEmpty()) {
-            return Collections.singletonList(
-                    "description should not be empty, describe your intent or provide link to the issue this PR is fixing");
+        if ((body == null || body.isBlank()) && isMeaningfulPullRequest(pullRequest)) {
+            return List.of(
+                    "description should not be empty, describe your intent or provide links to the issues this PR is fixing (using `Fixes #NNNNN`)");
         }
 
         return errorMessages;
@@ -131,5 +134,29 @@ class CheckPullRequestEditorialRules {
         }
 
         return false;
+    }
+
+    private static boolean isMeaningfulPullRequest(GHPullRequest pullRequest) throws IOException {
+        // Note: these rules will have to be adjusted depending on how it goes
+        // we don't want to annoy people fixing a typo or require a description for a one liner explained in the title
+
+        // if we have more than one commit, then it's meaningful
+        if (pullRequest.getCommits() > 1) {
+            return true;
+        }
+
+        // for one liner/two liners, let's be a little more lenient
+        if (pullRequest.getAdditions() <= 2 && pullRequest.getDeletions() <= 2) {
+            return false;
+        }
+
+        // let's be a little more flexible for doc changes
+        PullRequestFilesMatcher filesMatcher = new PullRequestFilesMatcher(pullRequest);
+        if (filesMatcher.changedFilesOnlyMatch(DOC_CHANGES)
+                && pullRequest.getAdditions() <= 10 && pullRequest.getDeletions() <= 10) {
+            return false;
+        }
+
+        return true;
     }
 }

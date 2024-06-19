@@ -12,7 +12,7 @@
     "number": 1,
     "state": "open",
     "locked": false,
-    "title": "chore: update README.md",
+    "title": "An issue",
     "user": {
       "login": "yrodiere",
       "id": 412878,
@@ -33,7 +33,7 @@
       "type": "User",
       "site_admin": false
     },
-    "body": "body",
+    "body": "",
     "created_at": "2020-11-25T10:43:59Z",
     "updated_at": "2020-11-25T10:43:59Z",
     "closed_at": null,
@@ -342,8 +342,8 @@
     "review_comments": 0,
     "maintainer_can_modify": false,
     "commits": 1,
-    "additions": 3,
-    "deletions": 1,
+    "additions": 5,
+    "deletions": 3,
     "changed_files": 1
   },
   "repository": {
