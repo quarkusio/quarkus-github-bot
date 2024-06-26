@@ -32,6 +32,7 @@ class CheckPullRequestEditorialRules {
     private static final Pattern FIX_FEAT_CHORE = Pattern.compile("^(fix|chore|feat|docs|refactor)[(:].*");
 
     private static final List<String> UPPER_CASE_EXCEPTIONS = Arrays.asList("gRPC");
+    private static final List<String> BOMS = List.of("bom/application/pom.xml");
     private static final List<String> DOC_CHANGES = List.of("docs/src/main/asciidoc/", "README.md", "LICENSE",
             "CONTRIBUTING.md");
 
@@ -120,7 +121,7 @@ class CheckPullRequestEditorialRules {
 
         if ((body == null || body.isBlank()) && isMeaningfulPullRequest(pullRequest)) {
             return List.of(
-                    "description should not be empty, describe your intent or provide links to the issues this PR is fixing (using `Fixes #NNNNN`)");
+                    "description should not be empty, describe your intent or provide links to the issues this PR is fixing (using `Fixes #NNNNN`) or changelogs");
         }
 
         return errorMessages;
@@ -145,13 +146,19 @@ class CheckPullRequestEditorialRules {
             return true;
         }
 
+        PullRequestFilesMatcher filesMatcher = new PullRequestFilesMatcher(pullRequest);
+
+        // for changes to the BOM, we are stricter
+        if (filesMatcher.changedFilesMatch(BOMS)) {
+            return true;
+        }
+
         // for one liner/two liners, let's be a little more lenient
         if (pullRequest.getAdditions() <= 2 && pullRequest.getDeletions() <= 2) {
             return false;
         }
 
         // let's be a little more flexible for doc changes
-        PullRequestFilesMatcher filesMatcher = new PullRequestFilesMatcher(pullRequest);
         if (filesMatcher.changedFilesOnlyMatch(DOC_CHANGES)
                 && pullRequest.getAdditions() <= 10 && pullRequest.getDeletions() <= 10) {
             return false;
