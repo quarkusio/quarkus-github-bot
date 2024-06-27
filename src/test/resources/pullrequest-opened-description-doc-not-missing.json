@@ -12,7 +12,7 @@
     "number": 1,
     "state": "open",
     "locked": false,
-    "title": "chore: update README.md",
+    "title": "An issue",
     "user": {
       "login": "yrodiere",
       "id": 412878,
@@ -342,8 +342,8 @@
     "review_comments": 0,
     "maintainer_can_modify": false,
     "commits": 1,
-    "additions": 3,
-    "deletions": 1,
+    "additions": 100,
+    "deletions": 50,
     "changed_files": 1
   },
   "repository": {
