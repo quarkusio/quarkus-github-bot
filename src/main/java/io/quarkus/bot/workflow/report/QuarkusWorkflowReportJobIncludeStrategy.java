@@ -13,14 +13,14 @@ public class QuarkusWorkflowReportJobIncludeStrategy implements WorkflowReportJo
 
     @Override
     public boolean include(WorkflowReport report, WorkflowReportJob job) {
-        if (QuarkusWorkflowConstants.JOB_NAME_BUILD_REPORT.equals(job.getName())) {
-            return false;
-        }
         if (job.getName().startsWith(WorkflowConstants.BUILD_SUMMARY_CHECK_RUN_PREFIX)) {
             return false;
         }
         if (job.isFailing()) {
             return true;
+        }
+        if (QuarkusWorkflowConstants.JOB_NAME_BUILD_REPORT.equals(job.getName())) {
+            return false;
         }
 
         // in this particular case, we exclude the Windows job as it does not run the containers job
