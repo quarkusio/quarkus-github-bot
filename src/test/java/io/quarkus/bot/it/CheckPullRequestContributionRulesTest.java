@@ -269,6 +269,10 @@ public class CheckPullRequestContributionRulesTest {
                     "sender": {
                       "login": "TestUser",
                       "id": 8484741
+                    },
+                    "installation" : {
+                      "id" : 28125889,
+                      "node_id" : "MDIzOkludGVncmF0aW9uSW5zdGFsbGF0aW9uMjgxMjU4ODk="
                     }
                   }
                     """;

@@ -55,6 +55,10 @@ public class CheckTriageBackportContextTest {
                     },
                     "sender": {
                       "login": "test-github-user"
+                    },
+                    "installation" : {
+                      "id" : 28125889,
+                      "node_id" : "MDIzOkludGVncmF0aW9uSW5zdGFsbGF0aW9uMjgxMjU4ODk="
                     }
                   }""";
     }
