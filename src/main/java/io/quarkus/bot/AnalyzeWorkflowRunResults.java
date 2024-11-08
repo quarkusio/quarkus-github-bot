@@ -33,10 +33,24 @@ public class AnalyzeWorkflowRunResults {
             return;
         }
 
+        Comparator<GHWorkflowJob> workflowJobComparator;
+
+        switch (workflowRunPayload.getRepository().getFullName()) {
+            case "quarkusio/quarkus":
+                workflowJobComparator = QuarkusWorkflowJobComparator.INSTANCE;
+                break;
+            case "quarkiverse/quarkus-langchain4j":
+                workflowJobComparator = QuarkusLangChain4jWorkflowJobComparator.INSTANCE;
+                break;
+            default:
+                // it will use the default ones
+                workflowJobComparator = null;
+        }
+
         BuildReporterConfig buildReporterConfig = BuildReporterConfig.builder()
                 .dryRun(quarkusBotConfig.isDryRun())
                 .monitoredWorkflows(quarkusBotConfigFile.workflowRunAnalysis.workflows)
-                .workflowJobComparator(QuarkusWorkflowJobComparator.INSTANCE)
+                .workflowJobComparator(workflowJobComparator)
                 .enableDevelocity(quarkusBotConfigFile.develocity.enabled)
                 .develocityUrl(quarkusBotConfigFile.develocity.url)
                 .build();
@@ -108,6 +122,40 @@ public class AnalyzeWorkflowRunResults {
                     return 82;
                 }
                 return 81;
+            }
+
+            return 200;
+        }
+    }
+
+    private final static class QuarkusLangChain4jWorkflowJobComparator implements Comparator<GHWorkflowJob> {
+
+        private static final QuarkusLangChain4jWorkflowJobComparator INSTANCE = new QuarkusLangChain4jWorkflowJobComparator();
+
+        @Override
+        public int compare(GHWorkflowJob o1, GHWorkflowJob o2) {
+            int order1 = getOrder(o1.getName());
+            int order2 = getOrder(o2.getName());
+
+            if (order1 == order2) {
+                return o1.getName().compareToIgnoreCase(o2.getName());
+            }
+
+            return order1 - order2;
+        }
+
+        private static int getOrder(String jobName) {
+            if (jobName.startsWith("Quick Build")) {
+                return 1;
+            }
+            if (jobName.startsWith("JVM tests - ")) {
+                return 2;
+            }
+            if (jobName.startsWith("Native tests - ")) {
+                return 12;
+            }
+            if (jobName.startsWith("In process embedding model tests - ")) {
+                return 22;
             }
 
             return 200;
