@@ -17,7 +17,8 @@ public class QuarkusWorkflowJobLabeller implements WorkflowJobLabeller {
         String[] tokens = name.split(QuarkusWorkflowConstants.JOB_NAME_DELIMITER);
 
         for (int i = 0; i < tokens.length; i++) {
-            if (tokens[i].startsWith(QuarkusWorkflowConstants.JOB_NAME_JDK_PREFIX)) {
+            if (tokens[i].startsWith(QuarkusWorkflowConstants.JOB_NAME_JDK_PREFIX)
+                    || tokens[i].startsWith(QuarkusWorkflowConstants.JOB_NAME_JAVA_PREFIX)) {
                 break;
             }
 

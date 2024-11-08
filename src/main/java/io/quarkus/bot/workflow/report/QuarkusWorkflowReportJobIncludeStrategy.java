@@ -1,5 +1,7 @@
 package io.quarkus.bot.workflow.report;
 
+import java.util.Locale;
+
 import jakarta.inject.Singleton;
 
 import io.quarkus.bot.buildreporter.githubactions.WorkflowConstants;
@@ -38,7 +40,8 @@ public class QuarkusWorkflowReportJobIncludeStrategy implements WorkflowReportJo
     }
 
     private static boolean isJvmTests(WorkflowReportJob job) {
-        return job.getName().startsWith(QuarkusWorkflowConstants.JOB_NAME_JVM_TESTS_PREFIX);
+        return job.getName().toLowerCase(Locale.ROOT)
+                .startsWith(QuarkusWorkflowConstants.JOB_NAME_JVM_TESTS_PREFIX.toLowerCase(Locale.ROOT));
     }
 
     private static boolean isWindows(WorkflowReportJob job) {
