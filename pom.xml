@@ -24,7 +24,7 @@
         <version.formatter.plugin>2.24.1</version.formatter.plugin>
         <version.impsort.plugin>1.4.1</version.impsort.plugin>
 
-        <quarkus-github-app.version>2.7.0</quarkus-github-app.version>
+        <quarkus-github-app.version>2.8.0</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
         <build-reporter.version>3.9.6</build-reporter.version>
         <assertj.version>3.26.3</assertj.version>
