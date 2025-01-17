@@ -29,6 +29,8 @@ public class QuarkusGitHubBotConfigFile {
 
         public List<TriageRule> rules = new ArrayList<>();
 
+        public List<GuardedBranch> guardedBranches = new ArrayList<>();
+
         public QE qe = new QE();
 
         public Discussions discussions = new Discussions();
@@ -147,6 +149,14 @@ public class QuarkusGitHubBotConfigFile {
         public boolean enabled = false;
 
         public String url;
+    }
+
+    public static class GuardedBranch {
+
+        public String ref;
+
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> notify = new TreeSet<>();
     }
 
     boolean isFeatureEnabled(Feature feature) {
