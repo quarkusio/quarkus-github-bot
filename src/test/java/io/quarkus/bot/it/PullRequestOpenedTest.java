@@ -394,6 +394,23 @@ public class PullRequestOpenedTest {
     }
 
     @Test
+    void triageGuardedBranches() throws IOException {
+        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
+                .fromString("features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]\n"
+                        + "triage:\n"
+                        + "  guardedBranches:\n"
+                        + "    - ref: 3.15\n"
+                        + "      notify: [jmartisk,gsmet]\n"))
+                .when().payloadFromClasspath("/pullrequest-opened-guarded-branch.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verify(mocks.pullRequest(527350930))
+                            .comment("/cc @gsmet (3.15), @jmartisk (3.15)");
+                    verifyNoMoreInteractions(mocks.ghObjects());
+                });
+    }
+
+    @Test
     void descriptionMissingForSmallDocChange() throws IOException {
         given()
                 .github(mocks -> {
