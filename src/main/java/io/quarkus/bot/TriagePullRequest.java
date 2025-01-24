@@ -19,7 +19,6 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
-import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.GuardedBranch;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Mentions;
@@ -49,6 +48,10 @@ class TriagePullRequest {
             return;
         }
 
+        if (quarkusBotConfigFile.triage.rules.isEmpty()) {
+            return;
+        }
+
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Set<String> labels = new TreeSet<>();
         Mentions mentions = new Mentions();
@@ -75,32 +78,20 @@ class TriagePullRequest {
             }
         }
 
-        for (GuardedBranch guardedBranch : quarkusBotConfigFile.triage.guardedBranches) {
-            if (guardedBranch.ref.equals(pullRequest.getBase().getRef())) {
-                for (String mention : guardedBranch.notify) {
-                    mentions.add(mention, guardedBranch.ref);
-                }
-            }
-        }
-
         // remove from the set the labels already present on the pull request
-        if (!labels.isEmpty()) {
-            pullRequest.getLabels().stream().map(GHLabel::getName).forEach(labels::remove);
+        pullRequest.getLabels().stream().map(GHLabel::getName).forEach(labels::remove);
 
-            if (!labels.isEmpty()) {
-                if (!quarkusBotConfig.isDryRun()) {
-                    pullRequest.addLabels(limit(labels).toArray(new String[0]));
-                } else {
-                    LOG.info("Pull Request #" + pullRequest.getNumber() + " - Add labels: " + String.join(", ", limit(labels)));
-                }
+        if (!labels.isEmpty()) {
+            if (!quarkusBotConfig.isDryRun()) {
+                pullRequest.addLabels(limit(labels).toArray(new String[0]));
+            } else {
+                LOG.info("Pull Request #" + pullRequest.getNumber() + " - Add labels: " + String.join(", ", limit(labels)));
             }
         }
 
+        mentions.removeAlreadyParticipating(GHIssues.getParticipatingUsers(pullRequest, gitHubGraphQLClient));
         if (!mentions.isEmpty()) {
-            mentions.removeAlreadyParticipating(GHIssues.getParticipatingUsers(pullRequest, gitHubGraphQLClient));
-            if (!mentions.isEmpty()) {
-                comments.add("/cc " + mentions.getMentionsString());
-            }
+            comments.add("/cc " + mentions.getMentionsString());
         }
 
         for (String comment : comments) {
