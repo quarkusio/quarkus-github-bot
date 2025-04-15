@@ -26,7 +26,7 @@
 
         <quarkus-github-app.version>2.8.5</quarkus-github-app.version>
         <glob.version>0.9.0</glob.version>
-        <build-reporter.version>3.9.9</build-reporter.version>
+        <build-reporter.version>3.9.10</build-reporter.version>
         <assertj.version>3.27.3</assertj.version>
     </properties>
     <dependencyManagement>
