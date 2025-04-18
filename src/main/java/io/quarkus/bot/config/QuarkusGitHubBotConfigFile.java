@@ -8,6 +8,10 @@ import java.util.TreeSet;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Note: a subset of this class is present in action-build-reporter,
+ * so be careful when updating existing features.
+ */
 public class QuarkusGitHubBotConfigFile {
 
     @JsonDeserialize(as = HashSet.class)
