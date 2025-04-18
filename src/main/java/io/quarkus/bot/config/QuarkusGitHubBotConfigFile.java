@@ -94,6 +94,9 @@ public class QuarkusGitHubBotConfigFile {
 
         @JsonDeserialize(as = HashSet.class)
         public Set<String> workflows = new HashSet<>();
+
+        @JsonDeserialize(as = HashSet.class)
+        public Set<String> ignoredFlakyTests = new HashSet<>();
     }
 
     public static class Workflows {

@@ -50,6 +50,7 @@ public class AnalyzeWorkflowRunResults {
         BuildReporterConfig buildReporterConfig = BuildReporterConfig.builder()
                 .dryRun(quarkusBotConfig.isDryRun())
                 .monitoredWorkflows(quarkusBotConfigFile.workflowRunAnalysis.workflows)
+                .ignoredFlakyTests(quarkusBotConfigFile.workflowRunAnalysis.ignoredFlakyTests)
                 .workflowJobComparator(workflowJobComparator)
                 .enableDevelocity(quarkusBotConfigFile.develocity.enabled)
                 .develocityUrl(quarkusBotConfigFile.develocity.url)
