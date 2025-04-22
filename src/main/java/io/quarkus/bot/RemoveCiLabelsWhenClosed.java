@@ -15,9 +15,9 @@ import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 
-public class RemoveWaitingForCiLabelWhenClosed {
+public class RemoveCiLabelsWhenClosed {
 
-    private static final Logger LOG = Logger.getLogger(RemoveWaitingForCiLabelWhenClosed.class);
+    private static final Logger LOG = Logger.getLogger(RemoveCiLabelsWhenClosed.class);
 
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
@@ -32,12 +32,13 @@ public class RemoveWaitingForCiLabelWhenClosed {
         Collection<GHLabel> labels = pullRequest.getLabels();
 
         for (GHLabel label : labels) {
-            if (label.getName().equals(Labels.TRIAGE_WAITING_FOR_CI)) {
+            if (label.getName().equals(Labels.TRIAGE_WAITING_FOR_CI)
+                    || label.getName().startsWith(Labels.CI_PREFIX)) {
                 if (!quarkusBotConfig.isDryRun()) {
-                    pullRequest.removeLabels(Labels.TRIAGE_WAITING_FOR_CI);
+                    pullRequest.removeLabels(label.getName());
                 } else {
                     LOG.info("Pull request #" + pullRequest.getNumber() + " - Remove label: "
-                            + Labels.TRIAGE_WAITING_FOR_CI);
+                            + label.getName());
                 }
                 break;
             }
