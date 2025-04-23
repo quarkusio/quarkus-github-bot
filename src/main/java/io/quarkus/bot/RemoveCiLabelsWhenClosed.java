@@ -40,7 +40,6 @@ public class RemoveCiLabelsWhenClosed {
                     LOG.info("Pull request #" + pullRequest.getNumber() + " - Remove label: "
                             + label.getName());
                 }
-                break;
             }
         }
     }
