@@ -1,0 +1,79 @@
+{
+  "action": "edited",
+  "number": 1,
+  "pull_request": {
+    "url": "https://api.github.com/repos/yrodiere/quarkus-bot-java-playground/pulls/1",
+    "id": 527350930,
+    "node_id": "MDExOlB1bGxSZXF1ZXN0NTI3MzUwOTMw",
+    "html_url": "https://github.com/yrodiere/quarkus-bot-java-playground/pull/1",
+    "diff_url": "https://github.com/yrodiere/quarkus-bot-java-playground/pull/1.diff",
+    "patch_url": "https://github.com/yrodiere/quarkus-bot-java-playground/pull/1.patch",
+    "issue_url": "https://api.github.com/repos/yrodiere/quarkus-bot-java-playground/issues/1",
+    "number": 1,
+    "state": "open",
+    "locked": false,
+    "title": "Fixed title without dot",
+    "user": {
+      "login": "yrodiere",
+      "id": 412878,
+      "node_id": "MDQ6VXNlcjQxMjg3OA==",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/412878?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/yrodiere",
+      "html_url": "https://github.com/yrodiere",
+      "followers_url": "https://api.github.com/users/yrodiere/followers",
+      "following_url": "https://api.github.com/users/yrodiere/following{/other_user}",
+      "gists_url": "https://api.github.com/users/yrodiere/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/yrodiere/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/yrodiere/subscriptions",
+      "organizations_url": "https://api.github.com/users/yrodiere/orgs",
+      "repos_url": "https://api.github.com/users/yrodiere/repos",
+      "events_url": "https://api.github.com/users/yrodiere/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/yrodiere/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "body": "This is a valid description",
+    "created_at": "2020-11-25T10:43:59Z",
+    "updated_at": "2020-11-25T10:43:59Z",
+    "closed_at": null,
+    "merged_at": null,
+    "merge_commit_sha": null,
+    "assignee": null,
+    "assignees": [],
+    "requested_reviewers": [],
+    "requested_teams": [],
+    "labels": [],
+    "milestone": null,
+    "draft": false,
+    "commits": 1,
+    "additions": 3,
+    "deletions": 1,
+    "changed_files": 1
+  },
+  "changes": {
+    "title": {
+      "from": "Update README.md."
+    },
+    "body": {
+      "from": "body"
+    }
+  },
+  "repository": {
+    "id": 315892888,
+    "name": "quarkus-bot-java-playground",
+    "full_name": "yrodiere/quarkus-bot-java-playground",
+    "owner": {
+      "login": "yrodiere",
+      "id": 412878
+    }
+  },
+  "sender": {
+    "login": "yrodiere",
+    "id": 412878
+  },
+  "installation": {
+    "id": 13173124,
+    "node_id": "MDIzOkludGVncmF0aW9uSW5zdGFsbGF0aW9uMTMxNzMxMjQ="
+  }
+}
