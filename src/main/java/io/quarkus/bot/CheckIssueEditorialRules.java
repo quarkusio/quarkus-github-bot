@@ -1,25 +1,23 @@
 package io.quarkus.bot;
 
-import java.io.IOException;
-
-import jakarta.inject.Inject;
-
-import org.jboss.logging.Logger;
-import org.kohsuke.github.GHEventPayload;
-import org.kohsuke.github.GHIssue;
-
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.Strings;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssue;
+
+import java.io.IOException;
 
 public class CheckIssueEditorialRules {
     private static final Logger LOG = Logger.getLogger(CheckIssueEditorialRules.class);
 
     private static final String ZULIP_URL = "https://quarkusio.zulipchat.com/";
-    public static final String ZULIP_WARNING = Strings.commentByBot(
+    public static final String ZULIP_WARNING = Strings.editorialCommentByBot(
             "You added a link to a Zulip discussion, please make sure the description of the issue is comprehensive and doesn't require accessing Zulip");
 
     @Inject

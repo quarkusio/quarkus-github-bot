@@ -1,12 +1,12 @@
 package io.quarkus.bot.it.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import io.quarkus.bot.util.GHPullRequests;
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.bot.util.GHPullRequests;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GHPullRequestsTest {
+    public static final String FEATURES_CHECK_EDITORIAL_RULES = "features: [ CHECK_EDITORIAL_RULES ]\n";
 
     @Test
     public void testDropVersionSuffix() {
