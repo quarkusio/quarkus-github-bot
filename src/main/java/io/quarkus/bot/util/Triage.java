@@ -1,14 +1,15 @@
 package io.quarkus.bot.util;
 
-import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
-import io.quarkus.bot.el.SimpleELContext;
-import org.jboss.logging.Logger;
-import org.kohsuke.github.GHPullRequest;
-
 import jakarta.el.ELContext;
 import jakarta.el.ELManager;
 import jakarta.el.ExpressionFactory;
 import jakarta.el.ValueExpression;
+
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHPullRequest;
+
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.TriageRule;
+import io.quarkus.bot.el.SimpleELContext;
 
 public final class Triage {
 

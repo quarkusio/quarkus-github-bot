@@ -1,10 +1,17 @@
 package io.quarkus.bot.it;
 
-import io.quarkiverse.githubapp.testing.GitHubAppTest;
-import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
-import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
-import io.quarkus.cache.CacheInvalidateAll;
-import io.quarkus.test.junit.QuarkusTest;
+import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.quarkus.bot.it.MockHelper.mockUser;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHCommitPointer;
@@ -20,17 +27,11 @@ import org.kohsuke.github.PagedIterable;
 import org.mockito.Answers;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static io.quarkus.bot.it.MockHelper.mockUser;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
+import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
+import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @GitHubAppTest
