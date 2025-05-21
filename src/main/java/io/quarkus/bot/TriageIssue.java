@@ -11,6 +11,7 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssue;
+import org.kohsuke.github.GHLabel;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
@@ -24,8 +25,6 @@ import io.quarkus.bot.util.Mentions;
 import io.quarkus.bot.util.Strings;
 import io.quarkus.bot.util.Triage;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-
-import org.kohsuke.github.GHLabel;
 
 class TriageIssue {
 

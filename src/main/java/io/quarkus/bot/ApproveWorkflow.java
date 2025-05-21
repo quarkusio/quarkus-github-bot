@@ -1,13 +1,13 @@
 package io.quarkus.bot;
 
-import io.quarkiverse.githubapp.ConfigFile;
-import io.quarkiverse.githubapp.event.WorkflowRun;
-import io.quarkus.bot.config.Feature;
-import io.quarkus.bot.config.QuarkusGitHubBotConfig;
-import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
-import io.quarkus.bot.util.PullRequestFilesMatcher;
-import io.quarkus.cache.CacheKey;
-import io.quarkus.cache.CacheResult;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
@@ -16,12 +16,14 @@ import org.kohsuke.github.GHRepositoryStatistics;
 import org.kohsuke.github.GHWorkflowRun;
 import org.kohsuke.github.PagedIterable;
 
-import jakarta.inject.Inject;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import io.quarkiverse.githubapp.ConfigFile;
+import io.quarkiverse.githubapp.event.WorkflowRun;
+import io.quarkus.bot.config.Feature;
+import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.util.PullRequestFilesMatcher;
+import io.quarkus.cache.CacheKey;
+import io.quarkus.cache.CacheResult;
 
 class ApproveWorkflow {
 

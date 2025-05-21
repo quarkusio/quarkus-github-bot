@@ -50,4 +50,4 @@ jobs:
         key: maven-repo-pr-${{ runner.os }}-${{ steps.get-date.outputs.date }}
 
     - name: Build with Maven
-      run: mvn -B clean formatter:validate install
+      run: mvn -B clean install -Dno-format

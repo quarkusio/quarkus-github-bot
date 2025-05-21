@@ -1,5 +1,14 @@
 package io.quarkus.bot;
 
+import java.io.IOException;
+
+import jakarta.inject.Inject;
+
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssue;
+import org.kohsuke.github.GHPullRequest;
+
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.Issue;
 import io.quarkiverse.githubapp.event.PullRequest;
@@ -9,13 +18,6 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.GHPullRequests;
 import io.quarkus.bot.util.Labels;
-import org.jboss.logging.Logger;
-import org.kohsuke.github.GHEventPayload;
-import org.kohsuke.github.GHIssue;
-import org.kohsuke.github.GHPullRequest;
-
-import jakarta.inject.Inject;
-import java.io.IOException;
 
 class RemoveInvalidLabelOnReopenAction {
     private static final Logger LOG = Logger.getLogger(RemoveInvalidLabelOnReopenAction.class);

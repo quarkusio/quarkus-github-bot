@@ -1,14 +1,15 @@
 package io.quarkus.bot.it;
 
-import io.quarkiverse.githubapp.testing.GitHubAppTest;
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
+import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.IOException;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import org.junit.jupiter.api.Test;
+import org.kohsuke.github.GHEvent;
+
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
+import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
 @GitHubAppTest

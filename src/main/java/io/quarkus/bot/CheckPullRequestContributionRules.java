@@ -6,20 +6,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.jboss.logging.Logger;
 import jakarta.inject.Inject;
 
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHCheckRun.AnnotationLevel;
+import org.kohsuke.github.GHCheckRun.Conclusion;
+import org.kohsuke.github.GHCheckRun.Status;
 import org.kohsuke.github.GHCheckRunBuilder;
+import org.kohsuke.github.GHCheckRunBuilder.Annotation;
+import org.kohsuke.github.GHCheckRunBuilder.Output;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GHCheckRun.AnnotationLevel;
-import org.kohsuke.github.GHCheckRun.Conclusion;
-import org.kohsuke.github.GHCheckRun.Status;
-import org.kohsuke.github.GHCheckRunBuilder.Annotation;
-import org.kohsuke.github.GHCheckRunBuilder.Output;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;

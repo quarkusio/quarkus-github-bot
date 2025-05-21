@@ -1,17 +1,17 @@
 package io.quarkus.bot.it;
 
-import org.kohsuke.github.GHPullRequestFileDetail;
-import org.kohsuke.github.GHUser;
-import org.kohsuke.github.PagedIterable;
-import org.kohsuke.github.PagedIterator;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHUser;
+import org.kohsuke.github.PagedIterable;
+import org.kohsuke.github.PagedIterator;
 
 public class MockHelper {
 

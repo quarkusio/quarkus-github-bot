@@ -1,14 +1,16 @@
 package io.quarkus.bot.util;
 
-import com.hrakaroo.glob.GlobPattern;
-import com.hrakaroo.glob.MatchingEngine;
-import io.quarkus.cache.CacheResult;
+import java.util.Collection;
+
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.PagedIterable;
 
-import java.util.Collection;
+import com.hrakaroo.glob.GlobPattern;
+import com.hrakaroo.glob.MatchingEngine;
+
+import io.quarkus.cache.CacheResult;
 
 public class PullRequestFilesMatcher {
 
