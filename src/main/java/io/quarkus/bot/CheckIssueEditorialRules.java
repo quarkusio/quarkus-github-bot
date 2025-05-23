@@ -19,7 +19,7 @@ public class CheckIssueEditorialRules {
     private static final Logger LOG = Logger.getLogger(CheckIssueEditorialRules.class);
 
     private static final String ZULIP_URL = "https://quarkusio.zulipchat.com/";
-    public static final String ZULIP_WARNING = Strings.commentByBot(
+    public static final String ZULIP_WARNING = Strings.editorialCommentByBot(
             "You added a link to a Zulip discussion, please make sure the description of the issue is comprehensive and doesn't require accessing Zulip");
 
     @Inject
