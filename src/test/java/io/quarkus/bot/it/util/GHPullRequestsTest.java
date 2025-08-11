@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import io.quarkus.bot.util.GHPullRequests;
 
 public class GHPullRequestsTest {
+    public static final String FEATURES_CHECK_EDITORIAL_RULES = "features: [ CHECK_EDITORIAL_RULES ]\n";
 
     @Test
     public void testDropVersionSuffix() {
