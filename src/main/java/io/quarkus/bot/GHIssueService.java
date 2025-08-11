@@ -7,8 +7,6 @@ import jakarta.inject.Singleton;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHIssue;
 
-import io.quarkus.bot.util.Strings;
-
 @Singleton
 public class GHIssueService {
 
