@@ -1,6 +1,7 @@
 package io.quarkus.bot;
 
 import java.io.IOException;
+import java.util.List;
 
 import jakarta.inject.Inject;
 
@@ -14,7 +15,6 @@ import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile.GuardedBranch;
-import io.quarkus.bot.util.GHIssues;
 import io.quarkus.bot.util.Mentions;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 
@@ -48,7 +48,7 @@ class PullRequestGuardedBranches {
             return;
         }
 
-        mentions.removeAlreadyParticipating(GHIssues.getParticipatingUsers(pullRequest, gitHubGraphQLClient));
+        mentions.removeAlreadyParticipating(List.of(pullRequest.getUser().getLogin()));
 
         if (mentions.isEmpty()) {
             return;
