@@ -16,13 +16,25 @@ import io.quarkus.bot.util.Strings;
 public class GHIssueCommentService {
     private static final Logger LOG = Logger.getLogger(GHIssueCommentService.class);
 
+    private String formatComment(String comment, boolean isEditorialComment) {
+        return isEditorialComment ? Strings.editorialCommentByBot(comment) : Strings.commentByBot(comment);
+    }
+
+    public void addCommentOrThrow(GHIssue ghIssue, String comment, boolean isEditorialComment, boolean isDryRun)
+            throws IOException {
+        if (!isDryRun) {
+            ghIssue.comment(formatComment(comment, isEditorialComment));
+            LOG.debugf("Pull request #%d - Added new comment", ghIssue.getNumber());
+        } else {
+            LOG.infof("Pull request #%d - Add comment (dry-run): %s", ghIssue.getNumber(), comment);
+        }
+    }
+
     public void updateComment(GHIssueComment comment, String newText, int issueNumber, boolean isEditorialComment,
             boolean isDryRun) {
         if (!isDryRun) {
             try {
-                String formattedComment = isEditorialComment ? Strings.editorialCommentByBot(newText)
-                        : Strings.commentByBot(newText);
-                comment.update(formattedComment);
+                comment.update(formatComment(newText, isEditorialComment));
                 LOG.debug("Pull request #" + issueNumber + " - Updated comment");
             } catch (IOException e) {
                 LOG.error(String.format("Pull Request #%s - Failed to update comment %d",
@@ -62,17 +74,10 @@ public class GHIssueCommentService {
     }
 
     public void addComment(GHIssue ghIssue, String comment, boolean isEditorialComment, boolean isDryRun) {
-        if (!isDryRun) {
-            try {
-                String formattedComment = isEditorialComment ? Strings.editorialCommentByBot(comment)
-                        : Strings.commentByBot(comment);
-                ghIssue.comment(formattedComment);
-                LOG.debugf("Pull request #%d - Added new comment", ghIssue.getNumber());
-            } catch (IOException e) {
-                LOG.errorf(e, "Pull Request #%d - Failed to add comment", ghIssue.getNumber());
-            }
-        } else {
-            LOG.infof("Pull request #%d - Add comment (dry-run): %s", ghIssue.getNumber(), comment);
+        try {
+            addCommentOrThrow(ghIssue, comment, isEditorialComment, isDryRun);
+        } catch (IOException e) {
+            LOG.errorf(e, "Pull Request #%d - Failed to add comment", ghIssue.getNumber());
         }
     }
 }

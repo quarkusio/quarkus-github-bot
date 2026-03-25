@@ -14,7 +14,8 @@ public enum Feature {
     TRIAGE_ISSUES_AND_PULL_REQUESTS,
     TRIAGE_DISCUSSIONS,
     PUSH_TO_PROJECTS,
-    APPROVE_WORKFLOWS;
+    APPROVE_WORKFLOWS,
+    RETEST_PULL_REQUEST_WORKFLOWS;
 
     public boolean isEnabled(QuarkusGitHubBotConfigFile quarkusBotConfigFile) {
         if (quarkusBotConfigFile == null) {
