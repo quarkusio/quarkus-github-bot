@@ -15,8 +15,4 @@ record RetestWorkflowSelection(List<GHWorkflowRun> eligibleRuns, NoEligibleReaso
         LATEST_RUNS_GREEN,
         NO_RERUNNABLE_FAILED_JOBS
     }
-
-    boolean hasEligibleRuns() {
-        return !eligibleRuns.isEmpty();
-    }
 }

@@ -1,8 +1,10 @@
 package io.quarkus.bot.retest;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
@@ -23,6 +25,7 @@ import io.quarkiverse.githubapp.command.airline.Permission;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.service.GHIssueCommentService;
 
 /**
  * Handles {@code @quarkusbot retest} comments on pull requests.
@@ -43,6 +46,9 @@ class RetestCommand implements RetestCommandHandler {
     @Inject
     FailedJobsRerunner failedJobsRerunner;
 
+    @Inject
+    GHIssueCommentService issueCommentService;
+
     @Override
     public void run(QuarkusGitHubBotConfigFile quarkusBotConfigFile, GHEventPayload.IssueComment issueCommentPayload) {
         if (!Feature.RETEST_PULL_REQUEST_WORKFLOWS.isEnabled(quarkusBotConfigFile)) {
@@ -56,11 +62,11 @@ class RetestCommand implements RetestCommandHandler {
 
         RetestWorkflowSelection workflowSelection = getWorkflowSelection(pullRequest);
 
-        if (!workflowSelection.hasEligibleRuns()) {
+        if (workflowSelection.eligibleRuns().isEmpty()) {
             throw RetestCommandException.noEligibleWorkflowRuns(workflowSelection.noEligibleReason());
         }
 
-        List<Long> startedWorkflowRunIds = new ArrayList<>();
+        List<GHWorkflowRun> startedWorkflowRuns = new ArrayList<>();
         for (GHWorkflowRun workflowRun : workflowSelection.eligibleRuns()) {
             if (quarkusBotConfig.isDryRun()) {
                 LOG.infof("Pull request #%d - Retest failed jobs for workflow run #%d (dry-run)",
@@ -70,14 +76,20 @@ class RetestCommand implements RetestCommandHandler {
 
             try {
                 failedJobsRerunner.rerunFailedJobs(issueCommentPayload, workflowRun);
-                startedWorkflowRunIds.add(workflowRun.getId());
+                startedWorkflowRuns.add(workflowRun);
             } catch (RuntimeException e) {
-                if (startedWorkflowRunIds.isEmpty()) {
+                if (startedWorkflowRuns.isEmpty()) {
                     throw e;
                 }
 
-                throw RetestCommandException.partialRerunFailure(startedWorkflowRunIds, workflowRun.getId(), e);
+                throw RetestCommandException.partialRerunFailure(
+                        startedWorkflowRuns.stream().map(GHWorkflowRun::getId).toList(), workflowRun.getId(), e);
             }
+        }
+
+        if (!startedWorkflowRuns.isEmpty()) {
+            issueCommentService.addComment(issueCommentPayload.getIssue(), successMessage(startedWorkflowRuns), false,
+                    quarkusBotConfig.isDryRun());
         }
     }
 
@@ -96,5 +108,28 @@ class RetestCommand implements RetestCommandHandler {
         } catch (IOException e) {
             throw RetestCommandException.unableToInspectWorkflowRuns(e);
         }
+    }
+
+    private static String successMessage(List<GHWorkflowRun> startedWorkflowRuns) {
+        String workflowRunLinks = startedWorkflowRuns.stream()
+                .map(RetestCommand::workflowRunReference)
+                .collect(Collectors.joining(", "));
+        String label = startedWorkflowRuns.size() == 1 ? "workflow run " : "workflow runs ";
+        return ":arrows_counterclockwise: Retest started for failed jobs in " + label + workflowRunLinks + ".";
+    }
+
+    private static String workflowRunReference(GHWorkflowRun workflowRun) {
+        String label = "#" + workflowRun.getId();
+        URL htmlUrl;
+        try {
+            htmlUrl = workflowRun.getHtmlUrl();
+        } catch (IOException e) {
+            return label;
+        }
+        if (htmlUrl == null) {
+            return label;
+        }
+
+        return "[" + label + "](" + htmlUrl + ")";
     }
 }

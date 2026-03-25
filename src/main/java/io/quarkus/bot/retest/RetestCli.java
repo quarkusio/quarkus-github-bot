@@ -6,8 +6,7 @@ import com.github.rvesse.airline.annotations.Cli;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.command.airline.CliOptions;
-import io.quarkiverse.githubapp.command.airline.CommandOptions;
-import io.quarkiverse.githubapp.command.airline.CommandOptions.ReactionStrategy;
+import io.quarkiverse.githubapp.command.airline.CliOptions.ParseErrorStrategy;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 
 /**
@@ -15,7 +14,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
  */
 @Cli(name = "@quarkusbot", commands = RetestCommand.class)
 @CliOptions(aliases = {
-        "@quarkus-bot" }, parseErrorHandler = RetestParseErrorHandler.class, defaultCommandOptions = @CommandOptions(reactionStrategy = ReactionStrategy.NONE))
+        "@quarkus-bot" }, parseErrorStrategy = ParseErrorStrategy.NONE)
 class RetestCli {
 }
 

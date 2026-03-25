@@ -28,11 +28,6 @@ class RetestCommandException extends RuntimeException {
         return new RetestCommandException(":warning: Pull request workflow retest is disabled for this repository.");
     }
 
-    static RetestCommandException ambiguousPullRequestHead() {
-        return new RetestCommandException(
-                ":warning: Multiple pull requests share the same head branch and commit, so retest was skipped.");
-    }
-
     static RetestCommandException pullRequestNotOpen() {
         return new RetestCommandException(":warning: Retest is only available on open pull requests.");
     }

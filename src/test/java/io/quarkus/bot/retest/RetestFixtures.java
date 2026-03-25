@@ -1,463 +1,306 @@
 package io.quarkus.bot.retest;
 
+import static io.quarkus.bot.it.MockHelper.mockPagedIterable;
+import static org.mockito.Answers.RETURNS_SELF;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.kohsuke.github.GHCommitPointer;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHPermissionType;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GHWorkflowJob;
 import org.kohsuke.github.GHWorkflowRun;
-import org.kohsuke.github.PagedIterable;
+import org.kohsuke.github.GHWorkflowRunQueryBuilder;
 
-import io.quarkus.bot.it.MockHelper;
+import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
+import io.quarkus.bot.config.Feature;
+import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 
 public final class RetestFixtures {
 
-    public static final String DEFAULT_HEAD_SHA = "deadbeef";
-    public static final String DEFAULT_HEAD_BRANCH = "feature/retest";
+    public static final String PLAYGROUND_REPOSITORY = "yrodiere/quarkus-bot-java-playground";
+
+    static final String DEFAULT_HEAD_SHA = "deadbeef";
+    private static final String DEFAULT_HEAD_BRANCH = "feature/retest";
 
     private RetestFixtures() {
     }
 
-    public static GHRepository repository(String fullName) {
+    static GHRepository repository(String fullName) {
         GHRepository repository = mock(GHRepository.class);
-        String[] parts = fullName.split("/", 2);
-        when(repository.getFullName()).thenReturn(fullName);
-        when(repository.getOwnerName()).thenReturn(parts[0]);
-        when(repository.getName()).thenReturn(parts[1]);
+        stubRepositoryIdentity(repository, fullName);
         return repository;
     }
 
-    public static PullRequestFixture pullRequestFixture(GHRepository repository) {
+    static PullRequestFixture pullRequestFixture(GHRepository repository) {
         return new PullRequestFixture(repository);
     }
 
-    public static GHPullRequest openPullRequest(GHRepository repository) {
+    static GHPullRequest openPullRequest(GHRepository repository) {
         return pullRequestFixture(repository).build();
     }
 
-    public static GHPullRequest openPullRequest(GHRepository repository, GHRepository headRepository) {
+    static GHPullRequest openPullRequest(GHRepository repository, GHRepository headRepository) {
         return pullRequestFixture(repository).headRepository(headRepository).build();
     }
 
-    public static GHPullRequest closedPullRequestWithSameHead(GHRepository repository, int number) {
-        return pullRequestFixture(repository)
-                .number(number)
-                .state(GHIssueState.CLOSED)
-                .build();
+    static QuarkusGitHubBotConfigFile configFileWithRetestFeatureEnabled() throws Exception {
+        QuarkusGitHubBotConfigFile quarkusBotConfigFile = new QuarkusGitHubBotConfigFile();
+        Field featuresField = QuarkusGitHubBotConfigFile.class.getDeclaredField("features");
+        featuresField.setAccessible(true);
+        featuresField.set(quarkusBotConfigFile, new HashSet<>(Set.of(Feature.RETEST_PULL_REQUEST_WORKFLOWS)));
+        return quarkusBotConfigFile;
     }
 
-    public static WorkflowRunFixture workflowRunFixture(long id, long workflowId, String name) {
-        return new WorkflowRunFixture(id, workflowId, name);
+    public static void enableRetestFeature(GitHubMockSetupContext mocks) throws IOException {
+        mocks.configFile("quarkus-github-bot.yml").fromString("features: [ RETEST_PULL_REQUEST_WORKFLOWS ]\n");
+    }
+
+    public static void allowWritePermission(GitHubMockSetupContext mocks, boolean allowed) throws IOException {
+        when(mocks.repository(PLAYGROUND_REPOSITORY).hasPermission(any(GHUser.class), eq(GHPermissionType.WRITE)))
+                .thenReturn(allowed);
+    }
+
+    public static void givenOpenPullRequestWithRuns(GitHubMockSetupContext mocks, GHWorkflowRun... workflowRuns)
+            throws IOException {
+        GHRepository repository = mocks.repository(PLAYGROUND_REPOSITORY);
+        GHWorkflowRunQueryBuilder pullRequestRunsQuery = mock(GHWorkflowRunQueryBuilder.class,
+                withSettings().defaultAnswer(RETURNS_SELF));
+        GHWorkflowRunQueryBuilder pullRequestTargetRunsQuery = mock(GHWorkflowRunQueryBuilder.class,
+                withSettings().defaultAnswer(RETURNS_SELF));
+        GHPullRequest pullRequest = openPullRequest(repository);
+
+        stubRepositoryIdentity(repository, PLAYGROUND_REPOSITORY);
+        when(repository.getPullRequest(1)).thenReturn(pullRequest);
+        when(repository.queryWorkflowRuns()).thenReturn(pullRequestRunsQuery, pullRequestTargetRunsQuery);
+        when(pullRequestRunsQuery.list()).thenReturn(mockPagedIterable(workflowRuns));
+        when(pullRequestTargetRunsQuery.list()).thenReturn(mockPagedIterable());
     }
 
     public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .completed(GHWorkflowRun.Conclusion.FAILURE)
-                .jobs(failedJob())
-                .build();
+            GHRepository repository) {
+        return failedCompletedRun(id, workflowId, name, runNumber, runAttempt, repository, repository);
     }
 
     public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository, GHPullRequest associatedPullRequest) {
-        return failedCompletedRun(id, workflowId, name, runNumber, runAttempt, headRepository,
+            GHRepository repository, GHRepository headRepository) {
+        return failedCompletedRun(id, workflowId, name, runNumber, runAttempt, repository, headRepository, List.of());
+    }
+
+    public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
+            GHRepository repository, GHPullRequest associatedPullRequest) {
+        return failedCompletedRun(id, workflowId, name, runNumber, runAttempt, repository, repository,
                 List.of(associatedPullRequest));
     }
 
-    public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository, List<GHPullRequest> associatedPullRequests) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .associatedPullRequests(associatedPullRequests)
-                .completed(GHWorkflowRun.Conclusion.FAILURE)
-                .jobs(failedJob())
-                .build();
-    }
-
-    public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository, GHEvent event) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .event(event)
-                .completed(GHWorkflowRun.Conclusion.FAILURE)
-                .jobs(failedJob())
-                .build();
+    private static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
+            GHRepository repository, List<GHPullRequest> associatedPullRequests) {
+        return failedCompletedRun(id, workflowId, name, runNumber, runAttempt, repository, repository,
+                associatedPullRequests);
     }
 
     public static GHWorkflowRun failedCompletedRunOnHead(long id, long workflowId, String name, long runNumber,
-            long runAttempt, String headSha, String headBranch, GHRepository headRepository) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headSha(headSha)
-                .headBranch(headBranch)
-                .headRepository(headRepository)
-                .completed(GHWorkflowRun.Conclusion.FAILURE)
-                .jobs(failedJob())
-                .build();
+            long runAttempt, String headSha, String headBranch, GHRepository repository) {
+        return workflowRun(id, workflowId, name, runNumber, runAttempt, headSha, headBranch, repository, repository,
+                GHWorkflowRun.Status.COMPLETED, GHWorkflowRun.Conclusion.FAILURE, List.of(), null, failedJob());
     }
 
     public static GHWorkflowRun failedCompletedRunWithJobs(long id, long workflowId, String name, long runNumber,
-            long runAttempt, GHRepository headRepository, AtomicInteger listJobsCalls, GHWorkflowJob... jobs) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .listJobsCalls(listJobsCalls)
-                .completed(GHWorkflowRun.Conclusion.FAILURE)
-                .jobs(jobs)
-                .build();
+            long runAttempt, GHRepository repository, AtomicInteger listJobsCalls, GHWorkflowJob... jobs) {
+        return workflowRun(id, workflowId, name, runNumber, runAttempt, DEFAULT_HEAD_SHA, DEFAULT_HEAD_BRANCH, repository,
+                repository, GHWorkflowRun.Status.COMPLETED, GHWorkflowRun.Conclusion.FAILURE, List.of(), listJobsCalls, jobs);
     }
 
     public static GHWorkflowRun timedOutCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .completed(GHWorkflowRun.Conclusion.TIMED_OUT)
-                .jobs(timedOutJob())
-                .build();
+            GHRepository repository) {
+        return workflowRun(id, workflowId, name, runNumber, runAttempt, DEFAULT_HEAD_SHA, DEFAULT_HEAD_BRANCH, repository,
+                repository, GHWorkflowRun.Status.COMPLETED, GHWorkflowRun.Conclusion.TIMED_OUT, List.of(), null,
+                timedOutJob());
     }
 
     public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
-            long runAttempt, GHRepository headRepository) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .completed(GHWorkflowRun.Conclusion.SUCCESS)
-                .jobs(successfulJob())
-                .build();
+            long runAttempt, GHRepository repository) {
+        return successfulCompletedRun(id, workflowId, name, runNumber, runAttempt, repository, List.of());
     }
 
     public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
-            long runAttempt, GHRepository headRepository, GHPullRequest associatedPullRequest) {
-        return successfulCompletedRun(id, workflowId, name, runNumber, runAttempt, headRepository,
+            long runAttempt, GHRepository repository, GHPullRequest associatedPullRequest) {
+        return successfulCompletedRun(id, workflowId, name, runNumber, runAttempt, repository,
                 List.of(associatedPullRequest));
     }
 
-    public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
-            long runAttempt, GHRepository headRepository, List<GHPullRequest> associatedPullRequests) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .associatedPullRequests(associatedPullRequests)
-                .completed(GHWorkflowRun.Conclusion.SUCCESS)
-                .jobs(successfulJob())
-                .build();
+    private static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
+            long runAttempt, GHRepository repository, List<GHPullRequest> associatedPullRequests) {
+        return workflowRun(id, workflowId, name, runNumber, runAttempt, DEFAULT_HEAD_SHA, DEFAULT_HEAD_BRANCH, repository,
+                repository, GHWorkflowRun.Status.COMPLETED, GHWorkflowRun.Conclusion.SUCCESS, associatedPullRequests, null,
+                successfulJob());
     }
 
     public static GHWorkflowRun queuedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository) {
-        return workflowRunFixture(id, workflowId, name)
-                .runNumber(runNumber)
-                .runAttempt(runAttempt)
-                .headRepository(headRepository)
-                .status(GHWorkflowRun.Status.QUEUED)
-                .jobs(failedJob())
-                .build();
+            GHRepository repository) {
+        return workflowRun(id, workflowId, name, runNumber, runAttempt, DEFAULT_HEAD_SHA, DEFAULT_HEAD_BRANCH, repository,
+                repository, GHWorkflowRun.Status.QUEUED, null, List.of(), null, failedJob());
     }
 
-    public static GHWorkflowJob failedJob() {
-        return job(GHWorkflowRun.Conclusion.FAILURE);
+    static GHWorkflowJob successfulJob() {
+        return workflowJob(GHWorkflowRun.Conclusion.SUCCESS);
     }
 
-    public static GHWorkflowJob timedOutJob() {
-        return job(GHWorkflowRun.Conclusion.TIMED_OUT);
+    private static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber,
+            long runAttempt, GHRepository repository, GHRepository headRepository,
+            List<GHPullRequest> associatedPullRequests) {
+        return workflowRun(id, workflowId, name, runNumber, runAttempt, DEFAULT_HEAD_SHA, DEFAULT_HEAD_BRANCH, repository,
+                headRepository, GHWorkflowRun.Status.COMPLETED, GHWorkflowRun.Conclusion.FAILURE, associatedPullRequests,
+                null, failedJob());
     }
 
-    public static GHWorkflowJob startupFailureJob() {
-        return job(GHWorkflowRun.Conclusion.STARTUP_FAILURE);
+    private static GHWorkflowJob failedJob() {
+        return workflowJob(GHWorkflowRun.Conclusion.FAILURE);
     }
 
-    public static GHWorkflowJob successfulJob() {
-        return job(GHWorkflowRun.Conclusion.SUCCESS);
+    private static GHWorkflowJob timedOutJob() {
+        return workflowJob(GHWorkflowRun.Conclusion.TIMED_OUT);
     }
 
-    private static GHWorkflowJob job(GHWorkflowRun.Conclusion conclusion) {
+    private static GHWorkflowJob workflowJob(GHWorkflowRun.Conclusion conclusion) {
         GHWorkflowJob workflowJob = mock(GHWorkflowJob.class);
         when(workflowJob.getConclusion()).thenReturn(conclusion);
         return workflowJob;
     }
 
-    private static URL workflowUrl(long workflowId) {
-        if (workflowId <= 0) {
-            return null;
-        }
+    private static GHWorkflowRun workflowRun(long id, long workflowId, String name, long runNumber, long runAttempt,
+            String headSha, String headBranch, GHRepository repository, GHRepository headRepository,
+            GHWorkflowRun.Status status, GHWorkflowRun.Conclusion conclusion, List<GHPullRequest> associatedPullRequests,
+            AtomicInteger listJobsCalls, GHWorkflowJob... jobs) {
+        return new GHWorkflowRun() {
+            @Override
+            public long getId() {
+                return id;
+            }
 
-        try {
-            return new URL("https://api.github.com/workflows/" + workflowId);
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public long getRunNumber() {
+                return runNumber;
+            }
+
+            @Override
+            public long getWorkflowId() {
+                return workflowId;
+            }
+
+            @Override
+            public long getRunAttempt() {
+                return runAttempt;
+            }
+
+            @Override
+            public String getHeadSha() {
+                return headSha;
+            }
+
+            @Override
+            public String getHeadBranch() {
+                return headBranch;
+            }
+
+            @Override
+            public GHRepository getRepository() {
+                return repository;
+            }
+
+            @Override
+            public GHRepository getHeadRepository() {
+                return headRepository;
+            }
+
+            @Override
+            public GHWorkflowRun.Status getStatus() {
+                return status;
+            }
+
+            @Override
+            public GHWorkflowRun.Conclusion getConclusion() {
+                return conclusion;
+            }
+
+            @Override
+            public List<GHPullRequest> getPullRequests() {
+                return associatedPullRequests;
+            }
+
+            @Override
+            public URL getHtmlUrl() throws IOException {
+                return new URL("https://github.com/" + repository.getFullName() + "/actions/runs/" + id);
+            }
+
+            @Override
+            public org.kohsuke.github.PagedIterable<GHWorkflowJob> listJobs() {
+                if (listJobsCalls != null) {
+                    listJobsCalls.incrementAndGet();
+                }
+                return mockPagedIterable(jobs);
+            }
+        };
     }
 
-    public static final class PullRequestFixture {
+    private static void stubRepositoryIdentity(GHRepository repository, String fullName) {
+        String[] parts = fullName.split("/", 2);
+        when(repository.getFullName()).thenReturn(fullName);
+        when(repository.getOwnerName()).thenReturn(parts[0]);
+        when(repository.getName()).thenReturn(parts[1]);
+    }
+
+    static final class PullRequestFixture {
 
         private final GHRepository repository;
         private int number = 1;
-        private GHIssueState state = GHIssueState.OPEN;
         private GHRepository headRepository;
-        private String headRef = DEFAULT_HEAD_BRANCH;
-        private String headSha = DEFAULT_HEAD_SHA;
 
         private PullRequestFixture(GHRepository repository) {
             this.repository = repository;
             this.headRepository = repository;
         }
 
-        public PullRequestFixture number(int number) {
+        PullRequestFixture number(int number) {
             this.number = number;
             return this;
         }
 
-        public PullRequestFixture state(GHIssueState state) {
-            this.state = state;
-            return this;
-        }
-
-        public PullRequestFixture headRepository(GHRepository headRepository) {
+        PullRequestFixture headRepository(GHRepository headRepository) {
             this.headRepository = headRepository;
             return this;
         }
 
-        public PullRequestFixture headRef(String headRef) {
-            this.headRef = headRef;
-            return this;
-        }
-
-        public PullRequestFixture headSha(String headSha) {
-            this.headSha = headSha;
-            return this;
-        }
-
-        public GHPullRequest build() {
+        GHPullRequest build() {
             GHPullRequest pullRequest = mock(GHPullRequest.class);
             GHCommitPointer head = mock(GHCommitPointer.class);
             when(pullRequest.getNumber()).thenReturn(number);
-            when(pullRequest.getState()).thenReturn(state);
+            when(pullRequest.getState()).thenReturn(GHIssueState.OPEN);
             when(pullRequest.getRepository()).thenReturn(repository);
             when(pullRequest.getHead()).thenReturn(head);
-            when(head.getRef()).thenReturn(headRef);
-            when(head.getSha()).thenReturn(headSha);
+            when(head.getRef()).thenReturn(DEFAULT_HEAD_BRANCH);
+            when(head.getSha()).thenReturn(DEFAULT_HEAD_SHA);
             when(head.getRepository()).thenReturn(headRepository);
             return pullRequest;
-        }
-    }
-
-    public static final class WorkflowRunFixture {
-
-        private final long id;
-        private final long workflowId;
-        private final String name;
-        private long runNumber;
-        private long runAttempt = 1;
-        private URL workflowUrl;
-        private String headSha = DEFAULT_HEAD_SHA;
-        private String headBranch = DEFAULT_HEAD_BRANCH;
-        private GHRepository repository;
-        private GHRepository headRepository;
-        private GHWorkflowRun.Status status = GHWorkflowRun.Status.COMPLETED;
-        private GHWorkflowRun.Conclusion conclusion;
-        private GHEvent event = GHEvent.PULL_REQUEST;
-        private List<GHPullRequest> associatedPullRequests = List.of();
-        private AtomicInteger listJobsCalls;
-        private GHWorkflowJob[] jobs = new GHWorkflowJob[0];
-
-        private WorkflowRunFixture(long id, long workflowId, String name) {
-            this.id = id;
-            this.workflowId = workflowId;
-            this.name = name;
-            this.runNumber = workflowId;
-            this.workflowUrl = RetestFixtures.workflowUrl(workflowId);
-        }
-
-        public WorkflowRunFixture runNumber(long runNumber) {
-            this.runNumber = runNumber;
-            return this;
-        }
-
-        public WorkflowRunFixture runAttempt(long runAttempt) {
-            this.runAttempt = runAttempt;
-            return this;
-        }
-
-        public WorkflowRunFixture workflowUrl(URL workflowUrl) {
-            this.workflowUrl = workflowUrl;
-            return this;
-        }
-
-        public WorkflowRunFixture headSha(String headSha) {
-            this.headSha = headSha;
-            return this;
-        }
-
-        public WorkflowRunFixture headBranch(String headBranch) {
-            this.headBranch = headBranch;
-            return this;
-        }
-
-        public WorkflowRunFixture repository(GHRepository repository) {
-            this.repository = repository;
-            return this;
-        }
-
-        public WorkflowRunFixture headRepository(GHRepository headRepository) {
-            this.headRepository = headRepository;
-            if (this.repository == null) {
-                this.repository = headRepository;
-            }
-            return this;
-        }
-
-        public WorkflowRunFixture status(GHWorkflowRun.Status status) {
-            this.status = status;
-            return this;
-        }
-
-        public WorkflowRunFixture completed(GHWorkflowRun.Conclusion conclusion) {
-            this.status = GHWorkflowRun.Status.COMPLETED;
-            this.conclusion = conclusion;
-            return this;
-        }
-
-        public WorkflowRunFixture event(GHEvent event) {
-            this.event = event;
-            return this;
-        }
-
-        public WorkflowRunFixture associatedPullRequests(List<GHPullRequest> associatedPullRequests) {
-            this.associatedPullRequests = associatedPullRequests;
-            return this;
-        }
-
-        public WorkflowRunFixture listJobsCalls(AtomicInteger listJobsCalls) {
-            this.listJobsCalls = listJobsCalls;
-            return this;
-        }
-
-        public WorkflowRunFixture jobs(GHWorkflowJob... jobs) {
-            this.jobs = jobs;
-            return this;
-        }
-
-        public GHWorkflowRun build() {
-            GHRepository runRepository = repository;
-            GHRepository runHeadRepository = headRepository;
-            GHWorkflowRun.Status runStatus = status;
-            GHWorkflowRun.Conclusion runConclusion = conclusion;
-            GHEvent runEvent = event;
-            List<GHPullRequest> runAssociatedPullRequests = associatedPullRequests;
-            AtomicInteger runListJobsCalls = listJobsCalls;
-            GHWorkflowJob[] runJobs = jobs;
-            URL runWorkflowUrl = workflowUrl;
-            String runHeadSha = headSha;
-            String runHeadBranch = headBranch;
-            long runNumberValue = runNumber;
-            long runAttemptValue = runAttempt;
-
-            return new GHWorkflowRun() {
-                @Override
-                public long getId() {
-                    return id;
-                }
-
-                @Override
-                public String getName() {
-                    return name;
-                }
-
-                @Override
-                public long getRunNumber() {
-                    return runNumberValue;
-                }
-
-                @Override
-                public long getWorkflowId() {
-                    return workflowId;
-                }
-
-                @Override
-                public long getRunAttempt() {
-                    return runAttemptValue;
-                }
-
-                @Override
-                public URL getWorkflowUrl() {
-                    return runWorkflowUrl;
-                }
-
-                @Override
-                public String getHeadSha() {
-                    return runHeadSha;
-                }
-
-                @Override
-                public String getHeadBranch() {
-                    return runHeadBranch;
-                }
-
-                @Override
-                public GHRepository getRepository() {
-                    return runRepository;
-                }
-
-                @Override
-                public GHRepository getHeadRepository() {
-                    return runHeadRepository;
-                }
-
-                @Override
-                public GHWorkflowRun.Status getStatus() {
-                    return runStatus;
-                }
-
-                @Override
-                public GHWorkflowRun.Conclusion getConclusion() {
-                    return runConclusion;
-                }
-
-                @Override
-                public GHEvent getEvent() {
-                    return runEvent;
-                }
-
-                @Override
-                public List<GHPullRequest> getPullRequests() {
-                    return runAssociatedPullRequests;
-                }
-
-                @Override
-                public PagedIterable<GHWorkflowJob> listJobs() {
-                    if (runListJobsCalls != null) {
-                        runListJobsCalls.incrementAndGet();
-                    }
-                    return MockHelper.mockPagedIterable(runJobs);
-                }
-
-                @Override
-                public URL getHtmlUrl() {
-                    return null;
-                }
-            };
         }
     }
 }

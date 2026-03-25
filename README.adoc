@@ -252,6 +252,7 @@ features: [ RETEST_PULL_REQUEST_WORKFLOWS ]
 ----
 
 Only failed jobs from the latest run of each workflow are retriggered. If the latest run is still in progress, the bot asks you to retry once it completes.
+When reruns are started, the bot posts a confirmation comment linking to the workflow runs.
 
 This feature requires:
 

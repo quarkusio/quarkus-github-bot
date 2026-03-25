@@ -66,7 +66,7 @@ class GitHubFailedJobsRerunner implements FailedJobsRerunner {
         }
     }
 
-    URI rerunFailedJobsUri(GHEventPayload.IssueComment issueCommentPayload, GHWorkflowRun workflowRun) {
+    private URI rerunFailedJobsUri(GHEventPayload.IssueComment issueCommentPayload, GHWorkflowRun workflowRun) {
         String normalizedApiUrl = normalizeApiUrl(gitHubApiUrl(issueCommentPayload));
 
         // TODO switch to GHWorkflowRun.rerunFailedJobs() when Hub4j adds native support for rerunning failed jobs.

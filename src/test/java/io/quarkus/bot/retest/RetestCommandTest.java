@@ -2,51 +2,104 @@ package io.quarkus.bot.retest;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
-import java.util.HashSet;
+import java.net.URL;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssue;
+import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflowRun;
 
-import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.service.GHIssueCommentService;
 
 class RetestCommandTest {
 
     @Test
-    void shouldReportPartialFailureAfterStartingEarlierReruns() throws Exception {
-        RetestCommand command = new RetestCommand();
-        command.quarkusBotConfig = mock(QuarkusGitHubBotConfig.class);
-        command.workflowRunSelector = mock(RetestWorkflowRunSelector.class);
-        command.failedJobsRerunner = mock(FailedJobsRerunner.class);
+    void shouldRejectWhenFeatureIsDisabled() {
+        RetestCommand command = newCommand(false);
 
-        when(command.quarkusBotConfig.isDryRun()).thenReturn(false);
+        assertThatThrownBy(() -> command.run(new QuarkusGitHubBotConfigFile(), mock(GHEventPayload.IssueComment.class)))
+                .isInstanceOf(RetestCommandException.class)
+                .hasMessageContaining("workflow retest is disabled");
+    }
 
-        QuarkusGitHubBotConfigFile quarkusBotConfigFile = configFileWithFeatureEnabled();
-
+    @Test
+    void shouldRejectClosedPullRequests() throws Exception {
+        RetestCommand command = newCommand(false);
+        QuarkusGitHubBotConfigFile quarkusBotConfigFile = RetestFixtures.configFileWithRetestFeatureEnabled();
         GHEventPayload.IssueComment issueCommentPayload = mock(GHEventPayload.IssueComment.class);
-        GHRepository repository = RetestFixtures.repository("quarkusio/quarkus-github-bot");
+        GHRepository repository = mock(GHRepository.class);
         GHIssue issue = mock(GHIssue.class);
-        GHPullRequest pullRequest = RetestFixtures.openPullRequest(repository);
-        GHWorkflowRun firstWorkflowRun = RetestFixtures.failedCompletedRun(901L, 90L, "CI", 90L, 1L, repository);
-        GHWorkflowRun secondWorkflowRun = RetestFixtures.failedCompletedRun(902L, 91L, "Native", 91L, 1L, repository);
+        GHPullRequest pullRequest = mock(GHPullRequest.class);
 
         when(issueCommentPayload.getRepository()).thenReturn(repository);
         when(issueCommentPayload.getIssue()).thenReturn(issue);
         when(issue.getNumber()).thenReturn(1);
         when(repository.getPullRequest(1)).thenReturn(pullRequest);
+        when(pullRequest.getState()).thenReturn(GHIssueState.CLOSED);
+
+        assertThatThrownBy(() -> command.run(quarkusBotConfigFile, issueCommentPayload))
+                .isInstanceOf(RetestCommandException.class)
+                .hasMessageContaining("only available on open pull requests");
+    }
+
+    @Test
+    void shouldSkipRerunsAndCommentsInDryRun() throws Exception {
+        RetestCommand command = newCommand(true);
+        QuarkusGitHubBotConfigFile quarkusBotConfigFile = RetestFixtures.configFileWithRetestFeatureEnabled();
+        GHEventPayload.IssueComment issueCommentPayload = mock(GHEventPayload.IssueComment.class);
+        GHRepository repository = mock(GHRepository.class);
+        GHIssue issue = mock(GHIssue.class);
+        GHPullRequest pullRequest = mock(GHPullRequest.class);
+        GHWorkflowRun workflowRun = workflowRun(901L);
+
+        when(issueCommentPayload.getRepository()).thenReturn(repository);
+        when(issueCommentPayload.getIssue()).thenReturn(issue);
+        when(issue.getNumber()).thenReturn(1);
+        when(repository.getPullRequest(1)).thenReturn(pullRequest);
+        when(pullRequest.getNumber()).thenReturn(1);
+        when(pullRequest.getState()).thenReturn(GHIssueState.OPEN);
+        when(command.workflowRunSelector.selectWorkflowRuns(pullRequest))
+                .thenReturn(new RetestWorkflowSelection(List.of(workflowRun), null));
+
+        command.run(quarkusBotConfigFile, issueCommentPayload);
+
+        verify(command.failedJobsRerunner, never()).rerunFailedJobs(any(GHEventPayload.IssueComment.class),
+                any(GHWorkflowRun.class));
+        verify(command.issueCommentService, never()).addComment(any(GHIssue.class), anyString(), anyBoolean(),
+                anyBoolean());
+    }
+
+    @Test
+    void shouldReportPartialFailureAfterStartingEarlierReruns() throws Exception {
+        RetestCommand command = newCommand(false);
+        QuarkusGitHubBotConfigFile quarkusBotConfigFile = RetestFixtures.configFileWithRetestFeatureEnabled();
+        GHEventPayload.IssueComment issueCommentPayload = mock(GHEventPayload.IssueComment.class);
+        GHRepository repository = mock(GHRepository.class);
+        GHIssue issue = mock(GHIssue.class);
+        GHPullRequest pullRequest = mock(GHPullRequest.class);
+        GHWorkflowRun firstWorkflowRun = workflowRun(901L);
+        GHWorkflowRun secondWorkflowRun = workflowRun(902L);
+
+        when(issueCommentPayload.getRepository()).thenReturn(repository);
+        when(issueCommentPayload.getIssue()).thenReturn(issue);
+        when(issue.getNumber()).thenReturn(1);
+        when(repository.getPullRequest(1)).thenReturn(pullRequest);
+        when(pullRequest.getState()).thenReturn(GHIssueState.OPEN);
         when(command.workflowRunSelector.selectWorkflowRuns(pullRequest))
                 .thenReturn(new RetestWorkflowSelection(List.of(firstWorkflowRun, secondWorkflowRun), null));
 
@@ -65,11 +118,27 @@ class RetestCommandTest {
                 .hasCauseInstanceOf(RetestCommandException.class);
     }
 
-    private static QuarkusGitHubBotConfigFile configFileWithFeatureEnabled() throws Exception {
-        QuarkusGitHubBotConfigFile quarkusBotConfigFile = new QuarkusGitHubBotConfigFile();
-        Field featuresField = QuarkusGitHubBotConfigFile.class.getDeclaredField("features");
-        featuresField.setAccessible(true);
-        featuresField.set(quarkusBotConfigFile, new HashSet<>(Set.of(Feature.RETEST_PULL_REQUEST_WORKFLOWS)));
-        return quarkusBotConfigFile;
+    private static RetestCommand newCommand(boolean dryRun) {
+        RetestCommand command = new RetestCommand();
+        command.quarkusBotConfig = mock(QuarkusGitHubBotConfig.class);
+        command.workflowRunSelector = mock(RetestWorkflowRunSelector.class);
+        command.failedJobsRerunner = mock(FailedJobsRerunner.class);
+        command.issueCommentService = mock(GHIssueCommentService.class);
+        when(command.quarkusBotConfig.isDryRun()).thenReturn(dryRun);
+        return command;
+    }
+
+    private static GHWorkflowRun workflowRun(long id) {
+        return new GHWorkflowRun() {
+            @Override
+            public long getId() {
+                return id;
+            }
+
+            @Override
+            public URL getHtmlUrl() {
+                return null;
+            }
+        };
     }
 }

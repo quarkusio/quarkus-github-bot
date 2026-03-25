@@ -3,20 +3,17 @@ package io.quarkus.bot.retest;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 
 import io.quarkiverse.githubapp.command.airline.ExecutionErrorHandler;
-import io.quarkus.bot.GHIssueCommentService;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
+import io.quarkus.bot.service.GHIssueCommentService;
 
 /**
  * Formats command failures as pull-request comments.
  */
 @Singleton
 class RetestExecutionErrorHandler implements ExecutionErrorHandler {
-
-    private static final Logger LOG = Logger.getLogger(RetestExecutionErrorHandler.class);
 
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
@@ -34,20 +31,14 @@ class RetestExecutionErrorHandler implements ExecutionErrorHandler {
 
         String commandLine = executionErrorContext.commandExecutionContext().getCommandLine();
         String message = formatMessage(commandLine, executionErrorContext.exception());
-        String location = issueCommentPayload.getRepository().getFullName() + "#" + issueCommentPayload.getIssue().getNumber();
-
-        try {
-            issueCommentService.addCommentOrThrow(issueCommentPayload.getIssue(), message, false, quarkusBotConfig.isDryRun());
-        } catch (Exception e) {
-            LOG.warn("Error trying to add retest execution error comment for command in " + location, e);
-        }
+        issueCommentService.addComment(issueCommentPayload.getIssue(), message, false, quarkusBotConfig.isDryRun());
     }
 
-    static String formatMessage(String commandLine, Exception exception) {
-        String userMessage = exception instanceof RetestCommandException retestCommandException
-                ? retestCommandException.userMessage()
-                : ":rotating_light: An error occurred while executing the command.";
+    private static String formatMessage(String commandLine, Exception exception) {
+        if (exception instanceof RetestCommandException retestCommandException) {
+            return retestCommandException.userMessage();
+        }
 
-        return RetestCommentFormatter.formatCommandMessage(commandLine, userMessage);
+        return ":rotating_light: An error occurred while executing `" + commandLine + "`.";
     }
 }

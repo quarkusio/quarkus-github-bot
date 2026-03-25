@@ -21,6 +21,7 @@ import io.quarkiverse.githubapp.event.WorkflowRun;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.util.GHPullRequests;
 import io.quarkus.bot.util.PullRequestFilesMatcher;
 import io.quarkus.cache.CacheKey;
 import io.quarkus.cache.CacheResult;
@@ -90,36 +91,19 @@ class ApproveWorkflow {
     }
 
     private void checkFiles(QuarkusGitHubBotConfigFile quarkusBotConfigFile, GHWorkflowRun workflowRun,
-            ApprovalStatus approval) {
+            ApprovalStatus approval) throws IOException {
         String sha = workflowRun.getHeadSha();
 
-        // Now we want to get the pull request we're supposed to be checking.
-        // It would be nice to use commit.listPullRequests() but that only returns something if the
-        // base and head of the PR are from the same repository, which rules out most scenarios where we would want to do an approval
-
-        String fullyQualifiedBranchName = workflowRun.getHeadRepository().getOwnerName() + ":" + workflowRun.getHeadBranch();
-
-        PagedIterable<GHPullRequest> pullRequestsForThisBranch = workflowRun.getRepository().queryPullRequests()
-                .head(fullyQualifiedBranchName)
-                .list();
-
-        // The number of PRs with matching branch name should be exactly one, but if the PR
-        // has been closed it sometimes disappears from the list; also, if two branch names
-        // start with the same string, both will turn up in the query.
-        for (GHPullRequest pullRequest : pullRequestsForThisBranch) {
-
-            // Only look at PRs whose commit sha matches
-            if (sha.equals(pullRequest.getHead().getSha())) {
-
-                for (QuarkusGitHubBotConfigFile.WorkflowApprovalRule rule : quarkusBotConfigFile.workflows.rules) {
-                    // We allow if the files or directories match the allow rule ...
-                    if (matchRuleFromChangedFiles(pullRequest, rule.allow)) {
-                        approval.shouldApprove = true;
-                    }
-                    // ... unless we also match the unless rule
-                    if (matchRuleFromChangedFiles(pullRequest, rule.unless)) {
-                        approval.shouldNotApprove = true;
-                    }
+        for (GHPullRequest pullRequest : GHPullRequests.matchingHeadPullRequests(workflowRun.getRepository(),
+                workflowRun.getHeadRepository(), workflowRun.getHeadBranch(), sha)) {
+            for (QuarkusGitHubBotConfigFile.WorkflowApprovalRule rule : quarkusBotConfigFile.workflows.rules) {
+                // We allow if the files or directories match the allow rule ...
+                if (matchRuleFromChangedFiles(pullRequest, rule.allow)) {
+                    approval.shouldApprove = true;
+                }
+                // ... unless we also match the unless rule
+                if (matchRuleFromChangedFiles(pullRequest, rule.unless)) {
+                    approval.shouldNotApprove = true;
                 }
             }
         }

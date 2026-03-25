@@ -20,16 +20,6 @@ public class GHIssueCommentService {
         return isEditorialComment ? Strings.editorialCommentByBot(comment) : Strings.commentByBot(comment);
     }
 
-    public void addCommentOrThrow(GHIssue ghIssue, String comment, boolean isEditorialComment, boolean isDryRun)
-            throws IOException {
-        if (!isDryRun) {
-            ghIssue.comment(formatComment(comment, isEditorialComment));
-            LOG.debugf("Pull request #%d - Added new comment", ghIssue.getNumber());
-        } else {
-            LOG.infof("Pull request #%d - Add comment (dry-run): %s", ghIssue.getNumber(), comment);
-        }
-    }
-
     public void updateComment(GHIssueComment comment, String newText, int issueNumber, boolean isEditorialComment,
             boolean isDryRun) {
         if (!isDryRun) {
@@ -74,10 +64,15 @@ public class GHIssueCommentService {
     }
 
     public void addComment(GHIssue ghIssue, String comment, boolean isEditorialComment, boolean isDryRun) {
-        try {
-            addCommentOrThrow(ghIssue, comment, isEditorialComment, isDryRun);
-        } catch (IOException e) {
-            LOG.errorf(e, "Pull Request #%d - Failed to add comment", ghIssue.getNumber());
+        if (!isDryRun) {
+            try {
+                ghIssue.comment(formatComment(comment, isEditorialComment));
+                LOG.debugf("Pull request #%d - Added new comment", ghIssue.getNumber());
+            } catch (IOException e) {
+                LOG.errorf(e, "Pull Request #%d - Failed to add comment", ghIssue.getNumber());
+            }
+        } else {
+            LOG.infof("Pull request #%d - Add comment (dry-run): %s", ghIssue.getNumber(), comment);
         }
     }
 }
