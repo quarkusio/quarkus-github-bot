@@ -111,13 +111,16 @@ class RetestWorkflowRunSelectorTest {
     }
 
     @Test
-    void shouldRejectMultiplePullRequestsForSameHead() {
+    void shouldRejectMultiplePullRequestsForSameHeadWhenRunsHaveNoPullRequestAssociations() {
         Scenario scenario = scenario();
         GHPullRequest otherPullRequest = pullRequestFixture(scenario.repository)
                 .number(2)
                 .build();
+        GHWorkflowRun workflowRun = failedCompletedRunOnHead(175L, 17L, "CI", 5L, 1L, DEFAULT_HEAD_SHA,
+                "feature/retest", scenario.repository);
 
-        scenario.givenMatchingPullRequests(scenario.currentPullRequest, otherPullRequest);
+        scenario.givenMatchingPullRequests(scenario.currentPullRequest, otherPullRequest)
+                .givenWorkflowRunsForPullRequest(workflowRun);
 
         assertThatThrownBy(scenario::select)
                 .isInstanceOf(RetestCommandException.class)
@@ -125,11 +128,65 @@ class RetestWorkflowRunSelectorTest {
     }
 
     @Test
-    void shouldRejectClosedPullRequestsSharingTheSameHead() {
+    void shouldAllowClosedPullRequestsSharingTheSameHeadWhenRunTargetsTheCurrentPullRequest() throws Exception {
         Scenario scenario = scenario();
         GHPullRequest closedPullRequest = closedPullRequestWithSameHead(scenario.repository, 2);
+        GHWorkflowRun workflowRun = failedCompletedRun(177L, 18L, "CI", 6L, 1L, scenario.repository,
+                scenario.currentPullRequest);
 
-        scenario.givenMatchingPullRequests(scenario.currentPullRequest, closedPullRequest);
+        scenario.givenMatchingPullRequests(scenario.currentPullRequest, closedPullRequest)
+                .givenWorkflowRunsForPullRequest(workflowRun);
+
+        RetestWorkflowSelection workflowSelection = scenario.select();
+
+        assertThat(workflowSelection.eligibleRuns()).containsExactly(workflowRun);
+        assertThat(workflowSelection.noEligibleReason()).isNull();
+    }
+
+    @Test
+    void shouldIgnoreOlderAmbiguousUnassociatedRunWhenCurrentPullRequestHasANewerAssociatedRun() throws Exception {
+        Scenario scenario = scenario();
+        GHPullRequest closedPullRequest = closedPullRequestWithSameHead(scenario.repository, 2);
+        GHWorkflowRun associatedRun = successfulCompletedRun(178L, 18L, "CI", 7L, 1L, scenario.repository,
+                scenario.currentPullRequest);
+        GHWorkflowRun ambiguousUnassociatedRun = failedCompletedRun(179L, 18L, "CI", 6L, 1L, scenario.repository);
+
+        scenario.givenMatchingPullRequests(scenario.currentPullRequest, closedPullRequest)
+                .givenWorkflowRunsForPullRequest(associatedRun, ambiguousUnassociatedRun);
+
+        RetestWorkflowSelection workflowSelection = scenario.select();
+
+        assertThat(workflowSelection.eligibleRuns()).isEmpty();
+        assertThat(workflowSelection.noEligibleReason())
+                .isEqualTo(RetestWorkflowSelection.NoEligibleReason.LATEST_RUNS_GREEN);
+    }
+
+    @Test
+    void shouldRejectNewerAmbiguousUnassociatedRunWhenCurrentPullRequestHasAnOlderAssociatedRun() {
+        Scenario scenario = scenario();
+        GHPullRequest closedPullRequest = closedPullRequestWithSameHead(scenario.repository, 2);
+        GHWorkflowRun associatedRun = successfulCompletedRun(180L, 18L, "CI", 6L, 1L, scenario.repository,
+                scenario.currentPullRequest);
+        GHWorkflowRun ambiguousUnassociatedRun = failedCompletedRun(181L, 18L, "CI", 7L, 1L, scenario.repository);
+
+        scenario.givenMatchingPullRequests(scenario.currentPullRequest, closedPullRequest)
+                .givenWorkflowRunsForPullRequest(associatedRun, ambiguousUnassociatedRun);
+
+        assertThatThrownBy(scenario::select)
+                .isInstanceOf(RetestCommandException.class)
+                .hasMessageContaining("Multiple pull requests share the same head branch and commit");
+    }
+
+    @Test
+    void shouldRejectAmbiguousUnassociatedRunForDifferentWorkflowEvenWhenCurrentPullRequestHasAssociatedRuns() {
+        Scenario scenario = scenario();
+        GHPullRequest closedPullRequest = closedPullRequestWithSameHead(scenario.repository, 2);
+        GHWorkflowRun associatedRun = successfulCompletedRun(182L, 18L, "CI", 7L, 1L, scenario.repository,
+                scenario.currentPullRequest);
+        GHWorkflowRun ambiguousUnassociatedRun = failedCompletedRun(183L, 19L, "Native", 6L, 1L, scenario.repository);
+
+        scenario.givenMatchingPullRequests(scenario.currentPullRequest, closedPullRequest)
+                .givenWorkflowRunsForPullRequest(associatedRun, ambiguousUnassociatedRun);
 
         assertThatThrownBy(scenario::select)
                 .isInstanceOf(RetestCommandException.class)

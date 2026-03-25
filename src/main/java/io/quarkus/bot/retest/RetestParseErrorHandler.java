@@ -51,10 +51,9 @@ class RetestParseErrorHandler implements ParseErrorHandler {
         try {
             shouldComment = shouldCommentOnParseError(issueCommentPayload);
         } catch (IOException | RuntimeException e) {
-            throw new IllegalStateException(
-                    "Unable to determine whether retest parse error should be reported in "
-                            + location(issueCommentPayload),
-                    e);
+            LOG.warn("Unable to determine whether retest parse error should be reported in "
+                    + location(issueCommentPayload), e);
+            return;
         }
         if (!shouldComment) {
             return;

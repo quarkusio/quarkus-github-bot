@@ -1,7 +1,10 @@
 package io.quarkus.bot.retest;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -31,7 +34,7 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
 class RetestParseErrorHandlerTest {
 
     @Test
-    void shouldFailFastWhenParseErrorGatingCannotBeEvaluated() throws Exception {
+    void shouldIgnoreParseErrorWhenGatingCannotBeEvaluated() throws Exception {
         RetestParseErrorHandler handler = new RetestParseErrorHandler();
         handler.gitHubConfigFileProvider = mock(GitHubConfigFileProvider.class);
 
@@ -57,10 +60,9 @@ class RetestParseErrorHandlerTest {
         ParseErrorContext parseErrorContext = new ParseErrorContext(cliConfig, null, "@quarkusbot \"retest", null,
                 "Unbalanced quotes");
 
-        assertThatThrownBy(() -> handler.handleParseError(issueCommentPayload, parseErrorContext))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Unable to determine whether retest parse error should be reported")
-                .hasCauseInstanceOf(IOException.class);
+        assertThatCode(() -> handler.handleParseError(issueCommentPayload, parseErrorContext))
+                .doesNotThrowAnyException();
+        verify(issue, never()).comment(anyString());
     }
 
     private static QuarkusGitHubBotConfigFile configFileWithFeatureEnabled() throws Exception {

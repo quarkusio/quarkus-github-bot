@@ -35,20 +35,9 @@ class RetestWorkflowRunSelector {
             GHWorkflowRun.Conclusion.STARTUP_FAILURE);
 
     RetestWorkflowSelection selectWorkflowRuns(GHPullRequest pullRequest) throws IOException {
-        GHCommitPointer pullRequestHead = pullRequest.getHead();
-        GHRepository pullRequestHeadRepository = pullRequestHead.getRepository();
-        List<GHPullRequest> matchingPullRequests = matchingPullRequestsForHead(pullRequest, pullRequestHead,
-                pullRequestHeadRepository);
-
-        ensureUniquePullRequestForHead(matchingPullRequests);
-
-        Map<String, GHWorkflowRun> latestRunsByWorkflow = new LinkedHashMap<>();
-        collectWorkflowRuns(latestRunsByWorkflow, pullRequest, pullRequestHead, pullRequestHeadRepository,
-                "pull_request");
-        collectWorkflowRuns(latestRunsByWorkflow, pullRequest, pullRequestHead, pullRequestHeadRepository,
-                PULL_REQUEST_TARGET_EVENT);
-
-        List<GHWorkflowRun> latestRuns = new ArrayList<>(latestRunsByWorkflow.values());
+        PullRequestHeadContext headContext = pullRequestHeadContext(pullRequest);
+        Map<String, WorkflowCandidates> workflowCandidates = collectWorkflowCandidates(pullRequest, headContext);
+        List<GHWorkflowRun> latestRuns = resolveLatestRuns(workflowCandidates);
         List<AnalyzedWorkflowRun> analyzedRuns = analyzeRuns(latestRuns);
         List<GHWorkflowRun> eligibleRuns = eligibleRuns(analyzedRuns);
 
@@ -56,7 +45,109 @@ class RetestWorkflowRunSelector {
         return new RetestWorkflowSelection(eligibleRuns, noEligibleReason(analyzedRuns, eligibleRuns));
     }
 
-    private static GHWorkflowRun latestRun(GHWorkflowRun left, GHWorkflowRun right) {
+    private static PullRequestHeadContext pullRequestHeadContext(GHPullRequest pullRequest) throws IOException {
+        GHCommitPointer pullRequestHead = pullRequest.getHead();
+        GHRepository pullRequestHeadRepository = pullRequestHead.getRepository();
+        boolean ambiguousPullRequestHead = matchingPullRequestsForHead(pullRequest, pullRequestHead,
+                pullRequestHeadRepository).size() > 1;
+        return new PullRequestHeadContext(pullRequestHead, pullRequestHeadRepository, ambiguousPullRequestHead);
+    }
+
+    private static Map<String, WorkflowCandidates> collectWorkflowCandidates(GHPullRequest pullRequest,
+            PullRequestHeadContext headContext) throws IOException {
+        Map<String, WorkflowCandidates> workflowCandidates = new LinkedHashMap<>();
+        collectWorkflowCandidates(workflowCandidates, pullRequest, headContext, "pull_request");
+        collectWorkflowCandidates(workflowCandidates, pullRequest, headContext, PULL_REQUEST_TARGET_EVENT);
+        return workflowCandidates;
+    }
+
+    private static void collectWorkflowCandidates(Map<String, WorkflowCandidates> workflowCandidates,
+            GHPullRequest pullRequest,
+            PullRequestHeadContext headContext,
+            String event) throws IOException {
+        PagedIterable<GHWorkflowRun> workflowRuns = pullRequest.getRepository().queryWorkflowRuns()
+                .headSha(headContext.pullRequestHead().getSha())
+                .event(event)
+                .list()
+                .withPageSize(WORKFLOW_RUN_PAGE_SIZE);
+
+        for (GHWorkflowRun workflowRun : workflowRuns) {
+            if (!matchesPullRequestHead(workflowRun, headContext)) {
+                continue;
+            }
+
+            String workflowIdentity = workflowIdentity(workflowRun, event);
+            WorkflowCandidates candidates = workflowCandidates.getOrDefault(workflowIdentity, WorkflowCandidates.EMPTY);
+            List<GHPullRequest> associatedPullRequests = workflowRun.getPullRequests();
+
+            if (isAssociatedWithCurrentPullRequest(associatedPullRequests, pullRequest)) {
+                workflowCandidates.put(workflowIdentity, candidates.withAcceptedRun(workflowRun));
+                continue;
+            }
+            if (associatedPullRequests != null && !associatedPullRequests.isEmpty()) {
+                continue;
+            }
+            if (headContext.ambiguousPullRequestHead()) {
+                workflowCandidates.put(workflowIdentity, candidates.withAmbiguousUnassociatedRun(workflowRun));
+            } else {
+                workflowCandidates.put(workflowIdentity, candidates.withAcceptedRun(workflowRun));
+            }
+        }
+    }
+
+    private static List<GHWorkflowRun> resolveLatestRuns(Map<String, WorkflowCandidates> workflowCandidates) {
+        List<GHWorkflowRun> latestRuns = new ArrayList<>(workflowCandidates.size());
+        for (WorkflowCandidates candidates : workflowCandidates.values()) {
+            latestRuns.add(resolveLatestRun(candidates));
+        }
+        return latestRuns;
+    }
+
+    private static GHWorkflowRun resolveLatestRun(WorkflowCandidates candidates) {
+        GHWorkflowRun ambiguousUnassociatedRun = candidates.ambiguousUnassociatedRun();
+        if (ambiguousUnassociatedRun == null) {
+            return candidates.acceptedRun();
+        }
+
+        GHWorkflowRun acceptedRun = candidates.acceptedRun();
+        if (acceptedRun == null) {
+            throw RetestCommandException.ambiguousPullRequestHead();
+        }
+        if (latestWorkflowRun(acceptedRun, ambiguousUnassociatedRun) != acceptedRun) {
+            throw RetestCommandException.ambiguousPullRequestHead();
+        }
+
+        return acceptedRun;
+    }
+
+    private static boolean matchesPullRequestHead(GHWorkflowRun workflowRun, PullRequestHeadContext headContext) {
+        if (!headContext.pullRequestHead().getSha().equals(workflowRun.getHeadSha())) {
+            return false;
+        }
+        if (!headContext.pullRequestHead().getRef().equals(workflowRun.getHeadBranch())) {
+            return false;
+        }
+        return isSameRepository(headContext.pullRequestHeadRepository(), workflowRun.getHeadRepository());
+    }
+
+    private static boolean isAssociatedWithCurrentPullRequest(List<GHPullRequest> associatedPullRequests,
+            GHPullRequest pullRequest) {
+        if (associatedPullRequests == null || associatedPullRequests.isEmpty()) {
+            return false;
+        }
+
+        return associatedPullRequests.stream()
+                .anyMatch(associatedPullRequest -> associatedPullRequest.getNumber() == pullRequest.getNumber());
+    }
+
+    private static GHWorkflowRun latestWorkflowRun(GHWorkflowRun left, GHWorkflowRun right) {
+        if (left == null) {
+            return right;
+        }
+        if (right == null) {
+            return left;
+        }
+
         int runNumberComparison = Long.compare(left.getRunNumber(), right.getRunNumber());
         if (runNumberComparison != 0) {
             return runNumberComparison > 0 ? left : right;
@@ -70,7 +161,7 @@ class RetestWorkflowRunSelector {
         return left.getId() >= right.getId() ? left : right;
     }
 
-    private static List<AnalyzedWorkflowRun> analyzeRuns(List<GHWorkflowRun> latestRuns) throws IOException {
+    private static List<AnalyzedWorkflowRun> analyzeRuns(List<GHWorkflowRun> latestRuns) {
         List<AnalyzedWorkflowRun> analyzedRuns = new ArrayList<>(latestRuns.size());
         for (GHWorkflowRun workflowRun : latestRuns) {
             analyzedRuns.add(analyzeRun(workflowRun));
@@ -78,7 +169,7 @@ class RetestWorkflowRunSelector {
         return analyzedRuns;
     }
 
-    private static AnalyzedWorkflowRun analyzeRun(GHWorkflowRun workflowRun) throws IOException {
+    private static AnalyzedWorkflowRun analyzeRun(GHWorkflowRun workflowRun) {
         boolean completed = workflowRun.getStatus() == GHWorkflowRun.Status.COMPLETED;
         boolean hasFailedLatestJob = completed
                 && FAILED_JOB_CONCLUSIONS.contains(workflowRun.getConclusion())
@@ -120,7 +211,7 @@ class RetestWorkflowRunSelector {
         return RetestWorkflowSelection.NoEligibleReason.LATEST_RUNS_GREEN;
     }
 
-    private static boolean hasFailedLatestJob(GHWorkflowRun workflowRun) throws IOException {
+    private static boolean hasFailedLatestJob(GHWorkflowRun workflowRun) {
         for (GHWorkflowJob workflowJob : workflowRun.listJobs()) {
             if (FAILED_JOB_CONCLUSIONS.contains(workflowJob.getConclusion())) {
                 return true;
@@ -142,48 +233,6 @@ class RetestWorkflowRunSelector {
         }
 
         return leftFullName.equals(rightFullName);
-    }
-
-    private static void collectWorkflowRuns(Map<String, GHWorkflowRun> latestRunsByWorkflow,
-            GHPullRequest pullRequest,
-            GHCommitPointer pullRequestHead,
-            GHRepository pullRequestHeadRepository,
-            String event) throws IOException {
-        PagedIterable<GHWorkflowRun> workflowRuns = pullRequest.getRepository().queryWorkflowRuns()
-                .headSha(pullRequestHead.getSha())
-                .event(event)
-                .list()
-                .withPageSize(WORKFLOW_RUN_PAGE_SIZE);
-
-        for (GHWorkflowRun workflowRun : workflowRuns) {
-            if (!pullRequestHead.getSha().equals(workflowRun.getHeadSha())) {
-                continue;
-            }
-            if (!pullRequestHead.getRef().equals(workflowRun.getHeadBranch())) {
-                continue;
-            }
-            if (!isSameRepository(pullRequestHeadRepository, workflowRun.getHeadRepository())) {
-                continue;
-            }
-
-            List<GHPullRequest> associatedPullRequests = workflowRun.getPullRequests();
-            if (associatedPullRequests != null && !associatedPullRequests.isEmpty()) {
-                boolean matchesCurrentPullRequest = associatedPullRequests.stream()
-                        .anyMatch(associatedPullRequest -> associatedPullRequest.getNumber() == pullRequest.getNumber());
-                if (!matchesCurrentPullRequest) {
-                    continue;
-                }
-            }
-
-            latestRunsByWorkflow.merge(workflowIdentity(workflowRun, event), workflowRun,
-                    RetestWorkflowRunSelector::latestRun);
-        }
-    }
-
-    private static void ensureUniquePullRequestForHead(List<GHPullRequest> matchingPullRequests) {
-        if (matchingPullRequests.size() > 1) {
-            throw RetestCommandException.ambiguousPullRequestHead();
-        }
     }
 
     private static List<GHPullRequest> matchingPullRequestsForHead(GHPullRequest pullRequest,
@@ -226,7 +275,23 @@ class RetestWorkflowRunSelector {
             return "workflow-url:" + workflowUrl + ":event:" + event;
         }
 
-        return event + "::" + String.valueOf(workflowRun.getName()) + "::" + workflowRun.getRunNumber();
+        return event + "::" + workflowRun.getName() + "::" + workflowRun.getRunNumber();
+    }
+
+    private record PullRequestHeadContext(GHCommitPointer pullRequestHead, GHRepository pullRequestHeadRepository,
+            boolean ambiguousPullRequestHead) {
+    }
+
+    private record WorkflowCandidates(GHWorkflowRun acceptedRun, GHWorkflowRun ambiguousUnassociatedRun) {
+        private static final WorkflowCandidates EMPTY = new WorkflowCandidates(null, null);
+
+        private WorkflowCandidates withAcceptedRun(GHWorkflowRun workflowRun) {
+            return new WorkflowCandidates(latestWorkflowRun(acceptedRun, workflowRun), ambiguousUnassociatedRun);
+        }
+
+        private WorkflowCandidates withAmbiguousUnassociatedRun(GHWorkflowRun workflowRun) {
+            return new WorkflowCandidates(acceptedRun, latestWorkflowRun(ambiguousUnassociatedRun, workflowRun));
+        }
     }
 
     private record AnalyzedWorkflowRun(GHWorkflowRun workflowRun, boolean completed, boolean hasFailedLatestJob) {

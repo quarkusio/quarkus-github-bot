@@ -42,7 +42,7 @@ class RetestCommandException extends RuntimeException {
             case NO_WORKFLOW_RUNS_FOR_HEAD -> new RetestCommandException(
                     ":warning: No workflow runs matched the latest head for this pull request.");
             case LATEST_RUNS_NOT_COMPLETED -> new RetestCommandException(
-                    ":warning: The latest workflow runs for this pull request are not completed yet.");
+                    ":warning: The latest workflow runs for this pull request are not completed yet. Retry once they finish.");
             case LATEST_RUNS_GREEN -> new RetestCommandException(
                     ":white_check_mark: The latest workflow runs for this pull request are already green.");
             case NO_RERUNNABLE_FAILED_JOBS -> new RetestCommandException(

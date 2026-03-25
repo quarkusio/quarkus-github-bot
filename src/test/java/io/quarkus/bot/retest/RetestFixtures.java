@@ -71,6 +71,12 @@ public final class RetestFixtures {
     }
 
     public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
+            GHRepository headRepository, GHPullRequest associatedPullRequest) {
+        return failedCompletedRun(id, workflowId, name, runNumber, runAttempt, headRepository,
+                List.of(associatedPullRequest));
+    }
+
+    public static GHWorkflowRun failedCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
             GHRepository headRepository, List<GHPullRequest> associatedPullRequests) {
         return workflowRunFixture(id, workflowId, name)
                 .runNumber(runNumber)
@@ -130,12 +136,30 @@ public final class RetestFixtures {
                 .build();
     }
 
-    public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber, long runAttempt,
-            GHRepository headRepository) {
+    public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
+            long runAttempt, GHRepository headRepository) {
         return workflowRunFixture(id, workflowId, name)
                 .runNumber(runNumber)
                 .runAttempt(runAttempt)
                 .headRepository(headRepository)
+                .completed(GHWorkflowRun.Conclusion.SUCCESS)
+                .jobs(successfulJob())
+                .build();
+    }
+
+    public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
+            long runAttempt, GHRepository headRepository, GHPullRequest associatedPullRequest) {
+        return successfulCompletedRun(id, workflowId, name, runNumber, runAttempt, headRepository,
+                List.of(associatedPullRequest));
+    }
+
+    public static GHWorkflowRun successfulCompletedRun(long id, long workflowId, String name, long runNumber,
+            long runAttempt, GHRepository headRepository, List<GHPullRequest> associatedPullRequests) {
+        return workflowRunFixture(id, workflowId, name)
+                .runNumber(runNumber)
+                .runAttempt(runAttempt)
+                .headRepository(headRepository)
+                .associatedPullRequests(associatedPullRequests)
                 .completed(GHWorkflowRun.Conclusion.SUCCESS)
                 .jobs(successfulJob())
                 .build();

@@ -251,7 +251,7 @@ Syntax of the `.github/quarkus-github-bot.yml` file is as follows:
 features: [ RETEST_PULL_REQUEST_WORKFLOWS ]
 ----
 
-Only failed jobs from the latest run of each workflow are retriggered. If the latest run is still in progress, retest waits for it to complete.
+Only failed jobs from the latest run of each workflow are retriggered. If the latest run is still in progress, the bot asks you to retry once it completes.
 
 This feature requires:
 
