@@ -2,6 +2,7 @@ package io.quarkus.bot.it;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +21,7 @@ import org.kohsuke.github.GHCheckRunBuilder.Output;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHEvent;
+import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRepository;
@@ -80,6 +83,7 @@ public class CheckPullRequestContributionRulesTest {
 
             mockPR = mocks.pullRequest(samplePullRequestId);
             when(mockPR.getRepository()).thenReturn(mockRepo);
+            when(mockPR.getComments()).thenReturn(List.of());
 
             setupMockHeadCommit();
 
@@ -101,6 +105,8 @@ public class CheckPullRequestContributionRulesTest {
                     verify(mockCheckRunBuilder, times(2)).withConclusion(eq(GHCheckRun.Conclusion.SUCCESS));
                     verify(mockCheckRunBuilder, times(2)).create();
 
+                    verify(mockPR, times(1)).getComments();
+
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
     }
@@ -119,6 +125,7 @@ public class CheckPullRequestContributionRulesTest {
 
             mockPR = mocks.pullRequest(samplePullRequestId);
             when(mockPR.getRepository()).thenReturn(mockRepo);
+            when(mockPR.getComments()).thenReturn(List.of());
 
             setupMockHeadCommit();
 
@@ -143,8 +150,39 @@ public class CheckPullRequestContributionRulesTest {
                     verify(mockCheckRunBuilder, times(1)).add(any(Output.class));
                     verify(mockCheckRunBuilder, times(2)).create();
 
+                    verify(mockPR, times(1)).getComments();
+                    verify(mockPR, times(1)).comment(contains("squash merged"));
+
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
+    }
+
+    /**
+     * If PR contains merge commits and no existing bot comment,
+     * a comment advising squash merge is posted.
+     */
+    @Test
+    void pullRequestWithMergeCommitPostsSquashMergeComment() throws IOException {
+
+        setupMock();
+
+        given().github(mocks -> {
+            mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_CONTRIBUTION_RULES ]\n");
+
+            mockPR = mocks.pullRequest(samplePullRequestId);
+            when(mockPR.getRepository()).thenReturn(mockRepo);
+            when(mockPR.getComments()).thenReturn(List.of());
+
+            setupMockHeadCommit();
+
+            GHPullRequestCommitDetail mockMergeCommitDetail = setupMockMergeCommit();
+            PagedIterable<GHPullRequestCommitDetail> iterableMock = MockHelper.mockPagedIterable(mockMergeCommitDetail);
+            when(mockPR.listCommits()).thenReturn(iterableMock);
+        })
+                .when().payloadFromString(getSamplePullRequestPayload())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> verify(mockPR, times(1))
+                        .comment(contains("squash merged")));
     }
 
     /**
@@ -161,6 +199,7 @@ public class CheckPullRequestContributionRulesTest {
 
             mockPR = mocks.pullRequest(samplePullRequestId);
             when(mockPR.getRepository()).thenReturn(mockRepo);
+            when(mockPR.getComments()).thenReturn(List.of());
 
             setupMockHeadCommit();
 
@@ -185,8 +224,73 @@ public class CheckPullRequestContributionRulesTest {
                     verify(mockCheckRunBuilder, times(1)).add(any(Output.class));
                     verify(mockCheckRunBuilder, times(2)).create();
 
+                    verify(mockPR, times(1)).getComments();
+
                     verifyNoMoreInteractions(mocks.ghObjects());
                 });
+    }
+
+    /**
+     * If PR no longer contains merge commits but a bot comment exists,
+     * the comment is deleted.
+     */
+    @Test
+    void pullRequestWithoutMergeCommitDeletesExistingComment() throws IOException {
+
+        setupMock();
+
+        GHIssueComment mockComment = mock(GHIssueComment.class);
+        when(mockComment.getBody()).thenReturn(
+                "old comment" + io.quarkus.bot.util.Strings.MERGE_COMMIT_COMMENT_MARKER);
+
+        given().github(mocks -> {
+            mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_CONTRIBUTION_RULES ]\n");
+
+            mockPR = mocks.pullRequest(samplePullRequestId);
+            when(mockPR.getRepository()).thenReturn(mockRepo);
+            when(mockPR.getComments()).thenReturn(List.of(mockComment));
+
+            setupMockHeadCommit();
+
+            PagedIterable<GHPullRequestCommitDetail> iterableMock = MockHelper.mockPagedIterable();
+            when(mockPR.listCommits()).thenReturn(iterableMock);
+        })
+                .when().payloadFromString(getSamplePullRequestPayload())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> verify(mockComment, times(1))
+                        .delete());
+    }
+
+    /**
+     * If PR contains merge commits and a bot comment already exists,
+     * no new comment is posted (idempotent).
+     */
+    @Test
+    void pullRequestWithMergeCommitDoesNotDuplicateComment() throws IOException {
+
+        setupMock();
+
+        GHIssueComment mockComment = mock(GHIssueComment.class);
+        when(mockComment.getBody()).thenReturn(
+                "existing comment" + io.quarkus.bot.util.Strings.MERGE_COMMIT_COMMENT_MARKER);
+
+        given().github(mocks -> {
+            mocks.configFile("quarkus-github-bot.yml").fromString("features: [ CHECK_CONTRIBUTION_RULES ]\n");
+
+            mockPR = mocks.pullRequest(samplePullRequestId);
+            when(mockPR.getRepository()).thenReturn(mockRepo);
+            when(mockPR.getComments()).thenReturn(List.of(mockComment));
+
+            setupMockHeadCommit();
+
+            GHPullRequestCommitDetail mockMergeCommitDetail = setupMockMergeCommit();
+            PagedIterable<GHPullRequestCommitDetail> iterableMock = MockHelper.mockPagedIterable(mockMergeCommitDetail);
+            when(mockPR.listCommits()).thenReturn(iterableMock);
+        })
+                .when().payloadFromString(getSamplePullRequestPayload())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> verify(mockPR, times(0))
+                        .comment(any(String.class)));
     }
 
     private static long samplePullRequestId = 1091703530;
