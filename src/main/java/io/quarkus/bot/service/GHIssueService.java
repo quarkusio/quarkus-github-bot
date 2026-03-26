@@ -1,4 +1,4 @@
-package io.quarkus.bot;
+package io.quarkus.bot.service;
 
 import java.io.IOException;
 

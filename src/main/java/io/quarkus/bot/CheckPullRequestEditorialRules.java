@@ -18,7 +18,7 @@ import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
-import io.quarkus.bot.util.GHPullRequests;
+import io.quarkus.bot.service.GitHubBotActions;
 import io.quarkus.bot.violation.EditorialViolation;
 import io.quarkus.bot.violation.ViolationDetectorManager;
 
@@ -44,12 +44,7 @@ class CheckPullRequestEditorialRules {
             return;
         }
 
-        String baseBranch = pullRequestPayload.getPullRequest().getBase().getRef();
-
-        GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        normalizeTitle(pullRequest, baseBranch);
-
-        processViolations(pullRequest, false);
+        processViolations(pullRequestPayload.getPullRequest(), false);
     }
 
     void checkPullRequestEditorialRulesOnEdit(@PullRequest.Edited GHEventPayload.PullRequest pullRequestPayload,
@@ -58,15 +53,6 @@ class CheckPullRequestEditorialRules {
             return;
         }
         processViolations(pullRequestPayload.getPullRequest(), true);
-    }
-
-    private void normalizeTitle(GHPullRequest pullRequest, String baseBranch) {
-        String originalTitle = pullRequest.getTitle();
-        String normalizedTitle = GHPullRequests.normalizeTitle(originalTitle, baseBranch);
-
-        if (!originalTitle.equals(normalizedTitle)) {
-            gitHubBotActions.setPullRequestTitle(pullRequest, normalizedTitle);
-        }
     }
 
     private void processViolations(GHPullRequest pullRequest, boolean isEdit) throws IOException {

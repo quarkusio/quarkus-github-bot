@@ -3,6 +3,7 @@ package io.quarkus.bot.config;
 public enum Feature {
 
     ALL,
+    ADD_BRANCH_TO_PULL_REQUEST_TITLE,
     ANALYZE_WORKFLOW_RUN_RESULTS,
     CHECK_EDITORIAL_RULES,
     CHECK_CONTRIBUTION_RULES,
