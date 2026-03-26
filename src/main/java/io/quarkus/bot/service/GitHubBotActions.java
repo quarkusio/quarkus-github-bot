@@ -1,4 +1,4 @@
-package io.quarkus.bot;
+package io.quarkus.bot.service;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -17,11 +17,14 @@ import io.quarkus.bot.config.QuarkusGitHubBotConfig;
  * as well as setting pull request titles.
  */
 @Singleton
-class GitHubBotActions {
+public class GitHubBotActions {
+
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
+
     @Inject
     GHIssueService issueService;
+
     @Inject
     GHIssueCommentService commentService;
 

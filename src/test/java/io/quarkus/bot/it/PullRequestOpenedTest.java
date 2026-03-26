@@ -1,6 +1,7 @@
 package io.quarkus.bot.it;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.quarkus.bot.it.util.GHPullRequestsTest.FEATURES_ADD_BRANCH_TO_PULL_REQUEST_TITLE;
 import static io.quarkus.bot.it.util.GHPullRequestsTest.FEATURES_CHECK_EDITORIAL_RULES;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -189,7 +190,8 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleStartsWithMaintenanceBranchParenthesis() throws IOException {
-        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString(FEATURES_CHECK_EDITORIAL_RULES))
+        given().github(
+                mocks -> mocks.configFile("quarkus-github-bot.yml").fromString(FEATURES_ADD_BRANCH_TO_PULL_REQUEST_TITLE))
                 .when().payloadFromClasspath("/pullrequest-opened-title-starts-with-maintenance-branch-parenthesis.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -222,7 +224,8 @@ public class PullRequestOpenedTest {
 
     @Test
     void titleForMaintenanceBranchWithNoPrefix() throws IOException {
-        given().github(mocks -> mocks.configFile("quarkus-github-bot.yml").fromString(FEATURES_CHECK_EDITORIAL_RULES))
+        given().github(
+                mocks -> mocks.configFile("quarkus-github-bot.yml").fromString(FEATURES_ADD_BRANCH_TO_PULL_REQUEST_TITLE))
                 .when().payloadFromClasspath("/pullrequest-opened-title-for-maintenance-branch-with-no-prefix.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
