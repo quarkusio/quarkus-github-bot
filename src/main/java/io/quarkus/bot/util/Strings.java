@@ -2,6 +2,7 @@ package io.quarkus.bot.util;
 
 public class Strings {
     public static final String EDITORIAL_RULES_COMMENT_MARKER = "\n<!-- Quarkus-Bot-Editor-Rules -->";
+    public static final String MERGE_COMMIT_COMMENT_MARKER = "\n<!-- Quarkus-Bot-Merge-Commits -->";
 
     public static boolean isNotBlank(String string) {
         return string != null && !string.trim().isEmpty();

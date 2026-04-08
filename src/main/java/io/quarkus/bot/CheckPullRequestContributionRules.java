@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -17,6 +18,7 @@ import org.kohsuke.github.GHCheckRunBuilder.Annotation;
 import org.kohsuke.github.GHCheckRunBuilder.Output;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRepository;
@@ -26,6 +28,8 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkus.bot.config.Feature;
 import io.quarkus.bot.config.QuarkusGitHubBotConfig;
 import io.quarkus.bot.config.QuarkusGitHubBotConfigFile;
+import io.quarkus.bot.service.GHIssueCommentService;
+import io.quarkus.bot.util.Strings;
 
 public class CheckPullRequestContributionRules {
 
@@ -36,6 +40,12 @@ public class CheckPullRequestContributionRules {
     public static final String MERGE_COMMIT_CHECK_RUN_NAME = "Check Pull Request - Merge commits";
     public static final String MERGE_COMMIT_ERROR_OUTPUT_TITLE = "PR contains merge commits";
     public static final String MERGE_COMMIT_ERROR_OUTPUT_SUMMARY = "Pull request that contains merge commits can not be merged";
+    public static final String MERGE_COMMIT_COMMENT_MESSAGE = """
+            \u26a0\ufe0f **This pull request contains merge commits.**
+
+            This is acceptable provided that it is **squash merged**.
+
+            Maintainers: please use the **Squash and merge** option when merging this pull request.""";
 
     public static final String FIXUP_COMMIT_CHECK_RUN_NAME = "Check Pull Request - Fixup commits";
     public static final String FIXUP_COMMIT_ERROR_OUTPUT_TITLE = "PR contains fixup commits";
@@ -46,6 +56,9 @@ public class CheckPullRequestContributionRules {
 
     @Inject
     QuarkusGitHubBotConfig quarkusBotConfig;
+
+    @Inject
+    GHIssueCommentService commentService;
 
     void checkPullRequestContributionRules(
             @PullRequest.Opened @PullRequest.Reopened @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
@@ -66,6 +79,9 @@ public class CheckPullRequestContributionRules {
             // Merge commits
             buildCheckRun(checkCommitData.getMergeCommitDetails(), repostitory, headCommit,
                     MERGE_COMMIT_CHECK_RUN_NAME, MERGE_COMMIT_ERROR_OUTPUT_TITLE, MERGE_COMMIT_ERROR_OUTPUT_SUMMARY);
+
+            // Post comment advising squash merge if merge commits are found
+            handleMergeCommitComment(pullRequest, checkCommitData.getMergeCommitDetails());
 
             // Fixup commits
             buildCheckRun(checkCommitData.getFixupCommitDetails(), repostitory, headCommit,
@@ -161,6 +177,23 @@ public class CheckPullRequestContributionRules {
                     .withConclusion(Conclusion.FAILURE);
             check.add(output);
             check.create();
+        }
+    }
+
+    private void handleMergeCommitComment(GHPullRequest pullRequest,
+            List<GHPullRequestCommitDetail> mergeCommitDetails) throws IOException {
+        Optional<GHIssueComment> existingComment = commentService.findBotCommentInIssue(
+                pullRequest, Strings.MERGE_COMMIT_COMMENT_MARKER);
+
+        if (!mergeCommitDetails.isEmpty()) {
+            if (existingComment.isEmpty()) {
+                String formattedComment = Strings.commentByBot(MERGE_COMMIT_COMMENT_MESSAGE)
+                        + Strings.MERGE_COMMIT_COMMENT_MARKER;
+                pullRequest.comment(formattedComment);
+            }
+        } else {
+            existingComment.ifPresent(comment -> commentService.deleteComment(
+                    comment, pullRequest.getNumber(), false));
         }
     }
 
