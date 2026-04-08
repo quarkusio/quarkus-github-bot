@@ -29,7 +29,7 @@ class PullRequestGuardedBranches {
             @PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile("quarkus-github-bot.yml") QuarkusGitHubBotConfigFile quarkusBotConfigFile,
             DynamicGraphQLClient gitHubGraphQLClient) throws IOException {
-        if (!Feature.TRIAGE_ISSUES_AND_PULL_REQUESTS.isEnabled(quarkusBotConfigFile)) {
+        if (!Feature.PULL_REQUEST_GUARDED_BRANCHES.isEnabled(quarkusBotConfigFile)) {
             return;
         }
 

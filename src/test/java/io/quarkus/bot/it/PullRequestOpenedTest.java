@@ -409,7 +409,7 @@ public class PullRequestOpenedTest {
     @Test
     void triageGuardedBranches() throws IOException {
         given().github(mocks -> mocks.configFile("quarkus-github-bot.yml")
-                .fromString("features: [ TRIAGE_ISSUES_AND_PULL_REQUESTS ]\n"
+                .fromString("features: [ PULL_REQUEST_GUARDED_BRANCHES ]\n"
                         + "triage:\n"
                         + "  guardedBranches:\n"
                         + "    - ref: 3.15\n"
