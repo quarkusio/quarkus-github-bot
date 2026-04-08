@@ -24,29 +24,30 @@ public class MockHelper {
     @SafeVarargs
     @SuppressWarnings("unchecked")
     public static <T> PagedIterable<T> mockPagedIterable(T... contentMocks) {
-        PagedIterable<T> iterableMock = mock(PagedIterable.class);
-        try {
-            lenient().when(iterableMock.toList()).thenAnswer(ignored2 -> List.of(contentMocks));
-        } catch (IOException e) {
-            // This should never happen
-            // That's a classic unwise comment, but it's a mock, so surely we're safe? :)
-            throw new RuntimeException(e);
-        }
-        lenient().when(iterableMock.iterator()).thenAnswer(ignored -> {
-            PagedIterator<T> iteratorMock = mock(PagedIterator.class);
-            Iterator<T> actualIterator = List.of(contentMocks).iterator();
-            when(iteratorMock.next()).thenAnswer(ignored2 -> actualIterator.next());
-            lenient().when(iteratorMock.hasNext()).thenAnswer(ignored2 -> actualIterator.hasNext());
+        return new PagedIterable<>() {
+            @Override
+            public PagedIterator<T> _iterator(int pageSize) {
+                return mockPagedIterator(contentMocks);
+            }
 
-            return iteratorMock;
-        });
-        return iterableMock;
+            @Override
+            public List<T> toList() throws IOException {
+                return List.of(contentMocks);
+            }
+        };
+    }
+
+    private static <T> PagedIterator<T> mockPagedIterator(T... contentMocks) {
+        PagedIterator<T> iteratorMock = mock(PagedIterator.class);
+        Iterator<T> actualIterator = List.of(contentMocks).iterator();
+        when(iteratorMock.next()).thenAnswer(ignored2 -> actualIterator.next());
+        lenient().when(iteratorMock.hasNext()).thenAnswer(ignored2 -> actualIterator.hasNext());
+        return iteratorMock;
     }
 
     public static GHUser mockUser(String login) {
         GHUser user = mock(GHUser.class);
-        when(user.getLogin()).thenReturn(login);
+        lenient().when(user.getLogin()).thenReturn(login);
         return user;
     }
-
 }

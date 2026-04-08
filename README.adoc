@@ -237,6 +237,28 @@ If the rule is triggered, the following actions will be executed:
 
 If the workflow is not approved, it will be left untouched, for a human approver to look at.
 
+=== Retest failed workflow jobs
+
+Users with GitHub `WRITE` permission can retrigger failed GitHub Actions jobs for a pull request by commenting:
+
+* `@quarkusbot retest`
+* alias: `@quarkus-bot retest`
+
+Syntax of the `.github/quarkus-github-bot.yml` file is as follows:
+
+[source, yaml]
+----
+features: [ RETEST_PULL_REQUEST_WORKFLOWS ]
+----
+
+Only failed jobs from the latest run of each workflow are retriggered. If the latest run is still in progress, the bot asks you to retry once it completes.
+When reruns are started, the bot posts a confirmation comment linking to the workflow runs.
+
+This feature requires:
+
+* Actions - `Read & Write`
+* Issue comment event subscription
+
 === Mark closed pull requests as invalid
 
 If a pull request is closed without being merged, we automatically add the `triage/invalid` label to the pull request.
@@ -270,6 +292,7 @@ Events to subscribe to:
 
 * Discussions
 * Issues
+* Issue comment
 * Label
 * Pull Request
 * Workflow run
