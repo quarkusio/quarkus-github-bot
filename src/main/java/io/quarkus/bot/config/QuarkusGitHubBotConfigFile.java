@@ -29,6 +29,8 @@ public class QuarkusGitHubBotConfigFile {
 
     public Develocity develocity = new Develocity();
 
+    public SimilarGitHubHandleCheck similarGitHubHandleCheck = new SimilarGitHubHandleCheck();
+
     public static class TriageConfig {
 
         public List<TriageRule> rules = new ArrayList<>();
@@ -164,6 +166,14 @@ public class QuarkusGitHubBotConfigFile {
 
         @JsonDeserialize(as = TreeSet.class)
         public Set<String> notify = new TreeSet<>();
+    }
+
+    public static class SimilarGitHubHandleCheck {
+
+        public String org;
+
+        @JsonDeserialize(as = TreeSet.class)
+        public Set<String> teams = new TreeSet<>();
     }
 
     boolean isFeatureEnabled(Feature feature) {
