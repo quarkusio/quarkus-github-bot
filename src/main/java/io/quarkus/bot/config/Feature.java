@@ -16,7 +16,8 @@ public enum Feature {
     TRIAGE_DISCUSSIONS,
     PUSH_TO_PROJECTS,
     APPROVE_WORKFLOWS,
-    CHECK_SIMILAR_GITHUB_HANDLES;
+    CHECK_SIMILAR_GITHUB_HANDLES,
+    SET_MILESTONE_DUE_ON_ON_CLOSE;
 
     public boolean isEnabled(QuarkusGitHubBotConfigFile quarkusBotConfigFile) {
         if (quarkusBotConfigFile == null) {
